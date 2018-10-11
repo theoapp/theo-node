@@ -15,10 +15,10 @@ if (settingsJson) {
 } else {
   settings = {
     admin: {
-      token: 'TMP_PASSWORD'
+      token: ''
     },
     client: {
-      tokens: ['TMP_CLIENT_TOKEN']
+      tokens: []
     },
     sqlite: {
       path: './data/theo.db'
