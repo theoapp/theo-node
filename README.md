@@ -14,7 +14,7 @@ You can easily run a Theo server using Theo's docker image:
 
 NB don't forget to replace ADMIN_TOKEN and CLIENT_TOKENS values!
 
-`docker run --rm -v /tmp/theo:/data -e DATA_PATH=/data/theo.db -e ADMIN_TOKEN=12345 -e CLIENT_TOKENS=abcde,fghij -p 9100:9100 theoapp/theo:0.1.0`
+`docker run --rm -v /tmp/theo:/data -e DATA_PATH=/data/theo.db -e ADMIN_TOKEN=12345 -e CLIENT_TOKENS=abcde,fghij -p 9100:9100 theoapp/theo`
 
 Then install `theoapp-cli` using npm:
 
