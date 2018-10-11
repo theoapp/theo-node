@@ -1,0 +1,12 @@
+.dockerignore
+.eslintrc.json
+.git
+.gitignore
+.idea
+.npmrc
+LICENSE
+README.md
+build
+data
+env.sample
+node_modules
