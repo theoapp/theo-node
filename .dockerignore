@@ -6,7 +6,8 @@
 .npmrc
 LICENSE
 README.md
-build
 data
 env.sample
-node_modules
+src
+package.json
+package-lock.json
