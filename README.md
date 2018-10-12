@@ -1,5 +1,7 @@
 ## Theo
 
+[![Build Status](https://travis-ci.com/gizero/theo-node.svg?branch=travis-ci)](https://travis-ci.com/gizero/theo-node)
+
 Theo is a public key manager, you can use it as replacement for all of your `authorized_keys`   
 It allows you to set fine permissions (specific user and host) or to use wildcard (ex, using host `*.test.sample.com`) 
 
