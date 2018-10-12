@@ -4,7 +4,6 @@
 .gitignore
 .idea
 .npmrc
-LICENSE
 README.md
 data
 env.sample
