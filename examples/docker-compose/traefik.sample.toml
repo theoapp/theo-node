@@ -1,0 +1,36 @@
+defaultEntryPoints = ["https","http"]
+
+[api]
+entryPoint = "traefik"
+dashboard = true
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+  [entryPoints.https]
+  address = ":443"
+    [entryPoints.https.tls]
+    minVersion = "VersionTLS12"
+    cipherSuites = [
+      "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305",
+      "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+      "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+      "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+      "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+      "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA"
+    ]
+
+[acme]
+email = "{{ EMAIL }}"
+storage = "/etc/traefik/acme/acme.json"
+entryPoint = "https"
+onHostRule = true
+  [acme.tlsChallenge]
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "{{ DOMAIN }}"
+watch = true
+exposedbydefault = false
