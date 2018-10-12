@@ -6,8 +6,9 @@ services:
   - docker
 jobs:
   include:
-    - stage: test
-      script: npm test
+# uncomment once test are implemented
+#    - stage: test
+#      script: npm test
     - stage: build docker image
       script:
         - docker build -t theo .
