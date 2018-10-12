@@ -1,0 +1,16 @@
+sudo: required
+language: node_js
+node_js:
+  - "node"
+services:
+  - docker
+jobs:
+  include:
+    - stage: test
+      script: npm test
+    - stage: build docker image
+      script:
+        - docker build -t theo .
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker tag theo $DOCKER_USERNAME/theo
+        - docker push $DOCKER_USERNAME/theo
