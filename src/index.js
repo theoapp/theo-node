@@ -5,6 +5,7 @@ import SqliteHelper from './lib/helpers/SqliteHelper';
 import SqliteManager from './lib/managers/SqliteManager';
 import { initRoutes } from './routes';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
+import packageJson from '../package';
 
 dotenv.config();
 
@@ -57,7 +58,9 @@ const sh = SqliteHelper(settings.sqlite, sm);
 
 // HTTP server
 
-const server = restify.createServer();
+const server = restify.createServer({
+  name: packageJson.name + '/' + packageJson.version
+});
 
 server.use(restify.plugins.acceptParser(server.acceptable));
 server.use(restify.plugins.dateParser());
