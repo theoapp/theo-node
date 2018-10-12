@@ -12,7 +12,7 @@ OpenSSH server must be  version >= 6.1 (since it has to support `AuthorizedKeysC
 
 You can easily run a Theo server using Theo's docker image:
 
-NB don't forget to replace ADMIN_TOKEN and CLIENT_TOKENS values!
+__NB__ don't forget to replace ADMIN_TOKEN and CLIENT_TOKENS values!
 
 `docker run --rm -v /tmp/theo:/data -e DATA_PATH=/data/theo.db -e ADMIN_TOKEN=12345 -e CLIENT_TOKENS=abcde,fghij -p 9100:9100 theoapp/theo`
 
@@ -22,7 +22,7 @@ Then install `theoapp-cli` using npm:
 
 Now you're ready to create your first user:
 
-NB don't forget to replace ADMIN_TOKEN with the same value you used before
+__NB__ don't forget to replace ADMIN_TOKEN with the same value you used before
 
 ```
 $ THEO_URL=http://localhost:9100 THEO_TOKEN=12345 theo \
@@ -116,9 +116,11 @@ You should see this output
 
 On servers you want to connect to, create a simple script and save it, ex: `/usr/local/bin/get_ssh_keys.sh`:
 
+__NB__ don't forget to replace the bearer value with one of the CLIENT_TOKENS you used before
+
 ```
 #!/bin/sh
-curl http://THEOSERVER_IP_OR_FQDN:9100/authorized_keys/$(hostname)/${1}
+curl -H "Authorization: Bearer abcde" http://THEOSERVER_IP_OR_FQDN:9100/authorized_keys/$(hostname)/${1}
 ```
 
 __remember__ to make it executable! `chmod +x /usr/local/bin/get_ssh_keys.sh` 
