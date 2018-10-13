@@ -32,12 +32,13 @@ class KeyManager {
     const sql = 'insert into keys (account_id, public_key, created_at) values (?, ?, ?) ';
 
     return new Promise((resolve, reject) => {
-      this.db.run(sql, [account_id, key, new Date().getTime()], async err => {
+      const am = this.am;
+      this.db.run(sql, [account_id, key, new Date().getTime()], async function(err) {
         if (err) {
           reject(err);
           return;
         }
-        await this.am.setUpdatedAt(account_id);
+        await am.setUpdatedAt(account_id);
         resolve(this.lastID);
       });
     });

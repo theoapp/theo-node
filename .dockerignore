@@ -8,4 +8,5 @@ README.md
 data
 env.sample
 src
+build/test
 package-lock.json
