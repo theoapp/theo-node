@@ -1,21 +1,16 @@
 import { requireAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
-import PermissionManager from '../lib/managers/PermissionManager';
+import { getAuthorizedKeys } from '../lib/helpers/KeysHelper';
 
 export default function handleKeys(server) {
   server.get('/authorized_keys/:host/:user', requireAuthMiddleware, async (req, res, next) => {
     const { host, user } = req.params;
-    const pm = new PermissionManager(req.db);
     try {
-      const keys = await pm.match(user, host);
+      const keys = await getAuthorizedKeys(req.db, user, host);
       res.header('Content-Type', 'text/plain');
-      let ret = '';
-      keys.forEach(key => {
-        ret += key.public_key + '\n';
-      });
-      res.send(ret);
+      res.send(keys);
     } catch (err) {
-      res.status(500);
-      res.json({ status: 500, reason: err.message });
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
 }

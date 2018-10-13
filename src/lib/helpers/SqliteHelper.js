@@ -6,11 +6,15 @@ class SqliteHelper {
   constructor(settings, sqliteManager) {
     this.sqliteManager = sqliteManager;
     this.db = new sqlite3.Database(settings.path);
-    this.db.run('PRAGMA foreign_keys = ON', err => {
-      this.checkDb().catch(err => {
-        console.error('WTF', err);
-      });
-    });
+    this.db.run('PRAGMA foreign_keys = ON');
+  }
+
+  async init() {
+    try {
+      await this.checkDb();
+    } catch (e) {
+      throw e;
+    }
   }
 
   getDb() {
@@ -99,6 +103,7 @@ class SqliteHelper {
       }
     });
   }
+
 }
 
 const getInstance = (settings, sqliteManager) => {
@@ -107,8 +112,13 @@ const getInstance = (settings, sqliteManager) => {
       throw Error('You need to pass a sqliteManager object to initialize SqliteHelper');
     }
     _instance = new SqliteHelper(settings, sqliteManager);
+    _instance.init();
   }
   return _instance;
 };
 
 export default getInstance;
+
+export const releaseSHInstance = () => {
+  _instance = null;
+};
