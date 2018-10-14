@@ -1,14 +1,10 @@
 ## Theo
 
+[![](https://images.microbadger.com/badges/image/theoapp/theo.svg)](https://microbadger.com/images/theoapp/theo) 
+[![Build Status](https://travis-ci.org/theoapp/theo-node.svg?branch=master)](https://travis-ci.org/theoapp/theo-node)
+
 Theo is a public key manager, you can use it as replacement for all of your `authorized_keys`   
 It allows you to set fine permissions (specific user and host) or to use wildcard (ex, using host `*.test.sample.com`) 
-
-### Docker image
-
-[![](https://images.microbadger.com/badges/image/theoapp/theo.svg)](https://microbadger.com/images/theoapp/theo) 
-[![Build Status](https://travis-ci.com/theoapp/theo-node.svg?branch=travis-ci)](https://travis-ci.com/theoapp/theo-node)
-
-
 
 ### Summary
 
