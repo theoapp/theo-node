@@ -32,7 +32,7 @@ const loadDb = function(sm) {
     sh = SqliteHelper(settings.sqlite, sm);
     setTimeout(() => {
       resolve(sh.getDb());
-    }, 500);
+    }, 1000);
   });
 };
 
@@ -53,7 +53,7 @@ const loadData = async function(db) {
 const sm = new SqliteManager();
 
 describe('Check keys', function() {
-  this.timeout(5000);
+  this.timeout(10000);
   let db;
   before(async function() {
     try {

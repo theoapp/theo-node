@@ -39,13 +39,14 @@ const loadDb = function(sm) {
     sh = SqliteHelper(settings.sqlite, sm);
     setTimeout(() => {
       resolve(sh.getDb());
-    }, 500);
+    }, 1000);
   });
 };
 
 const sm = new SqliteManager();
 
 describe('Create account', function() {
+  this.timeout(10000);
   let db;
   before(async function() {
     try {
