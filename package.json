@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Theo is your keys manager",
   "main": "index.js",
+  "repository": "theoapp/theo-node",
   "scripts": {
     "build": "babel -D src -d build",
     "build:dev": "babel -D --watch src --out-dir build",
