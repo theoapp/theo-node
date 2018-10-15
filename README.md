@@ -11,6 +11,7 @@ It allows you to set fine permissions (specific user and host) or to use wildcar
 - [System Requirements](#system-requirements)
 - [Prerequisites](#prerequisites)
 - [Cookbook](#cookbook)
+- [Caching](#caching)
 
 ### System Requirements
 
@@ -156,3 +157,23 @@ reload sshd
 and now you can connect to it:
 
 `ssh ubuntu@srv-sample-01`
+
+### Caching
+
+Optionally you can enable caching using `memcached` or `redis`, just add to your env these variables:
+
+For memcached:
+
+```
+CACHE_ENABLED=memcached
+CACHE_URI=localhost:11211
+```
+
+For redis:
+```
+CACHE_ENABLED=redis
+CACHE_URI=redis://localhost:6379
+```
+
+Cfg also [docker-compose-memcached](`examples/docler-compose/docker-compose-memcached.yml`) and [docker-compose-redis](`examples/docler-compose/docker-compose-redis.yml`) for examples
+ 

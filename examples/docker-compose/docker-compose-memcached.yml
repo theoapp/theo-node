@@ -1,0 +1,52 @@
+version: "3"
+
+# IPv4 only
+# docker network create http_network
+
+# IPv4/IPv6 network
+# docker network create http_network --ipv6 --subnet "fd00:0000:0000:0000::/64"
+
+networks:
+  http_network:
+    external: true
+  cache_network:
+    external: false
+services:
+  memcached:
+    image: memcached:1.5-alpine
+    container_name: theo_cache
+    networks:
+      - cache_network
+  theo:
+    image: theoapp/theo
+    container_name: theo
+    restart: ${RESTART_MODE}
+    labels:
+      - traefik.enable=true
+      - traefik.port=9100
+      - traefik.frontend.rule=Host:${THEO_FQDN}
+      - traefik.docker.network=http_network
+    environment:
+      - DATA_PATH=/data/${THEO_DATA_FILE}
+      - ADMIN_TOKEN=${THEO_ADMIN_TOKEN}
+      - CLIENT_TOKENS=${THEO_CLIENT_TOKENS}
+      - CACHE_ENABLED=memcached
+      - CACHE_URI=theo_cache:11211
+    volumes:
+      - ${VOLUMES_ROOT_PATH}/theo:/data
+    networks:
+      - cache_network
+      - http_network
+  traefik:
+    image: traefik:1.7-alpine
+    container_name: traefik
+    restart: ${RESTART_MODE}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${VOLUMES_ROOT_PATH}/traefik/traefik.toml:/traefik.toml:ro
+      - ${VOLUMES_ROOT_PATH}/traefik/acme:/etc/traefik/acme
+    networks:
+      - http_network
