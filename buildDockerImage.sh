@@ -12,4 +12,7 @@ rm -rf build node_modules
 docker run --rm -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm i -g npm && npm i --no-optional && npm run build' 
 
 docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+if [ "$1" = "push" ]; then
+    docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+fi
