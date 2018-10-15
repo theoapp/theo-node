@@ -1,14 +1,16 @@
 import { requireAdminAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
 import AccountManager from '../lib/managers/AccountManager';
-import KeyManager from '../lib/managers/KeyManager';
-import PermissionManager from '../lib/managers/PermissionManager';
 import {
-  adminAddAccountKey, adminAddAccountPermission,
+  adminAddAccountKey,
+  adminAddAccountKeyFromService,
+  adminAddAccountPermission,
   adminCreateAccount,
-  adminDeleteAccount, adminDeleteAccountKey, adminDeleteAccountPermission,
+  adminDeleteAccount,
+  adminDeleteAccountKey,
+  adminDeleteAccountPermission,
   adminEditAccount,
   adminGetAccount
-} from "../lib/helpers/AdminHelper";
+} from '../lib/helpers/AdminHelper';
 
 export default function handleAccounts(server) {
   server.get('/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
@@ -76,6 +78,22 @@ export default function handleAccounts(server) {
   server.post('/accounts/:id/keys', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const ret = await adminAddAccountKey(req.db, Number(req.params.id), req.body.keys);
+      res.json(ret);
+    } catch (err) {
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
+
+  server.post('/accounts/:id/keys/import/:service', requireAdminAuthMiddleware, async (req, res, next) => {
+    console.log('Importing from ', req.params.service);
+    try {
+      const ret = await adminAddAccountKeyFromService(
+        req.db,
+        Number(req.params.id),
+        req.params.service,
+        req.body.username
+      );
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);

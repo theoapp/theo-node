@@ -17,6 +17,7 @@
   "dependencies": {
     "dotenv": "^6.0.0",
     "memcached": "^2.2.2",
+    "node-fetch": "^2.2.0",
     "redis": "^2.8.0",
     "restify": "^7.2.1",
     "sqlite3": "^4.0.2"

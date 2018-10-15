@@ -4,12 +4,10 @@ let _instance;
 
 class CacheHelper {
   constructor(settings) {
-    console.log('CacheHelper init..', settings);
     if (!settings) {
       return;
     }
     if (settings.type && settings.type !== 'false') {
-      console.log('Loading %s', settings.type);
       const ManagerClass = getCacheModule(settings.type);
       if (!ManagerClass) {
         throw new Error('Invalid cache module ' + settings.type);

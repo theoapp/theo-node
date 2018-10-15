@@ -1,6 +1,7 @@
 import AccountManager from '../managers/AccountManager';
 import KeyManager from '../managers/KeyManager';
 import PermissionManager from '../managers/PermissionManager';
+import { getKeysImporterModule, getKeysImporterModulesList } from '../keys_importer/modules';
 
 export const adminCreateAccount = async (db, account) => {
   if (!account.email) {
@@ -78,6 +79,65 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
     await am.get(account_id);
   } catch (err) {
     err.t_code = 404;
+    throw err;
+  }
+  const ret = {
+    account_id,
+    public_keys: []
+  };
+  const km = new KeyManager(db);
+  try {
+    for (let i = 0; i < keys.length; i++) {
+      const _key = keys[i].trim();
+      if (!_key) {
+        continue;
+      }
+      const id = await km.create(account_id, _key);
+      const key = {
+        id,
+        public_key: keys[i]
+      };
+      ret.public_keys.push(key);
+    }
+    return ret;
+  } catch (err) {
+    err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminAddAccountKeyFromService = async (db, account_id, service, username) => {
+  const am = new AccountManager(db);
+  try {
+    await am.get(account_id);
+  } catch (err) {
+    err.t_code = 404;
+    throw err;
+  }
+  if (!service) {
+    const error = new Error('Service not valid');
+    error.t_code = 400;
+    throw error;
+  }
+  if (!username) {
+    const error = new Error('Username not valid');
+    error.t_code = 400;
+    throw error;
+  }
+  let keys;
+  try {
+    const KimClass = getKeysImporterModule(service);
+    if (!KimClass) {
+      const error = new Error(
+        'Service ' + service + ' not found. Valid services are: ' + getKeysImporterModulesList().join(', ')
+      );
+      error.t_code = 400;
+      throw error;
+    }
+    const kim = new KimClass();
+    keys = (await kim.get(username)) || [];
+  } catch (err) {
+    err.t_code = 400;
     throw err;
   }
   const ret = {
