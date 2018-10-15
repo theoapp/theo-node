@@ -34,7 +34,7 @@ You can easily run a Theo server using Theo's docker image:
 
 __NOTE__ don't forget to replace `ADMIN_TOKEN` and `CLIENT_TOKENS` values!
 
-`docker run --rm -v /tmp/theo:/data -e DATA_PATH=/data/theo.db -e ADMIN_TOKEN=12345 -e CLIENT_TOKENS=abcde,fghij -p 9100:9100 theoapp/theo`
+`$ docker run --rm -v /tmp/theo:/data -e DATA_PATH=/data/theo.db -e ADMIN_TOKEN=12345 -e CLIENT_TOKENS=abcde,fghij -p 9100:9100 theoapp/theo`
 
 Then install `theoapp-cli` using npm:
 
@@ -140,7 +140,7 @@ __NOTE__ don't forget to replace the bearer value with one of the `CLIENT_TOKENS
 
 ```
 #!/bin/sh
-curl -H "Authorization: Bearer abcde" http://${THEOSERVER_IP_OR_FQDN}:9100/authorized_keys/$(hostname)/${1}
+curl -H "Authorization: Bearer ${CLIENT_TOKEN}" http://${THEOSERVER_IP_OR_FQDN}:9100/authorized_keys/$(hostname)/${1}
 ```
 
 __remember__ to make it executable! `chmod +x /usr/local/bin/get_ssh_keys.sh` 
@@ -156,7 +156,25 @@ reload sshd
 
 and now you can connect to it:
 
-`ssh ubuntu@srv-sample-01`
+`$ ssh ubuntu@srv-sample-01`
+
+##### Enable client cache
+
+If you want to be sure to be able to login even if theo server is temporarily unavailable, you want to change the script to:
+
+```
+!/bin/sh
+AUTH_KEYS_FILE=/var/cache/theo/${1}
+curl -H "Authorization: Bearer ${CLIENT_TOKEN}" -s -f -o ${AUTH_KEYS_FILE} http://${THEOSERVER_IP_OR_FQDN}:9100/authorized_keys/$(hostname)/${1}
+cat ${AUTH_KEYS_FILE} 2>/dev/null
+```
+
+You'd also need to create and protect the cache dir:
+```
+$ sudo mkdir -p /var/cache/theo
+$ sudo chmod 700 /var/cache/theo/
+$ sudo chown nobody /var/cache/theo/
+``` 
 
 ### Caching
 
