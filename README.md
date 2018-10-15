@@ -175,5 +175,5 @@ CACHE_ENABLED=redis
 CACHE_URI=redis://localhost:6379
 ```
 
-Cfg also [docker-compose-memcached](examples/docler-compose/docker-compose-memcached.yml) and [docker-compose-redis](examples/docler-compose/docker-compose-redis.yml) for examples
+Cfg also [docker-compose-memcached](examples/docker-compose/docker-compose-memcached.yml) and [docker-compose-redis](examples/docker-compose/docker-compose-redis.yml) for examples
  
