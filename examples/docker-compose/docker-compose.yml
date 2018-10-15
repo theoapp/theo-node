@@ -21,7 +21,7 @@ services:
     - traefik.frontend.rule=Host:${THEO_FQDN}
     - traefik.docker.network=http_network
     environment:
-    - DATA_PATH=/data/${THEO_DATA_PATH}
+    - DATA_PATH=/data/${THEO_DATA_FILE}
     - ADMIN_TOKEN=${THEO_ADMIN_TOKEN}
     - CLIENT_TOKENS=${THEO_CLIENT_TOKENS}
     volumes:

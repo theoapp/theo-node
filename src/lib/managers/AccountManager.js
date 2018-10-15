@@ -1,5 +1,8 @@
 import KeyManager from './KeyManager';
 import PermissionManager from './PermissionManager';
+import { loadCacheManager } from '../helpers/CacheHelper';
+
+let _cm;
 
 class AccountManager {
   constructor(db) {
@@ -83,6 +86,14 @@ class AccountManager {
         if (err) {
           reject(err);
           return;
+        }
+        if (_cm === undefined) {
+          _cm = loadCacheManager();
+        }
+        if (_cm !== false) {
+          _cm.flush().catch(err => {
+            console.error('Failed to flush cache', err.message);
+          });
         }
         resolve(this.changes);
       });

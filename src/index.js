@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import restify from 'restify';
 import AppHelper from './lib/helpers/AppHelper';
 import SqliteHelper from './lib/helpers/SqliteHelper';
+import CacheHelper from './lib/helpers/CacheHelper';
 import SqliteManager from './lib/managers/SqliteManager';
 import { initRoutes } from './routes';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
@@ -47,11 +48,29 @@ const setEnv = () => {
   if (httpPort) {
     settings.server.http_port = Number(httpPort);
   }
+  const cache = process.env.CACHE_ENABLED || false;
+  if (cache) {
+    settings.cache = {
+      type: cache,
+      settings: {
+        uri: process.env.CACHE_URI || false,
+        options: process.env.CACHE_OPTIONS || false
+      }
+    };
+  }
 };
 
 setEnv();
 
-AppHelper(settings);
+const ah = AppHelper(settings);
+
+const ch = CacheHelper(ah.getSettings('cache'));
+const cm = ch.getManager();
+if (cm) {
+  cm.flush().catch(er => {
+    console.error('Failed to initialize CacheManager', er.message);
+  });
+}
 
 const sm = new SqliteManager();
 const sh = SqliteHelper(settings.sqlite, sm);
