@@ -103,7 +103,6 @@ class SqliteHelper {
       }
     });
   }
-
 }
 
 const getInstance = (settings, sqliteManager) => {
