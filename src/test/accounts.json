@@ -1117,7 +1117,7 @@
     ],
     "permissions": [
       {
-        "user": "*",
+        "user": "%",
         "host": "mil"
       }
     ]
@@ -1133,7 +1133,7 @@
     "permissions": [
       {
         "user": "mil",
-        "host": "*"
+        "host": "%"
       }
     ]
   },
@@ -1145,8 +1145,8 @@
     ],
     "permissions": [
       {
-        "user": "*",
-        "host": "*"
+        "user": "%",
+        "host": "%"
       }
     ]
   }
