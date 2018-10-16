@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/theoapp/theo-node.svg?branch=master)](https://travis-ci.org/theoapp/theo-node)
 
 Theo is a public key manager, you can use it as replacement for all of your `authorized_keys`   
-It allows you to set fine permissions (specific user and host) or to use wildcard (ex, using host `*.test.sample.com`) 
+It allows you to set fine permissions (specific user and host) or to use wildcard (ex, using host `%.test.sample.com`) 
 
 ### Summary
 
@@ -118,7 +118,7 @@ if john.doe must be able to login as user `ubuntu` on all the servers of your or
 ```
 THEO_URL=http://localhost:9100 THEO_TOKEN=12345 theo \
     permissions add 1 \
-    --host "*" \
+    --host "%" \
     --user ubuntu
 ```
 
