@@ -12,7 +12,7 @@ class PermissionManager {
 
   match(user, host) {
     const sql =
-      'select distinct public_key from accounts a, keys k, permissions p where a.id = k.account_id and a.id = p.account_id and ? glob p.host and ? glob p.user';
+      'select distinct public_key from accounts a, public_keys k, permissions p where a.active = 1 and a.id = k.account_id and a.id = p.account_id and ? like p.host and ? like p.user';
     return new Promise((resolve, reject) => {
       this.db.all(sql, [host, user], (err, rows) => {
         if (err) {

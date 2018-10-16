@@ -11,7 +11,7 @@ class KeyManager {
   }
 
   getAll(account_id, limit, offset) {
-    let sql = 'select id, public_key, created_at from keys where account_id = ? order by created_at ';
+    let sql = 'select id, public_key, created_at from public_keys where account_id = ? order by created_at ';
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -29,7 +29,7 @@ class KeyManager {
   }
 
   create(account_id, key) {
-    const sql = 'insert into keys (account_id, public_key, created_at) values (?, ?, ?) ';
+    const sql = 'insert into public_keys (account_id, public_key, created_at) values (?, ?, ?) ';
 
     return new Promise((resolve, reject) => {
       const am = this.am;
@@ -45,7 +45,7 @@ class KeyManager {
   }
 
   delete(account_id, id) {
-    const sql = 'delete from keys where id = ? and account_id = ?';
+    const sql = 'delete from public_keys where id = ? and account_id = ?';
     return new Promise((resolve, reject) => {
       this.db.run(sql, [id, account_id], async err => {
         if (err) {

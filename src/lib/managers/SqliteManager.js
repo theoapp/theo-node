@@ -1,15 +1,15 @@
 class SqliteManager {
-  dbVersion = 1;
+  dbVersion = 2;
   CREATE_TABLE_ACCOUNTS =
-    'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email text, name text, active int, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
-  CREATE_TABLE_KEYS =
-    'create table keys (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER, public_key text, created_at INTEGER, FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+    'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), active INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
+  CREATE_TABLE_PUBLIC_KEYS =
+    'create table public_keys (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER, public_key varchar(1024), created_at INTEGER, FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
   CREATE_TABLE_PERMISSIONS =
-    'create table permissions (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER, user text, host text, created_at INTEGER, FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+    'create table permissions (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER, user varchar(512), host varchar(512), created_at INTEGER, FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
 
   async initDb(db) {
     await this.runSql(db, this.CREATE_TABLE_ACCOUNTS);
-    await this.runSql(db, this.CREATE_TABLE_KEYS);
+    await this.runSql(db, this.CREATE_TABLE_PUBLIC_KEYS);
     await this.runSql(db, this.CREATE_TABLE_PERMISSIONS);
   }
 
@@ -46,7 +46,15 @@ class SqliteManager {
     });
   }
 
-  async upgradeDb(db, fromVersion) {}
+  async upgradeDb(db, fromVersion) {
+    if (fromVersion < 2) {
+      await this.runSql(db, this.CREATE_TABLE_PUBLIC_KEYS);
+      const updatePublicKeys =
+        'insert into public_keys (id, account_id, public_key, created_at) select id, account_id, public_key, created_at from keys';
+      await this.runSql(db, updatePublicKeys);
+      await this.runSql(db, 'drop table keys');
+    }
+  }
 }
 
 export default SqliteManager;
