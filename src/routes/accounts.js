@@ -16,7 +16,20 @@ export default function handleAccounts(server) {
   server.get('/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
     const am = new AccountManager(req.db);
     try {
-      const accounts = await am.getAll();
+      const { limit, offset } = req.query;
+      const ret = await am.getAll(Number(limit), Number(offset));
+      res.json(ret);
+    } catch (err) {
+      res.status(500);
+      res.json({ status: 500, reason: err.message });
+    }
+  });
+
+  server.get('/accounts/search', requireAdminAuthMiddleware, async (req, res, next) => {
+    const am = new AccountManager(req.db);
+    try {
+      const { name, email, limit, offset } = req.query;
+      const accounts = await am.search(name, email, Number(limit), Number(offset));
       res.json(accounts);
     } catch (err) {
       res.status(500);
