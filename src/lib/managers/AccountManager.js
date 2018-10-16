@@ -3,13 +3,36 @@ import PermissionManager from './PermissionManager';
 import { loadCacheManager } from '../helpers/CacheHelper';
 
 let _cm;
+const MAX_ROWS = 100;
 
 class AccountManager {
   constructor(db) {
     this.db = db;
   }
 
-  getAll(limit, offset) {
+  getAllCount(where = false, whereArgs = []) {
+    const sql = 'select count(*) total from accounts ' + (where || '');
+    return new Promise((resolve, reject) => {
+      this.db.get(sql, whereArgs, (err, row) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(row.total);
+      });
+    });
+  }
+
+  async getAll(limit = 10, offset = 0) {
+    if (limit > MAX_ROWS) {
+      limit = MAX_ROWS;
+    }
+    if (!limit || limit < 1) {
+      limit = 10;
+    }
+    if (!offset || offset < 0) {
+      offset = 0;
+    }
+    const total = await this.getAllCount();
     let sql = 'select id, email, name, active from accounts order by name';
     if (limit) {
       sql += ' limit ' + limit;
@@ -22,7 +45,60 @@ class AccountManager {
         if (err) {
           return reject(err);
         }
-        return resolve(rows);
+        const ret = {
+          rows,
+          limit,
+          offset,
+          total
+        };
+        return resolve(ret);
+      });
+    });
+  }
+
+  async search(name, email, limit = 10, offset = 0) {
+    if (limit > MAX_ROWS) {
+      limit = MAX_ROWS;
+    }
+    if (!limit || limit < 1) {
+      limit = 10;
+    }
+    if (!offset || offset < 0) {
+      offset = 0;
+    }
+    let where = '';
+    let whereArgs = [];
+    if (name && email) {
+      where = 'where name like ? and email like ?';
+      whereArgs.push(`%${name}%`);
+      whereArgs.push(`%${email}%`);
+    } else if (name) {
+      where = 'where name like ?';
+      whereArgs.push(`%${name}%`);
+    } else if (email) {
+      where = 'where email like ?';
+      whereArgs.push(`%${email}%`);
+    }
+    const total = await this.getAllCount(where, whereArgs);
+    let sql = 'select id, email, name, active from accounts ' + where + ' order by name';
+    if (limit) {
+      sql += ' limit ' + limit;
+    }
+    if (offset) {
+      sql += ' offset ' + offset;
+    }
+    return new Promise((resolve, reject) => {
+      this.db.all(sql, whereArgs, (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        const ret = {
+          rows,
+          limit,
+          offset,
+          total
+        };
+        return resolve(ret);
       });
     });
   }
