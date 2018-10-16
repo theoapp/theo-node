@@ -33,7 +33,7 @@ services:
       - CACHE_ENABLED=memcached
       - CACHE_URI=theo_cache:11211
     volumes:
-      - ${VOLUMES_ROOT_PATH}/theo:/data
+      - ${VOLUMES_ROOT_PATH}/data:/data
     networks:
       - cache_network
       - http_network

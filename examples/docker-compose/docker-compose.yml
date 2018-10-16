@@ -25,7 +25,7 @@ services:
     - ADMIN_TOKEN=${THEO_ADMIN_TOKEN}
     - CLIENT_TOKENS=${THEO_CLIENT_TOKENS}
     volumes:
-    - ${VOLUMES_ROOT_PATH}/theo:/data
+    - ${VOLUMES_ROOT_PATH}/data:/data
     networks:
     - http_network
   traefik:

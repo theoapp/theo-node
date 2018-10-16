@@ -33,7 +33,7 @@ services:
       - CACHE_ENABLED=redis
       - CACHE_URI=redis://theo_cache:6379
     volumes:
-      - ${VOLUMES_ROOT_PATH}/theo:/data
+      - ${VOLUMES_ROOT_PATH}/data:/data
     networks:
       - cache_network
       - http_network
