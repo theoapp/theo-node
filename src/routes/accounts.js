@@ -60,7 +60,7 @@ export default function handleAccounts(server) {
   server.put('/accounts/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     const { active } = req.body;
     try {
-      const done = adminEditAccount(req.db, Number(req.params.id), active);
+      const done = await adminEditAccount(req.db, Number(req.params.id), active);
       if (done) {
         res.json({ status: 201 });
       } else {

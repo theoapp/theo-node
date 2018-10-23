@@ -12,9 +12,24 @@ class PermissionManager {
 
   match(user, host) {
     const sql =
-      'select distinct public_key from accounts a, public_keys k, permissions p where a.active = 1 and a.id = k.account_id and a.id = p.account_id and ? like p.host and ? like p.user';
+      'select public_key from accounts a, public_keys k, permissions p ' +
+      'where ? like p.host and ? like p.user ' +
+      'and a.active = 1 ' +
+      'and a.id = k.account_id ' +
+      'and a.id = p.account_id ' +
+      ' union ' +
+      'select public_key from accounts a, public_keys k, permissions p, groups g, groups_accounts ga ' +
+      'where ' +
+      '? like p.host and ? like p.user ' +
+      'and g.active = 1 ' +
+      'and g.id = p.group_id ' +
+      'and g.id = ga.group_id ' +
+      'and a.active = 1 ' +
+      'and a.id = ga.account_id ' +
+      'and a.id = k.account_id ';
+
     return new Promise((resolve, reject) => {
-      this.db.all(sql, [host, user], (err, rows) => {
+      this.db.all(sql, [host, user, host, user], (err, rows) => {
         if (err) {
           return reject(err);
         }
@@ -41,6 +56,24 @@ class PermissionManager {
     });
   }
 
+  getAllGroup(group_id, limit, offset) {
+    let sql = 'select id, user, host, created_at from permissions where group_id = ? order by created_at ';
+    if (limit) {
+      sql += ' limit ' + limit;
+    }
+    if (offset) {
+      sql += ' offset ' + offset;
+    }
+    return new Promise((resolve, reject) => {
+      this.db.all(sql, [group_id], (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(rows);
+      });
+    });
+  }
+
   create(account_id, user, host) {
     const sql = 'insert into permissions (account_id, user, host, created_at) values (?, ?, ?, ?) ';
 
@@ -59,13 +92,41 @@ class PermissionManager {
 
   delete(account_id, id) {
     const sql = 'delete from permissions where id = ? and account_id = ?';
+    const am = this.am;
     return new Promise((resolve, reject) => {
-      this.db.run(sql, [id, account_id], async err => {
+      this.db.run(sql, [id, account_id], async function(err) {
         if (err) {
           reject(err);
           return;
         }
-        await this.am.setUpdatedAt(account_id);
+        await am.setUpdatedAt(account_id);
+        resolve(this.changes);
+      });
+    });
+  }
+
+  createGroup(group_id, user, host) {
+    const sql = 'insert into permissions (group_id, user, host, created_at) values (?, ?, ?, ?) ';
+
+    return new Promise((resolve, reject) => {
+      this.db.run(sql, [group_id, user, host, new Date().getTime()], async function(err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(this.lastID);
+      });
+    });
+  }
+
+  deleteGroup(group_id, id) {
+    const sql = 'delete from permissions where id = ? and group_id = ?';
+    return new Promise((resolve, reject) => {
+      this.db.run(sql, [id, group_id], async err => {
+        if (err) {
+          reject(err);
+          return;
+        }
         resolve(this.changes);
       });
     });

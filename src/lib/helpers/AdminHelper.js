@@ -2,6 +2,8 @@ import AccountManager from '../managers/AccountManager';
 import KeyManager from '../managers/KeyManager';
 import PermissionManager from '../managers/PermissionManager';
 import { getKeysImporterModule, getKeysImporterModulesList } from '../keys_importer/modules';
+import GroupManager from '../managers/GroupManager';
+import GroupAccountManager from '../managers/GroupAccountManager';
 
 export const adminCreateAccount = async (db, account) => {
   if (!account.email) {
@@ -230,6 +232,137 @@ export const adminDeleteAccountPermission = async (db, account_id, permission_id
   const pm = new PermissionManager(db);
   try {
     const ret = await pm.delete(account_id, permission_id);
+    if (ret === 0) {
+      const error = new Error('Permission not found');
+      error.t_code = 404;
+      throw error;
+    }
+    return true;
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+};
+
+// GROUP FUNCTIONS
+
+export const adminCreateGroup = async (db, group) => {
+  if (!group.name) {
+    const error = new Error('Malformed object, name is required');
+    error.t_code = 400;
+    throw error;
+  }
+  const gm = new GroupManager(db);
+  try {
+    const id = await gm.create(group.name);
+    return gm.getFull(id);
+  } catch (err) {
+    err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminGetGroup = async (db, id) => {
+  const gm = new GroupManager(db);
+  try {
+    return gm.getFull(id);
+  } catch (err) {
+    err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminEditGroup = async (db, group_id, active) => {
+  const gm = new GroupManager(db);
+  try {
+    const ret = await gm.changeStatus(group_id, active);
+    if (ret === 0) {
+      const error = new Error('Account not found');
+      error.t_code = 404;
+      throw error;
+    }
+    return true;
+  } catch (err) {
+    err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminDeleteGroup = async (db, group_id) => {
+  const gm = new GroupManager(db);
+  try {
+    const ret = await gm.delete(group_id);
+    if (ret === 0) {
+      const error = new Error('Group not found');
+      error.t_code = 404;
+      throw error;
+    }
+    return true;
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+};
+
+// Group / Account functions
+
+export const adminCreateGroupAccount = async (db, group_id, account) => {
+  if (!account.id) {
+    const error = new Error('Malformed object, id is required');
+    error.t_code = 400;
+    throw error;
+  }
+  const gam = new GroupAccountManager(db);
+  try {
+    await gam.create(group_id, account.id);
+    return true;
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminAddGroupPermission = async (db, group_id, user, host) => {
+  if (!user) {
+    const error = new Error('Malformed object, user is required');
+    error.code = 400;
+    throw error;
+  }
+  if (!host) {
+    const error = new Error('Malformed object, host is required');
+    error.code = 400;
+    throw error;
+  }
+  const gm = new GroupManager(db);
+  try {
+    await gm.get(group_id);
+  } catch (err) {
+    err.t_code = 404;
+    console.log('Throw 404');
+    throw err;
+  }
+  const pm = new PermissionManager(db);
+  try {
+    const permission_id = await pm.createGroup(group_id, user, host);
+    return { group_id, permission_id };
+  } catch (err) {
+    err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminDeleteGroupPermission = async (db, group_id, permission_id) => {
+  const gm = new GroupManager(db);
+  try {
+    await gm.get(group_id);
+  } catch (err) {
+    err.t_code = 404;
+    console.log('Throw 404');
+    throw err;
+  }
+  const pm = new PermissionManager(db);
+  try {
+    const ret = await pm.deleteGroup(group_id, permission_id);
     if (ret === 0) {
       const error = new Error('Permission not found');
       error.t_code = 404;
