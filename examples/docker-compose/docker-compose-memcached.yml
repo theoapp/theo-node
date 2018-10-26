@@ -15,6 +15,7 @@ services:
   memcached:
     image: memcached:1.5-alpine
     container_name: theo_cache
+    restart: ${RESTART_MODE}
     networks:
       - cache_network
   theo:
