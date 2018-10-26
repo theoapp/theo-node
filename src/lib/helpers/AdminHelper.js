@@ -277,7 +277,7 @@ export const adminEditGroup = async (db, group_id, active) => {
   try {
     const ret = await gm.changeStatus(group_id, active);
     if (ret === 0) {
-      const error = new Error('Account not found');
+      const error = new Error('Group not found');
       error.t_code = 404;
       throw error;
     }
