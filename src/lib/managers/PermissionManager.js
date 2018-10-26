@@ -12,13 +12,15 @@ class PermissionManager {
 
   match(user, host) {
     const sql =
-      'select public_key from accounts a, public_keys k, permissions p ' +
+      'select public_key ' +
+      ' from accounts a, public_keys k, permissions p ' +
       'where ? like p.host and ? like p.user ' +
       'and a.active = 1 ' +
       'and a.id = k.account_id ' +
       'and a.id = p.account_id ' +
       ' union ' +
-      'select public_key from accounts a, public_keys k, permissions p, groups g, groups_accounts ga ' +
+      'select public_key ' +
+      ' from accounts a, public_keys k, permissions p, groups g, groups_accounts ga ' +
       'where ' +
       '? like p.host and ? like p.user ' +
       'and g.active = 1 ' +

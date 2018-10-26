@@ -7,12 +7,19 @@ import SqliteHelper, { releaseSHInstance } from '../lib/helpers/SqliteHelper';
 import {
   adminAddAccountKey,
   adminAddAccountPermission,
+  adminAddGroupPermission,
   adminCreateAccount,
+  adminCreateGroup,
+  adminCreateGroupAccount,
   adminDeleteAccount,
   adminDeleteAccountKey,
   adminDeleteAccountPermission,
+  adminDeleteGroupAccount,
+  adminDeleteGroupPermission,
   adminEditAccount,
-  adminGetAccount
+  adminEditGroup,
+  adminGetAccount,
+  adminGetGroup
 } from '../lib/helpers/AdminHelper';
 
 const dataPath = './data';
@@ -45,7 +52,7 @@ const loadDb = function(sm) {
 
 const sm = new SqliteManager();
 
-describe('Create account', function() {
+describe('Test account', function() {
   this.timeout(10000);
   let db;
   before(async function() {
@@ -66,7 +73,7 @@ describe('Create account', function() {
     releaseSHInstance();
   });
 
-  describe('with nome and email', function() {
+  describe('with name and email', function() {
     it('should return an account object with no keys nor permissions', async function() {
       const reqAccount = {
         name: 'john.doe',
@@ -84,7 +91,55 @@ describe('Create account', function() {
     });
   });
 
-  describe('with nome and email and 1 key', function() {
+  describe('retrieve account by email', function() {
+    it('should return an account object with no keys nor permissions', async function() {
+      const email = 'john.doe@example.com';
+      const resAccount = await adminGetAccount(db, email);
+      assert.equal(typeof resAccount.id, 'number');
+      assert.equal(resAccount.email, email);
+      assert.equal(resAccount.active, 1);
+      assert.equal(resAccount.public_keys.length, 0);
+      assert.equal(resAccount.permissions.length, 0);
+    });
+  });
+
+  describe('without name', function() {
+    it('should return an error', async function() {
+      const reqAccount = {
+        email: 'john.doe@example.com'
+      };
+
+      let error;
+      let resAccount;
+      try {
+        resAccount = await adminCreateAccount(db, reqAccount);
+      } catch (er) {
+        error = er;
+      }
+      assert.notEqual(typeof error, 'undefined');
+      assert.equal(typeof resAccount, 'undefined');
+    });
+  });
+
+  describe('without email', function() {
+    it('should return an error', async function() {
+      const reqAccount = {
+        name: 'john.doe'
+      };
+
+      let error;
+      let resAccount;
+      try {
+        resAccount = await adminCreateAccount(db, reqAccount);
+      } catch (er) {
+        error = er;
+      }
+      assert.notEqual(typeof error, 'undefined');
+      assert.equal(typeof resAccount, 'undefined');
+    });
+  });
+
+  describe('with name and email and 1 key', function() {
     it('should return an account object with 1 key and no permissions', async function() {
       const reqAccount = {
         name: 'john.doe',
@@ -104,7 +159,7 @@ describe('Create account', function() {
     });
   });
 
-  describe('with nome and email and 2 keys', function() {
+  describe('with name and email and 2 keys', function() {
     it('should return an account object with 2 keys and no permissions', async function() {
       const reqAccount = {
         name: 'john.doe',
@@ -148,6 +203,7 @@ describe('Create account', function() {
         await adminGetAccount(db, 2);
         assert.equal(true, false);
       } catch (err) {
+        console.error('Fuck', err);
         assert.equal(err.t_code, 404);
       }
     });
@@ -209,6 +265,161 @@ describe('Create account', function() {
       }
       const resAccount = await adminGetAccount(db, 1);
       assert.equal(resAccount.permissions.length, 0);
+    });
+  });
+});
+
+describe('Test group', function() {
+  this.timeout(10000);
+  let db;
+  before(async function() {
+    try {
+      fs.unlinkSync(settings.sqlite.path);
+    } catch (err) {}
+    try {
+      fs.mkdirSync(dataPath);
+    } catch (err) {}
+
+    try {
+      db = await loadDb(sm);
+    } catch (err) {}
+  });
+
+  after(async function() {
+    sh.closeDb();
+    releaseSHInstance();
+  });
+
+  let group_id;
+  let account_id;
+  let permission_id;
+
+  describe('with name', function() {
+    it('should return a group object with no accounts nor permissions', async function() {
+      const reqGroup = {
+        name: 'developers'
+      };
+
+      const resGroup = await adminCreateGroup(db, reqGroup);
+
+      group_id = resGroup.id;
+
+      assert.equal(typeof resGroup.id, 'number');
+      assert.equal(resGroup.name, reqGroup.name);
+      assert.equal(resGroup.active, 1);
+      assert.equal(resGroup.accounts.length, 0);
+      assert.equal(resGroup.permissions.length, 0);
+    });
+  });
+
+  describe('without name', function() {
+    it('should return an error', async function() {
+      const reqGroup = {
+        namex: 'developers'
+      };
+
+      let error;
+      let resGroup;
+      try {
+        resGroup = await adminCreateGroup(db, reqGroup);
+      } catch (er) {
+        error = er;
+      }
+      assert.notEqual(typeof error, 'undefined');
+      assert.equal(typeof resGroup, 'undefined');
+    });
+  });
+
+  describe('edit group status', function() {
+    it('should return a group object with active = false and no accounts nor permissions', async function() {
+      const res = await adminEditGroup(db, group_id, false);
+      assert.equal(res, true);
+      const resGroup = await adminGetGroup(db, group_id);
+      assert.equal(resGroup.active, 0);
+    });
+  });
+
+  describe('add account to group', function() {
+    it('should return a group object with active = false and 1 accounts and no permissions', async function() {
+      const reqAccount = {
+        name: 'john.doe',
+        email: 'john.doe.2@example.com',
+        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian']
+      };
+
+      const resAccount = await adminCreateAccount(db, reqAccount);
+      account_id = resAccount.id;
+      const res = await adminCreateGroupAccount(db, group_id, account_id);
+      assert.equal(res, true);
+      const resGroup = await adminGetGroup(db, group_id);
+      assert.equal(resGroup.active, 0);
+      assert.equal(resGroup.accounts.length, 1);
+      assert.equal(resGroup.accounts[0].id, account_id);
+      assert.equal(resGroup.permissions.length, 0);
+
+      const resAccountWithGroup = await adminGetAccount(db, account_id);
+      assert.equal(resAccountWithGroup.groups.length, 1);
+      assert.equal(resAccountWithGroup.groups[0].id, group_id);
+      assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
+    });
+  });
+
+  describe('remove account from group', function() {
+    it('should return a group object with active = false and 0 accounts and no permissions', async function() {
+      const res = await adminDeleteGroupAccount(db, group_id, account_id);
+      assert.equal(res, true);
+      const resGroup = await adminGetGroup(db, group_id);
+      assert.equal(resGroup.active, 0);
+      assert.equal(resGroup.accounts.length, 0);
+      assert.equal(resGroup.permissions.length, 0);
+    });
+  });
+
+  describe('add permission to group', function() {
+    it('should return a group object with active = false and 0 accounts and 1 permission', async function() {
+      const permission = {
+        user: 'john',
+        host: 'debian'
+      };
+
+      const resPermission = await adminAddGroupPermission(db, group_id, permission.user, permission.host);
+      const resGroup = await adminGetGroup(db, group_id);
+      assert.equal(resGroup.active, 0);
+      assert.equal(resGroup.accounts.length, 0);
+      assert.equal(resGroup.permissions.length, 1);
+      assert.equal(resGroup.permissions[0].id, resPermission.permission_id);
+      assert.equal(resGroup.permissions[0].user, permission.user);
+      assert.equal(resGroup.permissions[0].host, permission.host);
+    });
+  });
+
+  describe('add another permission to group', function() {
+    it('should return a group object with active = false and 0 accounts and 2 permission', async function() {
+      const permission = {
+        user: 'core',
+        host: 'coreos'
+      };
+
+      const resPermission = await adminAddGroupPermission(db, group_id, permission.user, permission.host);
+      permission_id = resPermission.permission_id;
+      const resGroup = await adminGetGroup(db, group_id);
+      assert.equal(resGroup.active, 0);
+      assert.equal(resGroup.accounts.length, 0);
+      assert.equal(resGroup.permissions.length, 2);
+      assert.equal(resGroup.permissions[1].id, permission_id);
+      assert.equal(resGroup.permissions[1].user, permission.user);
+      assert.equal(resGroup.permissions[1].host, permission.host);
+    });
+  });
+
+  describe('delete permission from group', function() {
+    it('should return a group object with active = false and 0 accounts and 1 permission', async function() {
+      const res = await adminDeleteGroupPermission(db, group_id, permission_id);
+      assert.equal(res, true);
+      const resGroup = await adminGetGroup(db, group_id);
+      assert.equal(resGroup.active, 0);
+      assert.equal(resGroup.accounts.length, 0);
+      assert.equal(resGroup.permissions.length, 1);
     });
   });
 });

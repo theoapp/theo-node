@@ -1,6 +1,7 @@
 import KeyManager from './KeyManager';
 import PermissionManager from './PermissionManager';
 import { loadCacheManager } from '../helpers/CacheHelper';
+import GroupAccountManager from './GroupAccountManager';
 
 let _cm;
 const MAX_ROWS = 100;
@@ -103,12 +104,19 @@ class AccountManager {
     });
   }
 
+  async getFullByEmail(email) {
+    const account = await this.getByEmail(email);
+    return this.getFull(account.id);
+  }
+
   async getFull(id) {
     const account = await this.get(id);
     const km = new KeyManager(this.db);
     account.public_keys = await km.getAll(id);
     const pm = new PermissionManager(this.db);
     account.permissions = await pm.getAll(id);
+    const gam = new GroupAccountManager(this.db);
+    account.groups = await gam.getAllByAccount(id);
     return account;
   }
 
@@ -127,6 +135,20 @@ class AccountManager {
     });
   }
 
+  getByEmail(email) {
+    const sql = 'select id, name, email, active from accounts where email = ? ';
+    return new Promise((resolve, reject) => {
+      this.db.get(sql, [email], (err, row) => {
+        if (err) {
+          return reject(err);
+        }
+        if (!row) {
+          return reject(new Error('Account not found'));
+        }
+        return resolve(row);
+      });
+    });
+  }
   create(account) {
     const sql = 'insert into accounts (email, name, active, created_at) values (?, ?, 1 , ?) ';
 

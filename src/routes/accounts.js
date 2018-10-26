@@ -49,7 +49,7 @@ export default function handleAccounts(server) {
 
   server.get('/accounts/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const account = await adminGetAccount(req.db, Number(req.params.id));
+      const account = await adminGetAccount(req.db, req.params.id);
       res.json(account);
     } catch (err) {
       res.status(err.t_code || 500);

@@ -76,7 +76,7 @@ export default function handleGroups(server) {
 
   server.post('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const ret = await adminCreateGroupAccount(req.db, Number(req.params.id), req.body);
+      const ret = await adminCreateGroupAccount(req.db, Number(req.params.id), req.body.id);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);

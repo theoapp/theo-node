@@ -4,8 +4,16 @@ import fs from 'fs';
 import AppHelper from '../lib/helpers/AppHelper';
 import SqliteManager from '../lib/managers/SqliteManager';
 import SqliteHelper, { releaseSHInstance } from '../lib/helpers/SqliteHelper';
-import { adminAddAccountPermission, adminCreateAccount, adminGetAccount } from '../lib/helpers/AdminHelper';
+import {
+  adminAddAccountPermission,
+  adminAddGroupPermission,
+  adminCreateAccount,
+  adminCreateGroup,
+  adminCreateGroupAccount,
+  adminGetAccount
+} from '../lib/helpers/AdminHelper';
 import accountsJson from './accounts';
+import groupsJson from './groups';
 import { getAuthorizedKeys } from '../lib/helpers/KeysHelper';
 
 const dataPath = './data';
@@ -46,6 +54,17 @@ const loadData = async function(db) {
         accountsJson[i].permissions[ii].user,
         accountsJson[i].permissions[ii].host
       );
+    }
+  }
+  for (let i = 0; i < groupsJson.length; i++) {
+    const group = await adminCreateGroup(db, { name: groupsJson[i].name });
+    for (let ii = 0; ii < groupsJson[i].permissions.length; ii++) {
+      const { user, host } = groupsJson[i].permissions[ii];
+      await adminAddGroupPermission(db, group.id, user, host);
+    }
+    for (let ii = 0; ii < groupsJson[i].accounts.length; ii++) {
+      const account = await adminGetAccount(db, groupsJson[i].accounts[ii].email);
+      await adminCreateGroupAccount(db, group.id, account.id);
     }
   }
 };
@@ -102,6 +121,13 @@ describe('Check keys', function() {
     it('should return 1 rows (only Jolly user 3)', async function() {
       const res = await getAuthorizedKeys(db, 'unkown', 'unkown');
       assert.equal(res.split('\n').length, 1);
+    });
+  });
+
+  describe('check authorized_keys for user=name and host=edu', function() {
+    it('should return 10 rows per 4 users (5 + 2 + 2 + 1)', async function() {
+      const res = await getAuthorizedKeys(db, 'name', 'edu');
+      assert.equal(res.split('\n').length, 10);
     });
   });
 });

@@ -17,14 +17,18 @@ export const getAuthorizedKeys = async function(db, user, host) {
       console.error('Failed to fetch from cache, using db', err.message);
     }
   }
+  const keys = await getAuthorizedKeysAsJson(db, user, host);
+  const skeys = keys.map(key => key.public_key).join('\n');
+  if (_cm !== false) {
+    await _cm.set(`${user}_${host}`, skeys);
+  }
+  return skeys;
+};
+
+export const getAuthorizedKeysAsJson = async function(db, user, host) {
   const pm = new PermissionManager(db);
   try {
-    const keys = await pm.match(user, host);
-    const skeys = keys.map(key => key.public_key).join('\n');
-    if (_cm !== false) {
-      await _cm.set(`${user}_${host}`, skeys);
-    }
-    return skeys;
+    return pm.match(user, host);
   } catch (err) {
     err.t_code = 500;
     throw err;

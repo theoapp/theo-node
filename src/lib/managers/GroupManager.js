@@ -1,5 +1,5 @@
-import GroupAccountManager from "./GroupAccountManager";
-import PermissionManager from "./PermissionManager";
+import GroupAccountManager from './GroupAccountManager';
+import PermissionManager from './PermissionManager';
 
 class GroupManager {
   constructor(db, am) {

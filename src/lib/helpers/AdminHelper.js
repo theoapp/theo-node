@@ -50,13 +50,24 @@ export const adminEditAccount = async (db, account_id, active) => {
 
 export const adminGetAccount = async (db, account_id) => {
   const am = new AccountManager(db);
+
+  let account;
+
   try {
-    return await am.getFull(account_id);
+    if (isNaN(account_id)) {
+      account = await am.getFullByEmail(account_id);
+    } else {
+      account = await am.getFull(Number(account_id));
+    }
   } catch (err) {
+    console.error('Got error while retrieving account', err);
     const error = new Error('Account not found');
     error.t_code = 404;
+    console.log('Throwing error ', error.t_code);
     throw error;
   }
+
+  return account;
 };
 
 export const adminDeleteAccount = async (db, account_id) => {
@@ -306,15 +317,15 @@ export const adminDeleteGroup = async (db, group_id) => {
 
 // Group / Account functions
 
-export const adminCreateGroupAccount = async (db, group_id, account) => {
-  if (!account.id) {
+export const adminCreateGroupAccount = async (db, group_id, account_id) => {
+  if (!account_id) {
     const error = new Error('Malformed object, id is required');
     error.t_code = 400;
     throw error;
   }
   const gam = new GroupAccountManager(db);
   try {
-    await gam.create(group_id, account.id);
+    await gam.create(group_id, account_id);
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -368,6 +379,27 @@ export const adminDeleteGroupPermission = async (db, group_id, permission_id) =>
       error.t_code = 404;
       throw error;
     }
+    return true;
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminDeleteGroupAccount = async (db, group_id, account_id) => {
+  if (!group_id) {
+    const error = new Error('Malformed url, group_id is required');
+    error.t_code = 400;
+    throw error;
+  }
+  if (!account_id) {
+    const error = new Error('Malformed object, body.id is required');
+    error.t_code = 400;
+    throw error;
+  }
+  const gam = new GroupAccountManager(db);
+  try {
+    await gam.delete(group_id, account_id);
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;

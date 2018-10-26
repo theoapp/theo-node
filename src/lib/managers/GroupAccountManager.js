@@ -1,5 +1,5 @@
 class GroupAccountManager {
-  constructor(db, am) {
+  constructor(db) {
     this.db = db;
   }
 
@@ -35,15 +35,34 @@ class GroupAccountManager {
     });
   }
 
-  delete(id) {
-    const sql = 'delete from groups_accounts where id = ?';
+  delete(group_id, account_id) {
+    const sql = 'delete from groups_accounts where group_id = ? and account_id = ?';
     return new Promise((resolve, reject) => {
-      this.db.run(sql, [id], async function(err) {
+      this.db.run(sql, [group_id, account_id], async function(err) {
         if (err) {
           reject(err);
           return;
         }
         resolve(this.changes);
+      });
+    });
+  }
+
+  getAllByAccount(account_id, limit, offset) {
+    let sql =
+      'select ga.id, g.id, g.name, g.active from groups_accounts ga, groups g where g.id = ga.group_id and ga.account_id = ? order by name asc';
+    if (limit) {
+      sql += ' limit ' + limit;
+    }
+    if (offset) {
+      sql += ' offset ' + offset;
+    }
+    return new Promise((resolve, reject) => {
+      this.db.all(sql, [account_id], (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(rows);
       });
     });
   }

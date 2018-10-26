@@ -1,0 +1,19 @@
+[
+  {
+    "name": "admin",
+    "permissions": [
+      {
+        "user": "name",
+        "host": "edu"
+      }
+    ],
+    "accounts": [
+      {
+        "email": "asiemantel1c@redcross.org"
+      },
+      {
+        "email": "scallar1b@1und1.de"
+      }
+    ]
+  }
+]
