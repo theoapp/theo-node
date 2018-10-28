@@ -1,5 +1,4 @@
 import assert from 'assert';
-import fs from 'fs';
 
 import AppHelper from '../lib/helpers/AppHelper';
 import SqliteManager from '../lib/managers/SqliteManager';
@@ -16,8 +15,6 @@ import accountsJson from './accounts';
 import groupsJson from './groups';
 import { getAuthorizedKeys } from '../lib/helpers/KeysHelper';
 
-const dataPath = './data';
-
 const settings = {
   admin: {
     token: ''
@@ -26,7 +23,7 @@ const settings = {
     tokens: []
   },
   sqlite: {
-    path: dataPath + '/theo_test.db'
+    path: ':memory:'
   },
   server: {
     http_port: 9100
@@ -76,19 +73,11 @@ describe('Check keys', function() {
   let db;
   before(async function() {
     try {
-      fs.unlinkSync(settings.sqlite.path);
-    } catch (err) {}
-    try {
-      fs.mkdirSync(dataPath);
-    } catch (err) {}
-
-    try {
       db = await loadDb(sm);
     } catch (err) {}
   });
 
   after(async function() {
-    sh.closeDb();
     releaseSHInstance();
   });
 

@@ -17,7 +17,8 @@ jobs:
     - stage: test
       script:
         - docker run --rm -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm i -g npm && npm i --no-optional && npm run build'
-        - docker run --rm -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm test'
+        - docker run -d --rm --name theo -e MODE=test -e DATA_PATH=":memory:" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm start'
+        - docker run --rm --link theo -e "THEO_URL=http://theo:9100" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm test'
     - stage: build
       script:
         - docker run --rm -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm i -g npm && npm i --no-optional && npm run build'

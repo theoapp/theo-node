@@ -5,6 +5,7 @@ import {
   adminCreateGroup,
   adminCreateGroupAccount,
   adminDeleteGroup,
+  adminDeleteGroupAccount,
   adminDeleteGroupPermission,
   adminEditGroup,
   adminGetGroup
@@ -48,6 +49,7 @@ export default function handleGroups(server) {
     try {
       const done = await adminEditGroup(req.db, Number(req.params.id), active);
       if (done) {
+        res.status(201);
         res.json({ status: 201 });
       } else {
         res.status(500);
@@ -63,6 +65,7 @@ export default function handleGroups(server) {
     try {
       const done = await adminDeleteGroup(req.db, Number(req.params.id));
       if (done) {
+        res.status(201);
         res.json({ status: 201 });
       } else {
         res.status(500);
@@ -76,8 +79,14 @@ export default function handleGroups(server) {
 
   server.post('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const ret = await adminCreateGroupAccount(req.db, Number(req.params.id), req.body.id);
-      res.json(ret);
+      const done = await adminCreateGroupAccount(req.db, Number(req.params.id), req.body.id);
+      if (done) {
+        res.status(201);
+        res.json({ status: 201 });
+      } else {
+        res.status(500);
+        res.json({ status: 500, reason: 'Unkown error' });
+      }
     } catch (err) {
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
@@ -85,8 +94,19 @@ export default function handleGroups(server) {
   });
 
   server.del('/groups/:id/:account_id', requireAdminAuthMiddleware, async (req, res, next) => {
-    res.status(501);
-    res.json({ status: 501, reason: 'Not implemented' });
+    try {
+      const done = await adminDeleteGroupAccount(req.db, Number(req.params.id), Number(req.params.account_id));
+      if (done) {
+        res.status(201);
+        res.json({ status: 201 });
+      } else {
+        res.status(500);
+        res.json({ status: 500, reason: 'Unkown error' });
+      }
+    } catch (err) {
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
   });
 
   server.post('/groups/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
@@ -104,6 +124,7 @@ export default function handleGroups(server) {
     try {
       const done = await adminDeleteGroupPermission(req.db, Number(req.params.id), Number(req.params.permission_id));
       if (done) {
+        res.status(201);
         res.json({ status: 201 });
       } else {
         res.status(500);

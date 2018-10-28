@@ -1,16 +1,11 @@
 import KeyManager from './KeyManager';
 import PermissionManager from './PermissionManager';
-import { loadCacheManager } from '../helpers/CacheHelper';
 import GroupAccountManager from './GroupAccountManager';
+import BaseCacheManager from './BaseCacheManager';
 
-let _cm;
 const MAX_ROWS = 100;
 
-class AccountManager {
-  constructor(db) {
-    this.db = db;
-  }
-
+class AccountManager extends BaseCacheManager {
   getAllCount(where = false, whereArgs = []) {
     const sql = 'select count(*) total from accounts ' + (where || '');
     return new Promise((resolve, reject) => {
@@ -149,15 +144,17 @@ class AccountManager {
       });
     });
   }
+
   create(account) {
     const sql = 'insert into accounts (email, name, active, created_at) values (?, ?, 1 , ?) ';
-
     return new Promise((resolve, reject) => {
+      const that = this;
       this.db.run(sql, [account.email, account.name, new Date().getTime()], async function(err) {
         if (err) {
           reject(err);
           return;
         }
+        that.invalidateCache();
         resolve(this.lastID);
       });
     });
@@ -167,11 +164,13 @@ class AccountManager {
     const sql = 'update accounts set active = ?, updated_at = ? where id = ? ';
     active = !!active;
     return new Promise((resolve, reject) => {
+      const that = this;
       this.db.run(sql, [active, new Date().getTime(), id], async function(err) {
         if (err) {
           reject(err);
           return;
         }
+        that.invalidateCache();
         resolve(this.changes);
       });
     });
@@ -180,19 +179,13 @@ class AccountManager {
   setUpdatedAt(id) {
     const sql = 'update accounts set updated_at = ? where id = ? ';
     return new Promise((resolve, reject) => {
+      const that = this;
       this.db.run(sql, [new Date().getTime(), id], async function(err) {
         if (err) {
           reject(err);
           return;
         }
-        if (_cm === undefined) {
-          _cm = loadCacheManager();
-        }
-        if (_cm !== false) {
-          _cm.flush().catch(err => {
-            console.error('Failed to flush cache', err.message);
-          });
-        }
+        that.invalidateCache();
         resolve(this.changes);
       });
     });
@@ -201,11 +194,13 @@ class AccountManager {
   delete(id) {
     const sql = 'delete from accounts where id = ? ';
     return new Promise((resolve, reject) => {
+      const that = this;
       this.db.run(sql, [id], async function(err) {
         if (err) {
           reject(err);
           return;
         }
+        that.invalidateCache();
         resolve(this.changes);
       });
     });

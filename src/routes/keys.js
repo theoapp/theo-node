@@ -4,7 +4,6 @@ import { getAuthorizedKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysH
 export default function handleKeys(server) {
   server.get('/authorized_keys/:host/:user', requireAuthMiddleware, async (req, res, next) => {
     const accept = req.header('Accept');
-
     const { host, user } = req.params;
     try {
       if (accept && accept.indexOf('application/json') >= 0) {

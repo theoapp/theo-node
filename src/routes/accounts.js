@@ -62,6 +62,7 @@ export default function handleAccounts(server) {
     try {
       const done = await adminEditAccount(req.db, Number(req.params.id), active);
       if (done) {
+        res.status(201);
         res.json({ status: 201 });
       } else {
         res.status(500);
@@ -77,6 +78,7 @@ export default function handleAccounts(server) {
     try {
       const done = await adminDeleteAccount(req.db, Number(req.params.id));
       if (done) {
+        res.status(201);
         res.json({ status: 201 });
       } else {
         res.status(500);
@@ -99,7 +101,6 @@ export default function handleAccounts(server) {
   });
 
   server.post('/accounts/:id/keys/import/:service', requireAdminAuthMiddleware, async (req, res, next) => {
-    console.log('Importing from ', req.params.service);
     try {
       const ret = await adminAddAccountKeyFromService(
         req.db,
@@ -118,6 +119,7 @@ export default function handleAccounts(server) {
     try {
       const done = await adminDeleteAccountKey(req.db, Number(req.params.id), Number(req.params.key_id));
       if (done) {
+        res.status(201);
         res.json({ status: 201 });
       } else {
         res.status(500);
@@ -144,6 +146,7 @@ export default function handleAccounts(server) {
     try {
       const done = await adminDeleteAccountPermission(req.db, Number(req.params.id), Number(req.params.permission_id));
       if (done) {
+        res.status(201);
         res.json({ status: 201 });
       } else {
         res.status(500);

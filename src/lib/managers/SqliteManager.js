@@ -1,21 +1,29 @@
 class SqliteManager {
-  dbVersion = 4;
+  dbVersion = 5;
+
   CREATE_TABLE_ACCOUNTS =
-    'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), active INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
+    'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), ' +
+    'active INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
+
   CREATE_TABLE_GROUPS =
-    'create table groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (name))';
+    'create table groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, ' +
+    'updated_at INTEGER, created_at INTEGER, UNIQUE (name))';
 
   CREATE_TABLE_GROUPS_ACCOUNTS =
     'create table groups_accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
     'account_id INTEGER, ' +
     'group_id INTEGER, ' +
+    'updated_at INTEGER, ' +
     'created_at INTEGER, ' +
     'UNIQUE (account_id, group_id), ' +
     'FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE, ' +
     'FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PUBLIC_KEYS =
-    'create table public_keys (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER, public_key varchar(1024), created_at INTEGER, FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+    'create table public_keys (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER, ' +
+    'public_key varchar(1024), created_at INTEGER, ' +
+    'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+
   CREATE_TABLE_PERMISSIONS =
     'create table permissions (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
     'account_id INTEGER, ' +
@@ -80,7 +88,6 @@ class SqliteManager {
       await this.runSql(db, this.CREATE_TABLE_GROUPS_ACCOUNTS);
     }
     if (fromVersion < 4) {
-
       await this.runSql(db, 'create table permissions_tmp as select * from permissions');
       await this.runSql(db, 'drop table permissions');
       await this.runSql(db, this.CREATE_TABLE_PERMISSIONS);
@@ -89,6 +96,11 @@ class SqliteManager {
         'insert into permissions (id, account_id, user, host, created_at) select id, account_id, user, host, created_at from permissions_tmp'
       );
       await this.runSql(db, 'drop table permissions_tmp');
+    }
+    if (fromVersion < 5) {
+      try {
+        await this.runSql(db, 'alter table groups add updated_at integer');
+      } catch (err) {}
     }
   }
 }

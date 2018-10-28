@@ -1,5 +1,4 @@
 import assert from 'assert';
-import fs from 'fs';
 
 import AppHelper from '../lib/helpers/AppHelper';
 import SqliteManager from '../lib/managers/SqliteManager';
@@ -22,8 +21,6 @@ import {
   adminGetGroup
 } from '../lib/helpers/AdminHelper';
 
-const dataPath = './data';
-
 const settings = {
   admin: {
     token: ''
@@ -32,7 +29,7 @@ const settings = {
     tokens: []
   },
   sqlite: {
-    path: dataPath + '/theo_test.db'
+    path: ':memory:'
   },
   server: {
     http_port: 9100
@@ -57,19 +54,11 @@ describe('Test account', function() {
   let db;
   before(async function() {
     try {
-      fs.unlinkSync(settings.sqlite.path);
-    } catch (err) {}
-    try {
-      fs.mkdirSync(dataPath);
-    } catch (err) {}
-
-    try {
       db = await loadDb(sm);
     } catch (err) {}
   });
 
   after(async function() {
-    sh.closeDb();
     releaseSHInstance();
   });
 
@@ -203,7 +192,6 @@ describe('Test account', function() {
         await adminGetAccount(db, 2);
         assert.equal(true, false);
       } catch (err) {
-        console.error('Fuck', err);
         assert.equal(err.t_code, 404);
       }
     });
@@ -229,7 +217,6 @@ describe('Test account', function() {
       try {
         await adminDeleteAccountKey(db, 1, 4);
       } catch (err) {
-        console.error(err);
         assert.equal(true, false);
       }
       const resAccount = await adminGetAccount(db, 1);
@@ -274,19 +261,11 @@ describe('Test group', function() {
   let db;
   before(async function() {
     try {
-      fs.unlinkSync(settings.sqlite.path);
-    } catch (err) {}
-    try {
-      fs.mkdirSync(dataPath);
-    } catch (err) {}
-
-    try {
       db = await loadDb(sm);
     } catch (err) {}
   });
 
   after(async function() {
-    sh.closeDb();
     releaseSHInstance();
   });
 

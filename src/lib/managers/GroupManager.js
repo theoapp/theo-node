@@ -1,11 +1,9 @@
 import GroupAccountManager from './GroupAccountManager';
 import PermissionManager from './PermissionManager';
+import { loadCacheManager } from '../helpers/CacheHelper';
+import BaseCacheManager from './BaseCacheManager';
 
-class GroupManager {
-  constructor(db, am) {
-    this.db = db;
-  }
-
+class GroupManager extends BaseCacheManager {
   getAll(limit, offset) {
     let sql = 'select id, name, created_at from groups order by name asc';
     if (limit) {
@@ -41,7 +39,6 @@ class GroupManager {
 
   create(name) {
     const sql = 'insert into groups (name, active, created_at) values (?, 1, ?) ';
-
     return new Promise((resolve, reject) => {
       this.db.run(sql, [name, new Date().getTime()], async function(err) {
         if (err) {
@@ -56,11 +53,13 @@ class GroupManager {
   delete(id) {
     const sql = 'delete from groups where id = ?';
     return new Promise((resolve, reject) => {
+      const that = this;
       this.db.run(sql, [id], async function(err) {
         if (err) {
           reject(err);
           return;
         }
+        that.invalidateCache();
         resolve(this.changes);
       });
     });
@@ -70,11 +69,28 @@ class GroupManager {
     const sql = 'update groups set active = ?, updated_at = ? where id = ? ';
     active = !!active;
     return new Promise((resolve, reject) => {
+      const that = this;
       this.db.run(sql, [active, new Date().getTime(), id], async function(err) {
         if (err) {
           reject(err);
           return;
         }
+        that.invalidateCache();
+        resolve(this.changes);
+      });
+    });
+  }
+
+  setUpdatedAt(id) {
+    const sql = 'update groups set updated_at = ? where id = ? ';
+    return new Promise((resolve, reject) => {
+      const that = this;
+      this.db.run(sql, [new Date().getTime(), id], async function(err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        that.invalidateCache();
         resolve(this.changes);
       });
     });

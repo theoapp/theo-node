@@ -50,13 +50,10 @@ class MemcachedManager extends CachedManager {
   }
   flush() {
     return new Promise((resolve, reject) => {
-      console.log('MemcachedManager flushing');
       this.memcached.flush(err => {
         if (err) {
-          console.log('MemcachedManager failed to flush');
           return reject(err);
         }
-        console.log('MemcachedManager flushed');
         resolve(true);
       });
     });

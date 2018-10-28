@@ -2,9 +2,12 @@ import sqlite3 from 'sqlite3';
 
 let _instance;
 
+const IN_MEMORY_DB = ':memory:';
+
 class SqliteHelper {
   constructor(settings, sqliteManager) {
     this.sqliteManager = sqliteManager;
+    this.is_in_memory = settings.path === IN_MEMORY_DB;
     this.db = new sqlite3.Database(settings.path);
     this.db.run('PRAGMA foreign_keys = ON');
   }
@@ -103,6 +106,13 @@ class SqliteHelper {
       }
     });
   }
+
+  async _flush() {
+    if (this.is_in_memory) {
+      this.db = new sqlite3.Database(IN_MEMORY_DB);
+      this.checkDb();
+    }
+  }
 }
 
 const getInstance = (settings, sqliteManager) => {
@@ -119,5 +129,8 @@ const getInstance = (settings, sqliteManager) => {
 export default getInstance;
 
 export const releaseSHInstance = () => {
+  if (_instance !== null) {
+    _instance.closeDb();
+  }
   _instance = null;
 };
