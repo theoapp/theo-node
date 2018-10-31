@@ -137,48 +137,53 @@ You should see this output
 On every server you want to connect to, create a simple script and save it, ex: `/usr/local/bin/get_ssh_keys.sh`:
 
 __NOTE__ don't forget to replace the bearer value with one of the `CLIENT_TOKENS` you used before
-
+__NOTE 2__ check the output of `hostname` it must match the value you used when adding the permissions above
+ 
 ```
 #!/bin/sh
-curl -H "Authorization: Bearer ${CLIENT_TOKEN}" http://${THEOSERVER_IP_OR_FQDN}:9100/authorized_keys/$(hostname)/${1}
-```
-
-__remember__ to make it executable! `chmod +x /usr/local/bin/get_ssh_keys.sh` 
-
-Then in your `/etc/sshd_config` you only need to add:
-
-```
-AuthorizedKeysCommand /usr/local/bin/get_ssh_keys.sh
-AuthorizedKeysCommandUser nobody
-```
-
-reload sshd
-
-and now you can connect to it:
-
-`$ ssh ubuntu@srv-sample-01`
-
-##### Enable client cache
-
-If you want to be sure to be able to login even if theo server is temporarily unavailable, you want to change the script to:
-
-```
-!/bin/sh
 AUTH_KEYS_FILE=/var/cache/theo/${1}
 curl -H "Authorization: Bearer ${CLIENT_TOKEN}" -s -f -o ${AUTH_KEYS_FILE} http://${THEOSERVER_IP_OR_FQDN}:9100/authorized_keys/$(hostname)/${1}
 cat ${AUTH_KEYS_FILE} 2>/dev/null
 ```
 
-You'd also need to create and protect the cache dir:
+__remember__ to protect it and make it executable! `chmod 755 /usr/local/bin/get_ssh_keys.sh` 
+
+Create and protect the theo dir:
+
 ```
 $ sudo mkdir -p /var/cache/theo
 $ sudo chmod 700 /var/cache/theo/
 $ sudo chown nobody /var/cache/theo/
 ``` 
 
+Then in your `/etc/sshd_config` you need to add:
+
+```
+AuthorizedKeysFile /var/cache/theo/%u
+AuthorizedKeysCommand /usr/local/bin/get_ssh_keys.sh
+AuthorizedKeysCommandUser nobody
+```
+
+Be sure password authentication is disabled
+
+```
+PasswordAuthentication no
+```
+
+
+reload sshd
+
+**NOTE** do not logout until you're sure everything is working!
+
+from another terminal try to connect to the server:
+
+`$ ssh ubuntu@srv-sample-01`
+
+
+
 ### Caching
 
-Optionally you can enable caching using `memcached` or `redis`, just add to your env these variables:
+Optionally you can enable keys caching on theo using `memcached` or `redis`, just add to your env these variables:
 
 For memcached:
 
