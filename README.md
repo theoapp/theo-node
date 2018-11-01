@@ -134,9 +134,9 @@ You should see this output
 
 #### 2 - Theo Agent
 
-On every server you want to connect to, you need to configue a theo agent.  
+On every server you want to connect to, you need to configue an agent.  
 You can use the `theo-agent` or do everything manually.
- 
+
 1. Install `theo-agent`
 
     See [theo-agent](https://github.com/theoapp/theo-agent)  repo
