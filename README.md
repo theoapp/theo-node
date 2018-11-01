@@ -132,46 +132,54 @@ You should see this output
 +--------------------+
 ```
 
-#### 2 - Theo clients
+#### 2 - Theo Agent
 
-On every server you want to connect to, create a simple script and save it, ex: `/usr/local/bin/get_ssh_keys.sh`:
-
-__NOTE__ don't forget to replace the bearer value with one of the `CLIENT_TOKENS` you used before
-__NOTE 2__ check the output of `hostname` it must match the value you used when adding the permissions above
+On every server you want to connect to, you need to configue a theo agent.  
+You can use the `theo-agent` or do everything manually.
  
-```
-#!/bin/sh
-AUTH_KEYS_FILE=/var/cache/theo/${1}
-curl -H "Authorization: Bearer ${CLIENT_TOKEN}" -s -f -o ${AUTH_KEYS_FILE} http://${THEOSERVER_IP_OR_FQDN}:9100/authorized_keys/$(hostname)/${1}
-cat ${AUTH_KEYS_FILE} 2>/dev/null
-```
+1. Install `theo-agent`
 
-__remember__ to protect it and make it executable! `chmod 755 /usr/local/bin/get_ssh_keys.sh` 
+    See [theo-agent](https://github.com/theoapp/theo-agent)  repo
 
-Create and protect the theo dir:
+2. Manually
 
-```
-$ sudo mkdir -p /var/cache/theo
-$ sudo chmod 700 /var/cache/theo/
-$ sudo chown nobody /var/cache/theo/
-``` 
-
-Then in your `/etc/sshd_config` you need to add:
-
-```
-AuthorizedKeysFile /var/cache/theo/%u
-AuthorizedKeysCommand /usr/local/bin/get_ssh_keys.sh
-AuthorizedKeysCommandUser nobody
-```
-
-Be sure password authentication is disabled
-
-```
-PasswordAuthentication no
-```
-
-
-reload sshd
+    Create a simple script and save it, ex: `/usr/local/bin/get_ssh_keys.sh`:
+    
+    __NOTE__ don't forget to replace the bearer value with one of the `CLIENT_TOKENS` you used before
+    __NOTE 2__ check the output of `hostname` it must match the value you used when adding the permissions above
+     
+    ```
+    #!/bin/sh
+    AUTH_KEYS_FILE=/var/cache/theo/${1}
+    curl -H "Authorization: Bearer ${CLIENT_TOKEN}" -s -f -o ${AUTH_KEYS_FILE} http://${THEOSERVER_IP_OR_FQDN}:9100/authorized_keys/$(hostname)/${1}
+    cat ${AUTH_KEYS_FILE} 2>/dev/null
+    ```
+    
+    __remember__ to protect it and make it executable! `chmod 755 /usr/local/bin/get_ssh_keys.sh` 
+    
+    Create and protect the theo dir:
+    
+    ```
+    $ sudo mkdir -p /var/cache/theo
+    $ sudo chmod 700 /var/cache/theo/
+    $ sudo chown nobody /var/cache/theo/
+    ``` 
+    
+    Then in your `/etc/sshd_config` you need to add:
+    
+    ```
+    AuthorizedKeysFile /var/cache/theo/%u
+    AuthorizedKeysCommand /usr/local/bin/get_ssh_keys.sh
+    AuthorizedKeysCommandUser nobody
+    ```
+    
+    Be sure password authentication is disabled
+    
+    ```
+    PasswordAuthentication no
+    ```
+    
+    reload sshd
 
 **NOTE** do not logout until you're sure everything is working!
 
