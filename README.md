@@ -143,7 +143,7 @@ You can use the `theo-agent` or do everything manually.
 
 2. Manually
 
-    Create a simple script and save it, ex: `/usr/local/bin/get_ssh_keys.sh`:
+    Create a simple script and save it, ex: `/usr/sbin/get_ssh_keys.sh`:
     
     __NOTE__ don't forget to replace the bearer value with one of the `CLIENT_TOKENS` you used before
     __NOTE 2__ check the output of `hostname` it must match the value you used when adding the permissions above
@@ -155,7 +155,11 @@ You can use the `theo-agent` or do everything manually.
     cat ${AUTH_KEYS_FILE} 2>/dev/null
     ```
     
-    __remember__ to protect it and make it executable! `chmod 755 /usr/local/bin/get_ssh_keys.sh` 
+    __remember__ to protect it and make it executable!
+    ```
+    sudo chmod 755 /usr/sbin/get_ssh_keys.sh
+    sudo chown root /usr/sbin/get_ssh_keys.sh
+    ```
     
     Create and protect the theo dir:
     
@@ -169,7 +173,7 @@ You can use the `theo-agent` or do everything manually.
     
     ```
     AuthorizedKeysFile /var/cache/theo/%u
-    AuthorizedKeysCommand /usr/local/bin/get_ssh_keys.sh
+    AuthorizedKeysCommand /usr/sbin/get_ssh_keys.sh
     AuthorizedKeysCommandUser nobody
     ```
     
