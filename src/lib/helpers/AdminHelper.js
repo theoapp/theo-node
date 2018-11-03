@@ -35,6 +35,9 @@ export const adminCreateAccount = async (db, account) => {
 export const adminEditAccount = async (db, account_id, active) => {
   const am = new AccountManager(db);
   try {
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    }
     const ret = await am.changeStatus(account_id, active);
     if (ret === 0) {
       const error = new Error('Account not found');
@@ -71,6 +74,9 @@ export const adminGetAccount = async (db, account_id) => {
 export const adminDeleteAccount = async (db, account_id) => {
   const am = new AccountManager(db);
   try {
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    }
     const ret = await am.delete(account_id);
     if (ret === 0) {
       const error = new Error('Account not found');
@@ -87,7 +93,11 @@ export const adminDeleteAccount = async (db, account_id) => {
 export const adminAddAccountKey = async (db, account_id, keys) => {
   const am = new AccountManager(db);
   try {
-    await am.get(account_id);
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    } else {
+      await am.get(account_id);
+    }
   } catch (err) {
     err.t_code = 404;
     throw err;
@@ -120,7 +130,11 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
 export const adminAddAccountKeyFromService = async (db, account_id, service, username) => {
   const am = new AccountManager(db);
   try {
-    await am.get(account_id);
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    } else {
+      await am.get(account_id);
+    }
   } catch (err) {
     err.t_code = 404;
     throw err;
@@ -179,7 +193,11 @@ export const adminAddAccountKeyFromService = async (db, account_id, service, use
 export const adminDeleteAccountKey = async (db, account_id, key_id) => {
   const am = new AccountManager(db);
   try {
-    await am.get(account_id);
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    } else {
+      await am.get(account_id);
+    }
   } catch (err) {
     err.t_code = 404;
     console.log('Throw 404');
@@ -213,7 +231,11 @@ export const adminAddAccountPermission = async (db, account_id, user, host) => {
   }
   const am = new AccountManager(db);
   try {
-    await am.get(account_id);
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    } else {
+      await am.get(account_id);
+    }
   } catch (err) {
     err.t_code = 404;
     console.log('Throw 404');
@@ -232,7 +254,11 @@ export const adminAddAccountPermission = async (db, account_id, user, host) => {
 export const adminDeleteAccountPermission = async (db, account_id, permission_id) => {
   const am = new AccountManager(db);
   try {
-    await am.get(account_id);
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    } else {
+      await am.get(account_id);
+    }
   } catch (err) {
     err.t_code = 404;
     console.log('Throw 404');
@@ -274,9 +300,12 @@ export const adminCreateGroup = async (db, group) => {
 export const adminGetGroup = async (db, id) => {
   const gm = new GroupManager(db);
   try {
+    if (isNaN(id)) {
+      id = await gm.getIdByName(id);
+    }
     return gm.getFull(id);
   } catch (err) {
-    err.t_code = 500;
+    if (!err.t_code) err.t_code = 500;
     throw err;
   }
 };
@@ -284,6 +313,9 @@ export const adminGetGroup = async (db, id) => {
 export const adminEditGroup = async (db, group_id, active) => {
   const gm = new GroupManager(db);
   try {
+    if (isNaN(group_id)) {
+      group_id = await gm.getIdByName(group_id);
+    }
     const ret = await gm.changeStatus(group_id, active);
     if (ret === 0) {
       const error = new Error('Group not found');
@@ -292,7 +324,7 @@ export const adminEditGroup = async (db, group_id, active) => {
     }
     return true;
   } catch (err) {
-    err.t_code = 500;
+    if (!err.t_code) err.t_code = 500;
     throw err;
   }
 };
@@ -300,6 +332,9 @@ export const adminEditGroup = async (db, group_id, active) => {
 export const adminDeleteGroup = async (db, group_id) => {
   const gm = new GroupManager(db);
   try {
+    if (isNaN(group_id)) {
+      group_id = await gm.getIdByName(group_id);
+    }
     const ret = await gm.delete(group_id);
     if (ret === 0) {
       const error = new Error('Group not found');
@@ -323,6 +358,14 @@ export const adminCreateGroupAccount = async (db, group_id, account_id) => {
   }
   const gam = new GroupAccountManager(db);
   try {
+    if (isNaN(group_id)) {
+      const gm = new GroupManager(db);
+      group_id = await gm.getIdByName(group_id);
+    }
+    if (isNaN(account_id)) {
+      const am = new AccountManager(db);
+      account_id = await am.getByEmail(account_id);
+    }
     await gam.create(group_id, account_id);
     return true;
   } catch (err) {
@@ -344,6 +387,9 @@ export const adminAddGroupPermission = async (db, group_id, user, host) => {
   }
   const gm = new GroupManager(db);
   try {
+    if (isNaN(group_id)) {
+      group_id = await gm.getIdByName(group_id);
+    }
     await gm.get(group_id);
   } catch (err) {
     err.t_code = 404;
@@ -363,6 +409,9 @@ export const adminAddGroupPermission = async (db, group_id, user, host) => {
 export const adminDeleteGroupPermission = async (db, group_id, permission_id) => {
   const gm = new GroupManager(db);
   try {
+    if (isNaN(group_id)) {
+      group_id = await gm.getIdByName(group_id);
+    }
     await gm.get(group_id);
   } catch (err) {
     err.t_code = 404;
@@ -397,6 +446,14 @@ export const adminDeleteGroupAccount = async (db, group_id, account_id) => {
   }
   const gam = new GroupAccountManager(db);
   try {
+    if (isNaN(group_id)) {
+      const gm = new GroupManager(db);
+      group_id = await gm.getIdByName(group_id);
+    }
+    if (isNaN(account_id)) {
+      const am = new AccountManager(db);
+      account_id = await am.getByEmail(account_id);
+    }
     await gam.delete(group_id, account_id);
     return true;
   } catch (err) {

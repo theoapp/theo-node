@@ -145,6 +145,21 @@ class AccountManager extends BaseCacheManager {
     });
   }
 
+  getIdByEmail(email) {
+    const sql = 'select id from accounts where email = ? ';
+    return new Promise((resolve, reject) => {
+      this.db.get(sql, [email], (err, row) => {
+        if (err) {
+          return reject(err);
+        }
+        if (!row) {
+          return reject(new Error('Account not found'));
+        }
+        return resolve(row.id);
+      });
+    });
+  }
+
   create(account) {
     const sql = 'insert into accounts (email, name, active, created_at) values (?, ?, 1 , ?) ';
     return new Promise((resolve, reject) => {

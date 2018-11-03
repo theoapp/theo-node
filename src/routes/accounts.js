@@ -60,7 +60,7 @@ export default function handleAccounts(server) {
   server.put('/accounts/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     const { active } = req.body;
     try {
-      const done = await adminEditAccount(req.db, Number(req.params.id), active);
+      const done = await adminEditAccount(req.db, req.params.id, active);
       if (done) {
         res.status(201);
         res.json({ status: 201 });
@@ -76,7 +76,7 @@ export default function handleAccounts(server) {
 
   server.del('/accounts/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminDeleteAccount(req.db, Number(req.params.id));
+      const done = await adminDeleteAccount(req.db, req.params.id);
       if (done) {
         res.status(201);
         res.json({ status: 201 });
@@ -92,7 +92,7 @@ export default function handleAccounts(server) {
 
   server.post('/accounts/:id/keys', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const ret = await adminAddAccountKey(req.db, Number(req.params.id), req.body.keys);
+      const ret = await adminAddAccountKey(req.db, req.params.id, req.body.keys);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
@@ -102,12 +102,7 @@ export default function handleAccounts(server) {
 
   server.post('/accounts/:id/keys/import/:service', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const ret = await adminAddAccountKeyFromService(
-        req.db,
-        Number(req.params.id),
-        req.params.service,
-        req.body.username
-      );
+      const ret = await adminAddAccountKeyFromService(req.db, req.params.id, req.params.service, req.body.username);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
@@ -117,7 +112,7 @@ export default function handleAccounts(server) {
 
   server.del('/accounts/:id/keys/:key_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminDeleteAccountKey(req.db, Number(req.params.id), Number(req.params.key_id));
+      const done = await adminDeleteAccountKey(req.db, req.params.id, Number(req.params.key_id));
       if (done) {
         res.status(201);
         res.json({ status: 201 });
@@ -134,7 +129,7 @@ export default function handleAccounts(server) {
   server.post('/accounts/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
     const { user, host } = req.body;
     try {
-      const ret = await adminAddAccountPermission(req.db, Number(req.params.id), user, host);
+      const ret = await adminAddAccountPermission(req.db, req.params.id, user, host);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
@@ -144,7 +139,7 @@ export default function handleAccounts(server) {
 
   server.del('/accounts/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminDeleteAccountPermission(req.db, Number(req.params.id), Number(req.params.permission_id));
+      const done = await adminDeleteAccountPermission(req.db, req.params.id, Number(req.params.permission_id));
       if (done) {
         res.status(201);
         res.json({ status: 201 });

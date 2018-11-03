@@ -1,6 +1,5 @@
 import GroupAccountManager from './GroupAccountManager';
 import PermissionManager from './PermissionManager';
-import { loadCacheManager } from '../helpers/CacheHelper';
 import BaseCacheManager from './BaseCacheManager';
 
 class GroupManager extends BaseCacheManager {
@@ -30,9 +29,28 @@ class GroupManager extends BaseCacheManager {
           return reject(err);
         }
         if (!row) {
-          return reject(new Error('Group not found'));
+          const error = new Error('Group not found');
+          error.t_code = 404;
+          return reject(error);
         }
         return resolve(row);
+      });
+    });
+  }
+
+  getIdByName(name) {
+    const sql = 'select id from groups where name = ? ';
+    return new Promise((resolve, reject) => {
+      this.db.get(sql, [name], (err, row) => {
+        if (err) {
+          return reject(err);
+        }
+        if (!row) {
+          const error = new Error('Group not found');
+          error.t_code = 404;
+          return reject(error);
+        }
+        return resolve(row.id);
       });
     });
   }
