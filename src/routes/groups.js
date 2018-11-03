@@ -4,6 +4,7 @@ import {
   adminAddGroupPermission,
   adminCreateGroup,
   adminCreateGroupAccount,
+  adminCreateGroupAccounts,
   adminDeleteGroup,
   adminDeleteGroupAccount,
   adminDeleteGroupPermission,
@@ -79,7 +80,13 @@ export default function handleGroups(server) {
 
   server.post('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminCreateGroupAccount(req.db, req.params.id, req.body.id);
+      let done;
+      if (req.body.id) {
+        done = await adminCreateGroupAccount(req.db, req.params.id, req.body.id);
+      }
+      if (req.body.ids) {
+        done = await adminCreateGroupAccounts(req.db, req.params.id, req.body.ids);
+      }
       if (done) {
         res.status(201);
         res.json({ status: 201 });

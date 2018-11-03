@@ -25,6 +25,26 @@ class GroupAccountManager {
     });
   }
 
+  getAllAccounts(group_id, limit, offset) {
+    let sql =
+      'select a.id, a.name, a.email, a.active from groups_accounts ga, accounts a where a.id = ga.account_id and ga.group_id = ? order by a.name asc';
+    if (limit) {
+      sql += ' limit ' + limit;
+    }
+    if (offset) {
+      sql += ' offset ' + offset;
+    }
+    return new Promise((resolve, reject) => {
+      this.db.all(sql, [group_id], (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        console.log('Got accounts', rows);
+        return resolve(rows);
+      });
+    });
+  }
+
   getAllByAccount(account_id, limit, offset) {
     let sql =
       'select ga.id, g.id, g.name, g.active from groups_accounts ga, groups g where g.id = ga.group_id and ga.account_id = ? order by name asc';

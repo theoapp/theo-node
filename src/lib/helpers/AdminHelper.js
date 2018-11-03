@@ -364,9 +364,37 @@ export const adminCreateGroupAccount = async (db, group_id, account_id) => {
     }
     if (isNaN(account_id)) {
       const am = new AccountManager(db);
-      account_id = await am.getByEmail(account_id);
+      account_id = await am.getIdByEmail(account_id);
     }
     await gam.create(group_id, account_id);
+    return true;
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminCreateGroupAccounts = async (db, group_id, accounts_id) => {
+  if (!accounts_id) {
+    const error = new Error('Malformed object, ids is required');
+    error.t_code = 400;
+    throw error;
+  }
+  const gam = new GroupAccountManager(db);
+  try {
+    if (isNaN(group_id)) {
+      const gm = new GroupManager(db);
+      group_id = await gm.getIdByName(group_id);
+    }
+    for (let i = 0; i < accounts_id.length; i++) {
+      let account_id = accounts_id[i];
+      if (isNaN(account_id)) {
+        const am = new AccountManager(db);
+        account_id = await am.getIdByEmail(account_id);
+      }
+      console.log('Add user %s to group %s', account_id, group_id);
+      await gam.create(group_id, account_id);
+    }
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -452,7 +480,7 @@ export const adminDeleteGroupAccount = async (db, group_id, account_id) => {
     }
     if (isNaN(account_id)) {
       const am = new AccountManager(db);
-      account_id = await am.getByEmail(account_id);
+      account_id = await am.getIdByEmail(account_id);
     }
     await gam.delete(group_id, account_id);
     return true;

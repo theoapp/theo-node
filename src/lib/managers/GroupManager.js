@@ -117,7 +117,7 @@ class GroupManager extends BaseCacheManager {
   async getFull(id) {
     const group = await this.get(id);
     const gam = new GroupAccountManager(this.db);
-    group.accounts = await gam.getAll(id);
+    group.accounts = await gam.getAllAccounts(id);
     const pm = new PermissionManager(this.db);
     group.permissions = await pm.getAllGroup(id);
     return group;
