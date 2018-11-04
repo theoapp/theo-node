@@ -24,7 +24,7 @@ Please check if your system meets the following minimum requirements :
 
 ### Prerequisites
 
-OpenSSH server must be version >= 6.1 (since it has to support `AuthorizedKeysCommand` option)
+OpenSSH server must be version >= 6.2 (since it has to support `AuthorizedKeysCommand` option)
 
 ### Cookbook
 
