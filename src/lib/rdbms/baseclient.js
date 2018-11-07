@@ -17,6 +17,9 @@ class BaseClient {
   delete(sql, params) {
     throw new Error('Not implemented');
   }
+  open() {
+    throw new Error('Not implemented');
+  }
   close() {
     throw new Error('Not implemented');
   }

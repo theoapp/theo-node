@@ -157,8 +157,9 @@ const startServer = () => {
   server.use(restify.plugins.bodyParser());
   server.use(authMiddleware);
 
-  server.use((req, res, next) => {
+  server.use(async (req, res, next) => {
     const client = dm.getClient();
+    await client.open();
     req.db = client;
     res.on('finish', () => {
       client.close();

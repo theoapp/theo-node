@@ -37,23 +37,37 @@ class DbHelper {
     let currentVersion;
     const client = this.manager.getClient();
     try {
+      await client.open();
+      this.manager.setClient(client);
+    } catch (e) {
+      console.error('checkDb failed', e.message);
+      console.error(e);
+      process.exit(99);
+    }
+    try {
       const row = await client.get(sqlCheck);
       currentVersion = row.value;
     } catch (e) {
       currentVersion = false;
     }
+    console.log('Check db: currentVersion %s targetVersion %s', currentVersion, this.manager.dbVersion);
     try {
       if (currentVersion === false) {
         currentVersion = await this.manager.createVersionTable();
       }
       if (currentVersion === 0) {
-        return this.manager.initDb();
+        const ret = await this.manager.initDb();
+        await client.close();
+        return ret;
       }
       if (this.manager.dbVersion === currentVersion) {
+        await client.close();
         return true;
       }
       if (this.manager.dbVersion > currentVersion) {
-        return this.manager.upgradeDb(currentVersion);
+        const ret = await this.manager.upgradeDb(currentVersion);
+        await client.close();
+        return ret;
       }
     } catch (e) {
       console.error('checkDb failed', e.message);
@@ -63,16 +77,25 @@ class DbHelper {
   }
 
   async _flush() {
-    if (this.manager.flushDb()) {
+    let done;
+    try {
+      done = await this.manager.flushDb();
       console.log('Flushed db!');
+    } catch (e) {
+      throw e;
+    }
+    if (done) {
       try {
         await this.checkDb();
+        return true;
       } catch (e) {
+        console.error('Failed to check db', e);
         throw e;
       }
     } else {
       throw new Error('Unable to flush db');
     }
+    return false;
   }
 
   close() {

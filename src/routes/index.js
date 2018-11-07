@@ -25,12 +25,12 @@ export const initRoutes = server => {
     }
     try {
       const dh = DbHelper();
-
-      if (dh._flush()) {
-
+      const done = await dh._flush();
+      console.log('Back from _flush() with ', done);
+      if (done) {
         res.send(204);
       } else {
-        res.send(500);
+        res.send(404);
       }
     } catch (err) {
       console.error(err);

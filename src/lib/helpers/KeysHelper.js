@@ -3,7 +3,7 @@ import { loadCacheManager } from './CacheHelper';
 
 let _cm;
 
-export const getAuthorizedKeys = async function(db, user, host) {
+export const getAuthorizedKeys = async (db, user, host) => {
   if (_cm === undefined) {
     _cm = loadCacheManager();
   }
@@ -18,14 +18,19 @@ export const getAuthorizedKeys = async function(db, user, host) {
     }
   }
   const keys = await getAuthorizedKeysAsJson(db, user, host);
-  const skeys = keys.map(key => key.public_key).join('\n');
+  const skeys = keys
+    .filter(key => {
+      return key !== undefined;
+    })
+    .map(key => key.public_key)
+    .join('\n');
   if (_cm !== false) {
     await _cm.set(`${user}_${host}`, skeys);
   }
   return skeys;
 };
 
-export const getAuthorizedKeysAsJson = async function(db, user, host) {
+export const getAuthorizedKeysAsJson = async (db, user, host) => {
   const pm = new PermissionManager(db);
   try {
     return pm.match(user, host);

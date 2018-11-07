@@ -49,7 +49,6 @@ class SqliteManager extends DbManager {
   prepareDb(storage) {
     this.db = new sqlite3.Database(storage);
     this.db.run('PRAGMA foreign_keys = ON');
-    this.client = this.getClient();
   }
 
   getEngine() {
@@ -60,13 +59,17 @@ class SqliteManager extends DbManager {
     return new SqliteClient(this.db);
   }
 
+  setClient(client) {
+    this.client = client;
+  }
+
   close() {
     console.log('Closing db');
     this.db.close();
   }
 
   async createVersionTable() {
-    const sqlCreateTable = 'create table _version (value text)';
+    const sqlCreateTable = 'create table _version (value INTEGER)';
     try {
       await this.client.run(sqlCreateTable);
     } catch (e) {
@@ -126,13 +129,24 @@ class SqliteManager extends DbManager {
     await this.updateVersion();
   }
 
-  flushDb() {
+  async flushDb() {
     if (this.is_in_memory) {
       this.close();
       this.prepareDb(IN_MEMORY_DB);
-      return true;
+    } else {
+      const tables = 'public_keys, groups_accounts, permissions, groups, accounts, _version'.split(',');
+      for (let i = 0; i < tables.length; i++) {
+        const sqlDrop = 'drop table ' + tables[i];
+        try {
+          await this.client.run(sqlDrop);
+          console.log('Dropped ', tables[i]);
+        } catch (e) {
+          console.error('Failed to drop %s', tables[i], e);
+          // it doesn't exists
+        }
+      }
     }
-    return false;
+    return true;
   }
 }
 

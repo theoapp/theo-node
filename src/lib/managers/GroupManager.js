@@ -71,6 +71,12 @@ class GroupManager extends BaseCacheManager {
     group.permissions = await pm.getAllGroup(id);
     return group;
   }
+
+  async getAccountsIfActive(id) {
+    const sql =
+      'select account_id from groups g, groups_accounts ga, accounts a where a.id = ga.account_id and a.active = 1 and ga.group_id = g.id and g.active = 1 and g.id = ?';
+    return this.db.all(sql, [id]);
+  }
 }
 
 export default GroupManager;

@@ -20,6 +20,9 @@ class DbManager {
   getClient() {
     throw new Error('Not implemented');
   }
+  setClient(client) {
+    throw new Error('Not implemented');
+  }
   close() {
     throw new Error('Not implemented');
   }

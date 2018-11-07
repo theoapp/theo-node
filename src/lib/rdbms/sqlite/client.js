@@ -75,6 +75,10 @@ class SqliteClient extends BaseClient {
     });
   }
 
+  open() {
+    // Do nothing
+  }
+
   close() {
     // Do nothing
   }

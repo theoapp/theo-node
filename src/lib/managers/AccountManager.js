@@ -139,7 +139,7 @@ class AccountManager extends BaseCacheManager {
 
   async setUpdatedAt(id) {
     const sql = 'update accounts set updated_at = ? where id = ? ';
-    const changes = await this.db.update(sql,[new Date().getTime(), id]);
+    const changes = await this.db.update(sql, [new Date().getTime(), id]);
     this.invalidateCache();
     return changes;
   }
@@ -149,6 +149,12 @@ class AccountManager extends BaseCacheManager {
     const changes = this.db.delete(sql, [id]);
     this.invalidateCache();
     return changes;
+  }
+
+  async getKeysIfActive(id) {
+    const sql =
+      'select k.public_key from public_keys k, accounts a where a.id = k.account_id and a.active = 1 and a.id = ?';
+    return this.db.all(sql, [id]);
   }
 }
 

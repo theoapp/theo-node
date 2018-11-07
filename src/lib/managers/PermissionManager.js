@@ -16,7 +16,7 @@ class PermissionManager {
     }
   }
 
-  match(user, host) {
+  match_x(user, host) {
     const sql =
       'select k.public_key, k.account_id account_id ' +
       ' from accounts a, public_keys k, permissions p ' +
@@ -36,7 +36,40 @@ class PermissionManager {
       'and a.id = ga.account_id ' +
       'and a.id = k.account_id ' +
       'order by k.account_id asc';
+
     return this.db.all(sql, [host, user, host, user]);
+  }
+
+  async match(user, host) {
+    const fromPermissions = 'select account_id, group_id from permissions where ? like host and ? like user';
+    const permissions = await this.db.all(fromPermissions, [host, user]);
+    const accountCache = {};
+    return Promise.all(
+      permissions.map(async permission => {
+        const { account_id, group_id } = permission;
+        if (account_id) {
+          if (!accountCache[account_id]) {
+            accountCache[account_id] = true;
+            return this.am.getKeysIfActive(account_id);
+          }
+          return [];
+        }
+
+        // group permissions..
+        const accounts = await this.gm.getAccountsIfActive(group_id);
+        return Promise.all(
+          accounts.map(async account => {
+            const account_id = account.account_id;
+            if (!accountCache[account_id]) {
+              accountCache[account_id] = true;
+              return this.am.getKeysIfActive(account_id);
+            }
+          })
+        ).then(keys => {
+          return [].concat.apply([], keys);
+        });
+      })
+    ).then(keys => [].concat.apply([], keys));
   }
 
   getAll(account_id, limit, offset) {
