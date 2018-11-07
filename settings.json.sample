@@ -3,10 +3,14 @@
     "token": "TMP_PASSWORD"
   },
   "client": {
-    "tokens": ["njknsjd2412fnjkasnj","knkjnknfjfnjenkln"]
+    "tokens": [
+      "njknsjd2412fnjkasnj",
+      "knkjnknfjfnjenkln"
+    ]
   },
-  "sqlite": {
-    "path": "./data/theo.db"
+  db: {
+    engine: 'sqlite',
+    storage: './data/theo.db'
   },
   "server": {
     "http_port": 8890

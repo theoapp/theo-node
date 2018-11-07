@@ -6,16 +6,10 @@ import BaseCacheManager from './BaseCacheManager';
 const MAX_ROWS = 100;
 
 class AccountManager extends BaseCacheManager {
-  getAllCount(where = false, whereArgs = []) {
+  async getAllCount(where = false, whereArgs = []) {
     const sql = 'select count(*) total from accounts ' + (where || '');
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, whereArgs, (err, row) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(row.total);
-      });
-    });
+    const row = await this.db.get(sql, whereArgs);
+    return row.total;
   }
 
   async getAll(limit = 10, offset = 0) {
@@ -36,20 +30,13 @@ class AccountManager extends BaseCacheManager {
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        const ret = {
-          rows,
-          limit,
-          offset,
-          total
-        };
-        return resolve(ret);
-      });
-    });
+    const rows = await this.db.all(sql);
+    return {
+      rows,
+      limit,
+      offset,
+      total
+    };
   }
 
   async search(name, email, limit = 10, offset = 0) {
@@ -83,20 +70,13 @@ class AccountManager extends BaseCacheManager {
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, whereArgs, (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        const ret = {
-          rows,
-          limit,
-          offset,
-          total
-        };
-        return resolve(ret);
-      });
-    });
+    const rows = await this.db.all(sql, whereArgs);
+    return {
+      rows,
+      limit,
+      offset,
+      total
+    };
   }
 
   async getFullByEmail(email) {
@@ -106,119 +86,69 @@ class AccountManager extends BaseCacheManager {
 
   async getFull(id) {
     const account = await this.get(id);
-    const km = new KeyManager(this.db);
+    const km = new KeyManager(this.db, this);
     account.public_keys = await km.getAll(id);
-    const pm = new PermissionManager(this.db);
+    const pm = new PermissionManager(this.db, this);
     account.permissions = await pm.getAll(id);
     const gam = new GroupAccountManager(this.db);
     account.groups = await gam.getAllByAccount(id);
     return account;
   }
 
-  get(id) {
+  async get(id) {
     const sql = 'select id, name, email, active from accounts where id = ? ';
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, [id], (err, row) => {
-        if (err) {
-          return reject(err);
-        }
-        if (!row) {
-          return reject(new Error('Account not found'));
-        }
-        return resolve(row);
-      });
-    });
+    const row = await this.db.get(sql, [id]);
+    if (!row) {
+      throw new Error('Account not found');
+    }
+    return row;
   }
 
-  getByEmail(email) {
+  async getByEmail(email) {
     const sql = 'select id, name, email, active from accounts where email = ? ';
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, [email], (err, row) => {
-        if (err) {
-          return reject(err);
-        }
-        if (!row) {
-          return reject(new Error('Account not found'));
-        }
-        return resolve(row);
-      });
-    });
+    const row = await this.db.get(sql, [email]);
+    if (!row) {
+      throw new Error('Account not found');
+    }
+    return row;
   }
 
-  getIdByEmail(email) {
+  async getIdByEmail(email) {
     const sql = 'select id from accounts where email = ? ';
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, [email], (err, row) => {
-        if (err) {
-          return reject(err);
-        }
-        if (!row) {
-          return reject(new Error('Account not found'));
-        }
-        return resolve(row.id);
-      });
-    });
+    const row = await this.db.get(sql, [email]);
+    if (!row) {
+      throw new Error('Account not found');
+    }
+    return row.id;
   }
 
-  create(account) {
+  async create(account) {
     const sql = 'insert into accounts (email, name, active, created_at) values (?, ?, 1 , ?) ';
-    return new Promise((resolve, reject) => {
-      const that = this;
-      this.db.run(sql, [account.email, account.name, new Date().getTime()], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        that.invalidateCache();
-        resolve(this.lastID);
-      });
-    });
+    const lastId = await this.db.insert(sql, [account.email, account.name, new Date().getTime()]);
+    this.invalidateCache();
+    return lastId;
   }
 
-  changeStatus(id, active) {
+  async changeStatus(id, active) {
     const sql = 'update accounts set active = ?, updated_at = ? where id = ? ';
     active = !!active;
-    return new Promise((resolve, reject) => {
-      const that = this;
-      this.db.run(sql, [active, new Date().getTime(), id], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        that.invalidateCache();
-        resolve(this.changes);
-      });
-    });
+    const changes = await this.db.update(sql, [active, new Date().getTime(), id]);
+    this.invalidateCache();
+    return changes;
   }
 
-  setUpdatedAt(id) {
+  async setUpdatedAt(id) {
     const sql = 'update accounts set updated_at = ? where id = ? ';
-    return new Promise((resolve, reject) => {
-      const that = this;
-      this.db.run(sql, [new Date().getTime(), id], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        that.invalidateCache();
-        resolve(this.changes);
-      });
-    });
+    const changes = await this.db.update(sql,[new Date().getTime(), id]);
+    this.invalidateCache();
+    return changes;
   }
 
-  delete(id) {
+  async delete(id) {
     const sql = 'delete from accounts where id = ? ';
-    return new Promise((resolve, reject) => {
-      const that = this;
-      this.db.run(sql, [id], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        that.invalidateCache();
-        resolve(this.changes);
-      });
-    });
+    const changes = this.db.delete(sql, [id]);
+    this.invalidateCache();
+    return changes;
   }
 }
 

@@ -11,12 +11,18 @@ describe('REST Test account', function() {
 
   before(function() {
     return new Promise(async (resolve, reject) => {
-      const res = await fetch(base_url + '/flushdb', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
-        }
-      });
+      let res;
+      try {
+        res = await fetch(base_url + '/flushdb', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+          }
+        });
+      } catch (e) {
+        reject(e);
+        return;
+      }
       if (res.status !== 204) {
         reject(new Error('Expecting 204 got ' + res.status));
         return;
@@ -395,12 +401,18 @@ describe('REST Test group', function() {
 
   before(function() {
     return new Promise(async (resolve, reject) => {
-      const res = await fetch(base_url + '/flushdb', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
-        }
-      });
+      let res;
+      try {
+        res = await fetch(base_url + '/flushdb', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+          }
+        });
+      } catch (e) {
+        reject(e);
+        return;
+      }
       if (res.status !== 204) {
         reject(new Error('Expecting 204 got ' + res.status));
         return;

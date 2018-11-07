@@ -1,9 +1,13 @@
 import GroupManager from './GroupManager';
 
 class GroupAccountManager {
-  constructor(db) {
+  constructor(db, gm) {
     this.db = db;
-    this.gm = new GroupManager(this.db);
+    if (gm) {
+      this.gm = gm;
+    } else {
+      this.gm = new GroupManager(this.db);
+    }
   }
 
   getAll(group_id, limit, offset) {
@@ -15,14 +19,7 @@ class GroupAccountManager {
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, [group_id], (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(rows);
-      });
-    });
+    return this.db.all(sql, [group_id]);
   }
 
   getAllAccounts(group_id, limit, offset) {
@@ -34,15 +31,7 @@ class GroupAccountManager {
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, [group_id], (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        console.log('Got accounts', rows);
-        return resolve(rows);
-      });
-    });
+    return this.db.all(sql, [group_id]);
   }
 
   getAllByAccount(account_id, limit, offset) {
@@ -54,44 +43,21 @@ class GroupAccountManager {
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, [account_id], (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(rows);
-      });
-    });
+    return this.db.all(sql, [account_id]);
   }
 
-  create(group_id, account_id) {
+  async create(group_id, account_id) {
     const sql = 'insert into groups_accounts (group_id, account_id, created_at) values (?, ?, ?) ';
-    return new Promise((resolve, reject) => {
-      const gm = this.gm;
-      this.db.run(sql, [group_id, account_id, new Date().getTime()], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        await gm.setUpdatedAt(group_id);
-        resolve(this.lastID);
-      });
-    });
+    const lastId = await this.db.insert(sql, [group_id, account_id, new Date().getTime()]);
+    await this.gm.setUpdatedAt(group_id);
+    return lastId;
   }
 
-  delete(group_id, account_id) {
+  async delete(group_id, account_id) {
     const sql = 'delete from groups_accounts where group_id = ? and account_id = ?';
-    return new Promise((resolve, reject) => {
-      const that = this;
-      this.db.run(sql, [group_id, account_id], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        await that.gm.setUpdatedAt(group_id);
-        resolve(this.changes);
-      });
-    });
+    const changes = this.db.delete(sql, [group_id, account_id]);
+    await this.gm.setUpdatedAt(group_id);
+    return changes;
   }
 }
 

@@ -20,6 +20,7 @@ export default function handleAccounts(server) {
       const ret = await am.getAll(Number(limit), Number(offset));
       res.json(ret);
     } catch (err) {
+      console.error('GET /accounts', err);
       res.status(500);
       res.json({ status: 500, reason: err.message });
     }
@@ -69,6 +70,7 @@ export default function handleAccounts(server) {
         res.json({ status: 500, reason: 'Unkown error' });
       }
     } catch (err) {
+      console.error(err);
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
     }

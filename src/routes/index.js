@@ -2,8 +2,7 @@ import handleAccounts from './accounts';
 import handleKeys from './keys';
 import handleGroups from './groups';
 import { requireAdminAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
-import SqliteHelper from '../lib/helpers/SqliteHelper';
-
+import DbHelper from '../lib/helpers/DbHelper';
 export const initRoutes = server => {
   server.get('/', (req, res, next) => {
     res.json({ status: 200 });
@@ -25,8 +24,14 @@ export const initRoutes = server => {
       return;
     }
     try {
-      await SqliteHelper()._flush();
-      res.send(204);
+      const dh = DbHelper();
+
+      if (dh._flush()) {
+
+        res.send(204);
+      } else {
+        res.send(500);
+      }
     } catch (err) {
       console.error(err);
       res.send(500);

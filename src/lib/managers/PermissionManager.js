@@ -2,10 +2,18 @@ import AccountManager from './AccountManager';
 import GroupManager from './GroupManager';
 
 class PermissionManager {
-  constructor(db) {
+  constructor(db, am, gm) {
     this.db = db;
-    this.am = new AccountManager(this.db);
-    this.gm = new GroupManager(this.db);
+    if (am) {
+      this.am = am;
+    } else {
+      this.am = new AccountManager(this.db);
+    }
+    if (gm) {
+      this.gm = gm;
+    } else {
+      this.gm = new GroupManager(this.db);
+    }
   }
 
   match(user, host) {
@@ -28,15 +36,7 @@ class PermissionManager {
       'and a.id = ga.account_id ' +
       'and a.id = k.account_id ' +
       'order by k.account_id asc';
-
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, [host, user, host, user], (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(rows);
-      });
-    });
+    return this.db.all(sql, [host, user, host, user]);
   }
 
   getAll(account_id, limit, offset) {
@@ -47,14 +47,7 @@ class PermissionManager {
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, [account_id], (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(rows);
-      });
-    });
+    return this.db.all(sql, [account_id]);
   }
 
   getAllGroup(group_id, limit, offset) {
@@ -65,74 +58,35 @@ class PermissionManager {
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, [group_id], (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(rows);
-      });
-    });
+    return this.db.all(sql, [group_id]);
   }
 
-  create(account_id, user, host) {
+  async create(account_id, user, host) {
     const sql = 'insert into permissions (account_id, user, host, created_at) values (?, ?, ?, ?) ';
-
-    return new Promise((resolve, reject) => {
-      const am = this.am;
-      this.db.run(sql, [account_id, user, host, new Date().getTime()], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        await am.setUpdatedAt(account_id);
-        resolve(this.lastID);
-      });
-    });
+    const lastId = await this.db.insert(sql, [account_id, user, host, new Date().getTime()]);
+    await this.am.setUpdatedAt(account_id);
+    return lastId;
   }
 
-  delete(account_id, id) {
+  async delete(account_id, id) {
     const sql = 'delete from permissions where id = ? and account_id = ?';
-    const am = this.am;
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, [id, account_id], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        await am.setUpdatedAt(account_id);
-        resolve(this.changes);
-      });
-    });
+    const changes = await this.db.delete(sql, [id, account_id]);
+    await this.am.setUpdatedAt(account_id);
+    return changes;
   }
 
-  createGroup(group_id, user, host) {
+  async createGroup(group_id, user, host) {
     const sql = 'insert into permissions (group_id, user, host, created_at) values (?, ?, ?, ?) ';
-    return new Promise((resolve, reject) => {
-      const gm = this.gm;
-      this.db.run(sql, [group_id, user, host, new Date().getTime()], async function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        await gm.setUpdatedAt(group_id);
-        resolve(this.lastID);
-      });
-    });
+    const lastId = await this.db.insert(sql, [group_id, user, host, new Date().getTime()]);
+    await this.gm.setUpdatedAt(group_id);
+    return lastId;
   }
 
-  deleteGroup(group_id, id) {
+  async deleteGroup(group_id, id) {
     const sql = 'delete from permissions where id = ? and group_id = ?';
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, [id, group_id], async err => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        await this.gm.setUpdatedAt(group_id);
-        resolve(this.changes);
-      });
-    });
+    const changes = await this.db.delete(sql, [id, group_id]);
+    await this.gm.setUpdatedAt(group_id);
+    return changes;
   }
 }
 

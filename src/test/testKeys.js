@@ -1,8 +1,6 @@
 import assert from 'assert';
 
 import AppHelper from '../lib/helpers/AppHelper';
-import SqliteManager from '../lib/managers/SqliteManager';
-import SqliteHelper, { releaseSHInstance } from '../lib/helpers/SqliteHelper';
 import {
   adminAddAccountPermission,
   adminAddGroupPermission,
@@ -14,6 +12,7 @@ import {
 import accountsJson from './accounts';
 import groupsJson from './groups';
 import { getAuthorizedKeys } from '../lib/helpers/KeysHelper';
+import DbHelper, { releaseDHInstance } from '../lib/helpers/DbHelper';
 
 const settings = {
   admin: {
@@ -22,22 +21,41 @@ const settings = {
   client: {
     tokens: []
   },
-  sqlite: {
-    path: ':memory:'
+  db: {
+    engine: 'sqlite',
+    storage: ':memory:'
   },
   server: {
     http_port: 9100
   }
 };
 
-AppHelper(settings);
-let sh;
-const loadDb = function(sm) {
+const ah = AppHelper(settings);
+let dh;
+const loadDb = function() {
   return new Promise((resolve, reject) => {
-    sh = SqliteHelper(settings.sqlite, sm);
-    setTimeout(() => {
-      resolve(sh.getDb());
-    }, 1000);
+    let dm;
+    try {
+      dh = DbHelper(ah.getSettings('db'));
+      dm = dh.getManager();
+      if (!dm) {
+        console.error('Unable to load DB Manager!!!');
+        process.exit(99);
+      }
+      dh.init()
+        .then(() => {
+          resolve(dm.getClient());
+        })
+        .catch(e => {
+          console.error('Failed to initialize db', e.message);
+          console.error(e);
+          process.exit(99);
+        });
+    } catch (e) {
+      console.error('Failed to load DB Manager!!!', e.message);
+      console.error(e);
+      process.exit(99);
+    }
   });
 };
 
@@ -66,19 +84,17 @@ const loadData = async function(db) {
   }
 };
 
-const sm = new SqliteManager();
-
 describe('Check keys', function() {
   this.timeout(10000);
   let db;
   before(async function() {
     try {
-      db = await loadDb(sm);
+      db = await loadDb();
     } catch (err) {}
   });
 
   after(async function() {
-    releaseSHInstance();
+    releaseDHInstance();
   });
 
   describe('check accounts creation', function() {
