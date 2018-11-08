@@ -25,12 +25,9 @@ class RedisManager extends CachedManager {
         return Math.min(options.attempt * 100, 3000);
       }
     };
-
     this.redis = redis.createClient(options);
     console.log('RedisManager started');
-    this.redis.on('error', function(err) {
-      console.error('Redis error: ', err);
-    });
+    this.redis.on('error', () => {});
   }
   set(key, value) {
     return new Promise((resolve, reject) => {
@@ -77,5 +74,11 @@ class RedisManager extends CachedManager {
       }
     });
   }
+  close() {
+    try {
+      this.redis.close();
+    } catch (e) {}
+  }
 }
+
 export default RedisManager;

@@ -166,11 +166,7 @@ try {
   console.error('Unable to create CacheHelper', err);
 }
 if (ch) {
-  try {
-    cm = ch.getManager();
-  } catch (err) {
-    console.error('Unable to get CacheManager', err);
-  }
+  cm = ch.getManager();
   if (cm) {
     console.log('Flushing CacheManager');
     cm.flush().catch(er => {
@@ -213,6 +209,9 @@ process.on('SIGINT', async () => {
   console.log('Caught interrupt signal');
   try {
     await dh.close();
+    if(cm) {
+      cm.close();
+    }
   } catch (e) {}
   process.exit();
 });

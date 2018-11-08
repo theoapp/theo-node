@@ -14,6 +14,9 @@ class CachedManager {
   flush() {
     throw new Error('Not implemented');
   }
+  quit() {
+    throw new Error('Not implemented');
+  }
 }
 
 export default CachedManager;

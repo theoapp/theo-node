@@ -58,6 +58,11 @@ class MemcachedManager extends CachedManager {
       });
     });
   }
+  quit() {
+    try {
+      this.memcached.end();
+    } catch (e) {}
+  }
 }
 
 export default MemcachedManager;
