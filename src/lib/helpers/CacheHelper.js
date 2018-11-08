@@ -1,5 +1,5 @@
 import { getCacheModule } from '../cache/modules';
-
+import EventHelper from './EventHelper';
 let _instance;
 
 class CacheHelper {
@@ -14,6 +14,13 @@ class CacheHelper {
       }
       this.manager = new ManagerClass(settings.settings);
     }
+    EventHelper.on('theo:flushdb', () => {
+      setImmediate(async () => {
+        try {
+          await this.manager.flush();
+        } catch (e) {}
+      });
+    });
   }
 
   getManager() {

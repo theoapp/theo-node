@@ -1,3 +1,4 @@
+import EventHelper from './EventHelper';
 import { getRdbmsModule } from '../rdbms/modules';
 
 let _instance;
@@ -80,7 +81,7 @@ class DbHelper {
     let done;
     try {
       done = await this.manager.flushDb();
-      console.log('Flushed db!');
+      if (done) EventHelper.emit('theo:flushdb');
     } catch (e) {
       throw e;
     }
@@ -95,7 +96,6 @@ class DbHelper {
     } else {
       throw new Error('Unable to flush db');
     }
-    return false;
   }
 
   close() {
