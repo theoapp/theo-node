@@ -5,10 +5,32 @@ class RedisManager extends CachedManager {
   constructor(settings) {
     super(settings);
     const options = {
-      url: settings.uri
+      url: settings.uri,
+      retry_strategy: function(options) {
+        if (options.error && options.error.code === 'ECONNREFUSED') {
+          // End reconnecting on a specific error and flush all commands with
+          // a individual error
+          return new Error('The server refused the connection');
+        }
+        if (options.total_retry_time > 1000 * 60 * 60) {
+          // End reconnecting after a specific timeout and flush all commands
+          // with a individual error
+          return new Error('Retry time exhausted');
+        }
+        if (options.attempt > 10) {
+          // End reconnecting with built in error
+          return undefined;
+        }
+        // reconnect after
+        return Math.min(options.attempt * 100, 3000);
+      }
     };
+
     this.redis = redis.createClient(options);
     console.log('RedisManager started');
+    this.redis.on('error', function(err) {
+      console.error('Redis error: ', err);
+    });
   }
   set(key, value) {
     return new Promise((resolve, reject) => {
@@ -41,13 +63,18 @@ class RedisManager extends CachedManager {
     });
   }
   flush() {
+    console.log('Flushing Redis');
     return new Promise((resolve, reject) => {
-      this.redis.flushdb(err => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(true);
-      });
+      try {
+        this.redis.flushdb(err => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(true);
+        });
+      } catch (err) {
+        console.error('this.redis.flushdb failed', err);
+      }
     });
   }
 }
