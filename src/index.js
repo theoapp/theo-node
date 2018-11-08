@@ -9,6 +9,8 @@ import packageJson from '../package';
 
 dotenv.config();
 
+const DB_CONN_MAX_RETRY = 10;
+
 let settings;
 const settingsJson = process.env.SETTINGS_FILE;
 if (settingsJson) {
@@ -112,6 +114,7 @@ const ah = AppHelper(settings);
 
 let dh;
 let dm;
+
 try {
   dh = DbHelper(ah.getSettings('db'));
   dm = dh.getManager();
@@ -119,28 +122,61 @@ try {
     console.error('Unable to load DB Manager!!!');
     process.exit(99);
   }
-  dh.init()
-    .then(() => {
-      console.log('Db %s initiated', dm.getEngine());
-      startServer();
-    })
-    .catch(e => {
-      console.error('Failed to initialize db', e.message);
-      console.error(e);
-      process.exit(99);
-    });
 } catch (e) {
   console.error('Failed to load DB Manager!!!', e.message);
   console.error(e);
   process.exit(99);
 }
 
-const ch = CacheHelper(ah.getSettings('cache'));
-const cm = ch.getManager();
-if (cm) {
-  cm.flush().catch(er => {
-    console.error('Failed to initialize CacheManager', er.message);
-  });
+const initDb = () => {
+  try {
+    dh.init()
+      .then(() => {
+        console.log('Db %s initiated', dm.getEngine());
+        startServer();
+      })
+      .catch(e => {
+        console.error('Failed to initialize db', e.message);
+        console.error(e);
+        process.exit(99);
+      });
+  } catch (e) {
+    console.error('Failed to load DB Manager!!!', e.message);
+    console.error(e);
+    process.exit(99);
+  }
+};
+
+const testDB = async () => {
+  try {
+    const client = dm.getClient();
+    await client.open();
+    await client.close();
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+let ch;
+let cm;
+try {
+  ch = CacheHelper(ah.getSettings('cache'));
+} catch (err) {
+  console.error('Unable to create CacheHelper', err);
+}
+if (ch) {
+  try {
+    cm = ch.getManager();
+  } catch (err) {
+    console.error('Unable to get CacheManager', err);
+  }
+  if (cm) {
+    console.log('Flushing CacheManager');
+    cm.flush().catch(er => {
+      console.error('Failed to initialize CacheManager', er.message);
+    });
+  }
 }
 
 const startServer = () => {
@@ -180,3 +216,21 @@ process.on('SIGINT', async () => {
   } catch (e) {}
   process.exit();
 });
+
+const startTestDb = async retry => {
+  if (retry >= DB_CONN_MAX_RETRY) {
+    console.error("Givin' it up, failed to connect to db after %s retries", DB_CONN_MAX_RETRY);
+    process.exit(90);
+  }
+  console.log('DB Check #%s ', retry);
+  const ret = await testDB();
+  if (ret) {
+    initDb();
+  } else {
+    setTimeout(() => {
+      startTestDb(retry + 1);
+    }, retry * 1000);
+  }
+};
+
+startTestDb(0);
