@@ -40,3 +40,5 @@ jobs:
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - docker tag theo $DOCKER_IMAGE:$TRAVIS_TAG
       - docker push $DOCKER_IMAGE:$TRAVIS_TAG
+      - docker tag theo $DOCKER_IMAGE:latest
+      - docker push $DOCKER_IMAGE:latest
