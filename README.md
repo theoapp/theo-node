@@ -150,7 +150,7 @@ You can use the `theo-agent` or do everything manually.
      
     ```
     #!/bin/sh
-    AUTH_KEYS_FILE=/var/cache/theo/${1}
+    AUTH_KEYS_FILE=/var/cache/theo/.${1}
     curl -H "Authorization: Bearer ${CLIENT_TOKEN}" -s -f -o ${AUTH_KEYS_FILE} http://${THEOSERVER_IP_OR_FQDN}:9100/authorized_keys/$(hostname)/${1}
     cat ${AUTH_KEYS_FILE} 2>/dev/null
     ```
