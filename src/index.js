@@ -3,6 +3,7 @@ import restify from 'restify';
 import AppHelper from './lib/helpers/AppHelper';
 import CacheHelper from './lib/helpers/CacheHelper';
 import DbHelper from './lib/helpers/DbHelper';
+import { loadPlugins } from './lib/helpers/PluginHelper';
 import { initRoutes } from './routes';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import packageJson from '../package';
@@ -112,6 +113,10 @@ setEnv();
 
 const ah = AppHelper(settings);
 
+if (process.env.USE_PLUGINS && (process.env.USE_PLUGINS === '1' || process.env.USE_PLUGINS === 'true')) {
+  loadPlugins();
+}
+
 let dh;
 let dm;
 
@@ -209,7 +214,7 @@ process.on('SIGINT', async () => {
   console.log('Caught interrupt signal');
   try {
     await dh.close();
-    if(cm) {
+    if (cm) {
       cm.close();
     }
   } catch (e) {}

@@ -4,6 +4,7 @@ import PermissionManager from '../managers/PermissionManager';
 import { getKeysImporterModule, getKeysImporterModulesList } from '../keys_importer/modules';
 import GroupManager from '../managers/GroupManager';
 import GroupAccountManager from '../managers/GroupAccountManager';
+import EventHelper from './EventHelper';
 
 export const adminCreateAccount = async (db, account) => {
   if (!account.email) {
@@ -19,6 +20,12 @@ export const adminCreateAccount = async (db, account) => {
   const am = new AccountManager(db);
   try {
     const id = await am.create(account);
+    EventHelper.emit('theo:change', {
+      func: 'account',
+      action: 'create',
+      object: id,
+      receiver: 'admin'
+    });
     if (account.keys) {
       const km = new KeyManager(db);
       for (let i = 0; i < account.keys.length; i++) {
@@ -44,6 +51,12 @@ export const adminEditAccount = async (db, account_id, active) => {
       error.t_code = 404;
       throw error;
     }
+    EventHelper.emit('theo:change', {
+      func: 'account',
+      action: 'edit',
+      object: account_id,
+      receiver: 'admin'
+    });
     return true;
   } catch (err) {
     err.t_code = 500;
@@ -62,6 +75,11 @@ export const adminGetAccount = async (db, account_id) => {
     } else {
       account = await am.getFull(Number(account_id));
     }
+    EventHelper.emit('theo:fetch', {
+      func: 'account',
+      action: 'get',
+      object: account.id
+    });
   } catch (err) {
     const error = new Error('Account not found');
     error.t_code = 404;
@@ -83,6 +101,12 @@ export const adminDeleteAccount = async (db, account_id) => {
       error.t_code = 404;
       throw error;
     }
+    EventHelper.emit('theo:change', {
+      func: 'account',
+      action: 'delete',
+      object: account_id,
+      receiver: 'admin'
+    });
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -120,6 +144,12 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
       };
       ret.public_keys.push(key);
     }
+    EventHelper.emit('theo:change', {
+      func: 'account_keys',
+      action: 'add',
+      object: account_id,
+      receiver: 'admin'
+    });
     return ret;
   } catch (err) {
     err.t_code = 500;
@@ -183,6 +213,12 @@ export const adminAddAccountKeyFromService = async (db, account_id, service, use
       };
       ret.public_keys.push(key);
     }
+    EventHelper.emit('theo:change', {
+      func: 'account_keys',
+      action: 'add_from_service',
+      object: account_id,
+      receiver: 'admin'
+    });
     return ret;
   } catch (err) {
     err.t_code = 500;
@@ -211,6 +247,12 @@ export const adminDeleteAccountKey = async (db, account_id, key_id) => {
       error.t_code = 404;
       throw error;
     }
+    EventHelper.emit('theo:change', {
+      func: 'account_keys',
+      action: 'delete',
+      object: account_id,
+      receiver: 'admin'
+    });
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -244,6 +286,12 @@ export const adminAddAccountPermission = async (db, account_id, user, host) => {
   const pm = new PermissionManager(db);
   try {
     const permission_id = await pm.create(account_id, user, host);
+    EventHelper.emit('theo:change', {
+      func: 'account_permissions',
+      action: 'add',
+      object: account_id,
+      receiver: 'admin'
+    });
     return { account_id, permission_id };
   } catch (err) {
     err.t_code = 500;
@@ -272,6 +320,12 @@ export const adminDeleteAccountPermission = async (db, account_id, permission_id
       error.t_code = 404;
       throw error;
     }
+    EventHelper.emit('theo:change', {
+      func: 'account_permissions',
+      action: 'delete',
+      object: account_id,
+      receiver: 'admin'
+    });
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -290,6 +344,12 @@ export const adminCreateGroup = async (db, group) => {
   const gm = new GroupManager(db);
   try {
     const id = await gm.create(group.name);
+    EventHelper.emit('theo:change', {
+      func: 'group',
+      action: 'add',
+      object: id,
+      receiver: 'admin'
+    });
     return gm.getFull(id);
   } catch (err) {
     err.t_code = 500;
