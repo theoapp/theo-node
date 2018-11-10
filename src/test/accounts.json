@@ -36,8 +36,8 @@
     "name": "Kathlin Local",
     "email": "klocal1@ezinearticles.com",
     "keys": [
-      "5b4ad82c97ada6e4c70882e644bd47f5cc281f46",
-      "24ed9a56bdb22a58b1955896ac88c0eeb61bf5f9"
+      { "key": "5b4ad82c97ada6e4c70882e644bd47f5cc281f46", "signature": "abcde" },
+      { "key": "24ed9a56bdb22a58b1955896ac88c0eeb61bf5f9", "signature": "fghij" }
     ],
     "permissions": [
       {

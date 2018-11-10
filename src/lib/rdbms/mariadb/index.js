@@ -3,20 +3,20 @@ import mysql from 'mysql2';
 import MariadbClient from './client';
 
 class MariadbManager extends DbManager {
-  dbVersion = 5;
+  dbVersion = 6;
 
   CREATE_TABLE_ACCOUNTS =
-    'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128), name varchar(128), ' +
-    'active INTEGER, updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (email))';
+    'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128) not null, name varchar(128) not null, ' +
+    'active INTEGER not null default 1, updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (email))';
 
   CREATE_TABLE_GROUPS =
-    'create table groups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128), active INTEGER, ' +
+    'create table groups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128) not null, active INTEGER not null default 1, ' +
     'updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (name))';
 
   CREATE_TABLE_GROUPS_ACCOUNTS =
     'create table groups_accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
-    'account_id INTEGER, ' +
-    'group_id INTEGER, ' +
+    'account_id INTEGER  not null, ' +
+    'group_id INTEGER not null, ' +
     'updated_at BIGINT UNSIGNED, ' +
     'created_at BIGINT UNSIGNED, ' +
     'UNIQUE (account_id, group_id), ' +
@@ -24,16 +24,19 @@ class MariadbManager extends DbManager {
     'FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PUBLIC_KEYS =
-    'create table public_keys (id INTEGER PRIMARY KEY AUTO_INCREMENT, account_id INTEGER, ' +
-    'public_key varchar(1024), created_at BIGINT UNSIGNED, ' +
+    'create table public_keys (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
+    'account_id INTEGER NOT NULL, ' +
+    'public_key varchar(1024) not null, ' +
+    'public_key_sig varchar(1024), ' +
+    'created_at BIGINT UNSIGNED, ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PERMISSIONS =
     'create table permissions (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
     'account_id INTEGER, ' +
     'group_id INTEGER, ' +
-    'user varchar(512), ' +
-    'host varchar(512), ' +
+    'user varchar(512) not null, ' +
+    'host varchar(512) not null, ' +
     'created_at BIGINT UNSIGNED, ' +
     'FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE, ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
@@ -128,7 +131,12 @@ class MariadbManager extends DbManager {
     }
     if (fromVersion < 5) {
       try {
-        await this.client.run('alter table groups add updated_at integer');
+        await this.client.run('alter table groups add updated_at BIGINT UNSIGNED');
+      } catch (err) {}
+    }
+    if (fromVersion < 6) {
+      try {
+        await this.client.run('alter table public_keys add public_key_sig varchar(1024)');
       } catch (err) {}
     }
     await this.updateVersion();

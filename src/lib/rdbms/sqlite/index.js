@@ -5,7 +5,7 @@ import SqliteClient from './client';
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 5;
+  dbVersion = 6;
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), ' +
@@ -26,8 +26,11 @@ class SqliteManager extends DbManager {
     'FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PUBLIC_KEYS =
-    'create table public_keys (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER, ' +
-    'public_key varchar(1024), created_at INTEGER, ' +
+    'create table public_keys (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+    'account_id INTEGER, ' +
+    'public_key varchar(1024), ' +
+    'public_key_sig varchar(1024), ' +
+    'created_at INTEGER, ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PERMISSIONS =
@@ -124,6 +127,11 @@ class SqliteManager extends DbManager {
     if (fromVersion < 5) {
       try {
         await this.client.run('alter table groups add updated_at integer');
+      } catch (err) {}
+    }
+    if (fromVersion < 6) {
+      try {
+        await this.client.run('alter table public_keys add public_key_sig varchar(1024)');
       } catch (err) {}
     }
     await this.updateVersion();

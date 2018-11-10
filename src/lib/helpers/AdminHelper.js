@@ -27,10 +27,7 @@ export const adminCreateAccount = async (db, account) => {
       receiver: 'admin'
     });
     if (account.keys) {
-      const km = new KeyManager(db);
-      for (let i = 0; i < account.keys.length; i++) {
-        await km.create(id, account.keys[i]);
-      }
+      await adminAddAccountKey(db, id, account.keys);
     }
     return am.getFull(id);
   } catch (err) {
@@ -133,15 +130,31 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
   const km = new KeyManager(db);
   try {
     for (let i = 0; i < keys.length; i++) {
-      const _key = keys[i].trim();
-      if (!_key) {
-        continue;
+      let __key = keys[i];
+      let key;
+      if (typeof __key === 'string') {
+        const _key = __key.trim();
+        if (!_key) {
+          continue;
+        }
+        const id = await km.create(account_id, _key);
+        key = {
+          id,
+          public_key: keys[i]
+        };
+      } else {
+        // Object, we got also sign
+        const _key = __key.key.trim();
+        const _signature = __key.signature.trim();
+        if (!_key) {
+          continue;
+        }
+        const id = await km.create(account_id, _key, _signature);
+        key = {
+          id,
+          public_key: keys[i]
+        };
       }
-      const id = await km.create(account_id, _key);
-      const key = {
-        id,
-        public_key: keys[i]
-      };
       ret.public_keys.push(key);
     }
     EventHelper.emit('theo:change', {
@@ -335,7 +348,7 @@ export const adminDeleteAccountPermission = async (db, account_id, permission_id
 
 // GROUP FUNCTIONS
 
-export const adminCreateGroup = async (db, group) => {
+export const adminCreateGroup = async (db, group, onlyId = false) => {
   if (!group.name) {
     const error = new Error('Malformed object, name is required');
     error.t_code = 400;
@@ -350,6 +363,7 @@ export const adminCreateGroup = async (db, group) => {
       object: id,
       receiver: 'admin'
     });
+    if (onlyId) return id;
     return gm.getFull(id);
   } catch (err) {
     err.t_code = 500;

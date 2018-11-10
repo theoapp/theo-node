@@ -153,7 +153,7 @@ class AccountManager extends BaseCacheManager {
 
   async getKeysIfActive(id) {
     const sql =
-      'select k.public_key from public_keys k, accounts a where a.id = k.account_id and a.active = 1 and a.id = ?';
+      'select k.public_key, k.public_key_sig from public_keys k, accounts a where a.id = k.account_id and a.active = 1 and a.id = ?';
     return this.db.all(sql, [id]);
   }
 }
