@@ -587,7 +587,7 @@ describe('REST Test group', function() {
       assert.equal(res4.headers.get('content-type'), 'application/json');
       const resAccountWithGroup = await res4.json();
 
-      assert.equal(resAccountWithGroup.groups.length, 1);
+      assert.equal(resAccountWithGroup.groups.length, 2);
       assert.equal(resAccountWithGroup.groups[0].id, group_id);
       assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
     });
@@ -652,7 +652,7 @@ describe('REST Test group', function() {
       assert.equal(res4.headers.get('content-type'), 'application/json');
       const resAccountWithGroup = await res4.json();
 
-      assert.equal(resAccountWithGroup.groups.length, 1);
+      assert.equal(resAccountWithGroup.groups.length, 2);
       assert.equal(resAccountWithGroup.groups[0].id, group_id);
       assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
     });
@@ -706,7 +706,7 @@ describe('REST Test group', function() {
       assert.equal(res4.headers.get('content-type'), 'application/json');
       const resAccountWithGroup = await res4.json();
 
-      assert.equal(resAccountWithGroup.groups.length, 0);
+      assert.equal(resAccountWithGroup.groups.length, 1);
     });
   });
 });

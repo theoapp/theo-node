@@ -35,13 +35,13 @@ class SqliteManager extends DbManager {
 
   CREATE_TABLE_PERMISSIONS =
     'create table permissions (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-    'account_id INTEGER, ' +
     'group_id INTEGER, ' +
     'user varchar(512), ' +
     'host varchar(512), ' +
     'created_at INTEGER, ' +
-    'FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE, ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+    'FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE)';
+
+  CREATE_INDEX_PERMISSIONS = 'create index k_permissions_host_user on permissions (host, user)';
 
   constructor(options) {
     super(options);
@@ -93,6 +93,7 @@ class SqliteManager extends DbManager {
     await this.client.run(this.CREATE_TABLE_ACCOUNTS);
     await this.client.run(this.CREATE_TABLE_PUBLIC_KEYS);
     await this.client.run(this.CREATE_TABLE_PERMISSIONS);
+    await this.client.run(this.CREATE_INDEX_PERMISSIONS);
     await this.client.run(this.CREATE_TABLE_GROUPS);
     await this.client.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
     await this.updateVersion();

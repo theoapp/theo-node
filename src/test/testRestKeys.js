@@ -4,6 +4,7 @@ import assert from 'assert';
 import fetch from 'node-fetch';
 import accountsJson from './accounts';
 import groupsJson from './groups';
+import { adminGetGroup } from '../lib/helpers/AdminHelper';
 
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 
@@ -264,8 +265,8 @@ describe('REST Check keys', function() {
         permissions: []
       };
       const resAccount2 = await createAccount(account2);
-      await addGroupAccount(1, resAccount.id);
-      await addGroupAccount(1, resAccount2.id);
+      await addGroupAccount(groupsJson[0].name, resAccount.id);
+      await addGroupAccount(groupsJson[0].name, resAccount2.id);
       const res = await fetch(base_url + '/authorized_keys/edu/name', {
         method: 'GET',
         headers: {
@@ -307,13 +308,12 @@ describe('REST Check keys', function() {
   describe('remove 1 account from group, check authorized_keys for user=name and host=edu', function() {
     it('should return 12 rows per 5 users (5 + 2 + 2 + 1 + 2)', async function() {
       const resAccount = await getAccountByEmail('asiemantel1c@redcross.org');
-      const res2 = await fetch(base_url + '/groups/1/' + resAccount.id, {
+      const res2 = await fetch(base_url + '/groups/' + groupsJson[0].name + '/' + resAccount.id, {
         method: 'DELETE',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-
       assert.equal(res2.status, 201);
 
       const res = await fetch(base_url + '/authorized_keys/edu/name', {
@@ -331,7 +331,7 @@ describe('REST Check keys', function() {
 
   describe('remove group, check authorized_keys for user=name and host=edu', function() {
     it('should return 10 rows per 4 users (5 + 2 + 1 + 2)', async function() {
-      const res2 = await fetch(base_url + '/groups/1', {
+      const res2 = await fetch(base_url + '/groups/' + groupsJson[0].name, {
         method: 'DELETE',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN

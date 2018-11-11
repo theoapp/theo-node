@@ -355,7 +355,7 @@ describe('Test group', function() {
       assert.equal(resGroup.permissions.length, 0);
 
       const resAccountWithGroup = await adminGetAccount(db, account_id);
-      assert.equal(resAccountWithGroup.groups.length, 1);
+      assert.equal(resAccountWithGroup.groups.length, 2);
       assert.equal(resAccountWithGroup.groups[0].id, group_id);
       assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
     });

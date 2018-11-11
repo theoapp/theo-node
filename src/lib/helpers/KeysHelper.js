@@ -3,13 +3,13 @@ import { loadCacheManager } from './CacheHelper';
 
 let _cm;
 
-export const getAuthorizedKeys = async (db, user, host) => {
+const checkCache = async key => {
   if (_cm === undefined) {
     _cm = loadCacheManager();
   }
   if (_cm !== false) {
     try {
-      const keys = await _cm.get(`${user}_${host}`);
+      const keys = await _cm.get(key);
       if (keys !== null) {
         return keys;
       }
@@ -17,7 +17,14 @@ export const getAuthorizedKeys = async (db, user, host) => {
       console.error('Failed to fetch from cache, using db', err.message);
     }
   }
-  const keys = await getAuthorizedKeysAsJson(db, user, host);
+  return false;
+};
+
+export const getAuthorizedKeys = async (db, user, host) => {
+  const cache_key = `${user}_${host}`;
+  const _cache = await checkCache(cache_key);
+  if (_cache) return { keys: _cache, cache: true };
+  const { keys, cache } = await getAuthorizedKeysAsJson(db, user, host);
   const skeys = keys
     .filter(key => {
       return key !== undefined;
@@ -25,17 +32,33 @@ export const getAuthorizedKeys = async (db, user, host) => {
     .map(key => key.public_key)
     .join('\n');
   if (_cm !== false) {
-    await _cm.set(`${user}_${host}`, skeys);
+    _cm
+      .set(cache_key, skeys)
+      .then()
+      .catch();
   }
-  return skeys;
+  return { keys: skeys, cache };
 };
 
 export const getAuthorizedKeysAsJson = async (db, user, host) => {
+  const cache_key = `json:${user}_${host}`;
+  const cache = await checkCache(cache_key);
+  if (cache) {
+    return { keys: JSON.parse(cache), cache: true };
+  }
   const pm = new PermissionManager(db);
+  let keys;
   try {
-    return pm.match(user, host);
+    keys = await pm.match(user, host);
   } catch (err) {
     err.t_code = 500;
     throw err;
   }
+  if (_cm !== false) {
+    _cm
+      .set(cache_key, JSON.stringify(keys))
+      .then()
+      .catch(err => console.error('Failed to save cache for %s', cache_key, err));
+  }
+  return { keys, cache: false };
 };

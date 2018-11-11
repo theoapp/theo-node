@@ -81,7 +81,7 @@ class MariadbClient extends BaseClient {
           reject(err);
           return;
         }
-        resolve(results);
+        resolve(results.affectedRows);
       });
     });
   }
@@ -93,7 +93,7 @@ class MariadbClient extends BaseClient {
           reject(err);
           return;
         }
-        resolve(results);
+        resolve(results.affectedRows);
       });
     });
   }

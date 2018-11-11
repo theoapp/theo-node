@@ -110,28 +110,28 @@ describe('Check keys', function() {
 
   describe('check authorized_keys for user=mil and host=mil', function() {
     it('should return 14 rows', async function() {
-      const res = await getAuthorizedKeys(db, 'mil', 'mil');
+      const { keys: res } = await getAuthorizedKeys(db, 'mil', 'mil');
       assert.equal(res.split('\n').length, 14);
     });
   });
 
   describe('check authorized_keys for user=biz and host=com', function() {
     it('should return 13 rows', async function() {
-      const res = await getAuthorizedKeys(db, 'biz', 'com');
+      const { keys: res } = await getAuthorizedKeys(db, 'biz', 'com');
       assert.equal(res.split('\n').length, 13);
     });
   });
 
   describe('check authorized_keys for user=unkown and host=unkown', function() {
     it('should return 1 rows (only Jolly user 3)', async function() {
-      const res = await getAuthorizedKeys(db, 'unkown', 'unkown');
+      const { keys: res } = await getAuthorizedKeys(db, 'unkown', 'unkown');
       assert.equal(res.split('\n').length, 1);
     });
   });
 
   describe('check authorized_keys for user=name and host=edu', function() {
     it('should return 10 rows per 4 users (5 + 2 + 2 + 1)', async function() {
-      const res = await getAuthorizedKeys(db, 'name', 'edu');
+      const { keys: res } = await getAuthorizedKeys(db, 'name', 'edu');
       assert.equal(res.split('\n').length, 10);
     });
   });

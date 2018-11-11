@@ -1,9 +1,10 @@
 import DbManager from '../../managers/DbManager';
 import mysql from 'mysql2';
 import MariadbClient from './client';
+import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 
 class MariadbManager extends DbManager {
-  dbVersion = 6;
+  dbVersion = 7;
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128) not null, name varchar(128) not null, ' +
@@ -33,13 +34,12 @@ class MariadbManager extends DbManager {
 
   CREATE_TABLE_PERMISSIONS =
     'create table permissions (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
-    'account_id INTEGER, ' +
     'group_id INTEGER, ' +
     'user varchar(512) not null, ' +
     'host varchar(512) not null, ' +
     'created_at BIGINT UNSIGNED, ' +
-    'FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE, ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+    'INDEX k_permissions_host_user (host, user),' +
+    'CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE)';
 
   constructor(settings) {
     super(settings);
@@ -138,6 +138,9 @@ class MariadbManager extends DbManager {
       try {
         await this.client.run('alter table public_keys add public_key_sig varchar(1024)');
       } catch (err) {}
+    }
+    if (fromVersion < 7) {
+      await runV7migrationMariaDb(this.client);
     }
     await this.updateVersion();
   }

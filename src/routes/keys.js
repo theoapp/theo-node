@@ -7,14 +7,19 @@ export default function handleKeys(server) {
     const { host, user } = req.params;
     try {
       if (accept && accept.indexOf('application/json') >= 0) {
-        const keys = await getAuthorizedKeysAsJson(req.db, user, host);
+        const { keys, cache } = await getAuthorizedKeysAsJson(req.db, user, host);
+        res.header('X-From-Cache', cache);
         res.json(keys);
       } else {
-        const keys = await getAuthorizedKeys(req.db, user, host);
+        const { keys, cache } = await getAuthorizedKeys(req.db, user, host);
+        res.header('X-From-Cache', cache);
         res.header('Content-Type', 'text/plain');
         res.send(keys);
       }
     } catch (err) {
+      if (process.env.MODE === 'test') {
+        console.error('Failed authorized_keys', err);
+      }
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
     }

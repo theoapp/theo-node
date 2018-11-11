@@ -11,7 +11,7 @@ class GroupManager extends BaseCacheManager {
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return this.db.all(sql, (err, rows));
+    return this.db.all(sql);
   }
 
   async get(id) {
