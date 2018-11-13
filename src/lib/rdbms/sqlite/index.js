@@ -1,15 +1,17 @@
 import DbManager from '../../managers/DbManager';
 import sqlite3 from 'sqlite3';
 import SqliteClient from './client';
+import { runV7migrationSqliteDb } from '../../../migrations/v7fixGroups';
 
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 6;
+  dbVersion = 8;
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), ' +
-    'active INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
+    'active INTEGER, ' +
+    'expire_at INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
 
   CREATE_TABLE_GROUPS =
     'create table groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, ' +
@@ -134,6 +136,20 @@ class SqliteManager extends DbManager {
       try {
         await this.client.run('alter table public_keys add public_key_sig varchar(1024)');
       } catch (err) {}
+    }
+    if (fromVersion < 7) {
+      await runV7migrationSqliteDb(this.client);
+
+      await this.client.run('create table permissions_tmp as select * from permissions');
+      await this.client.run('drop table permissions');
+      await this.client.run(this.CREATE_TABLE_PERMISSIONS);
+      await this.client.run(
+        'insert into permissions (id, group_id, user, host, created_at) select id, group_id, user, host, created_at from permissions_tmp'
+      );
+      await this.client.run('drop table permissions_tmp');
+    }
+    if (fromVersion < 8) {
+      await this.client.run('alter table accounts add expire_at INTEGER not null default 0');
     }
     await this.updateVersion();
   }

@@ -7,6 +7,7 @@ import {
   adminCreateAccount,
   adminCreateGroup,
   adminCreateGroupAccount,
+  adminEditAccount,
   adminGetAccount
 } from '../lib/helpers/AdminHelper';
 import accountsJson from './accounts';
@@ -133,6 +134,15 @@ describe('Check keys', function() {
     it('should return 10 rows per 4 users (5 + 2 + 2 + 1)', async function() {
       const { keys: res } = await getAuthorizedKeys(db, 'name', 'edu');
       assert.equal(res.split('\n').length, 10);
+    });
+  });
+
+  describe('check authorized_keys for user=name and host=edu after account expired', function() {
+    it('should return 10 rows per 4 users (5 + 2 + 1)', async function() {
+      const now = new Date().getTime();
+      await adminEditAccount(db, 'scallar1b@1und1.de', undefined, now - 60000);
+      const { keys: res } = await getAuthorizedKeys(db, 'name', 'edu');
+      assert.equal(res.split('\n').length, 8);
     });
   });
 });

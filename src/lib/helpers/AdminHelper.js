@@ -38,17 +38,36 @@ export const adminCreateAccount = async (db, account) => {
   }
 };
 
-export const adminEditAccount = async (db, account_id, active) => {
+export const adminEditAccount = async (db, account_id, active, expire_at) => {
+  if (typeof active === 'undefined' && typeof expire_at === 'undefined') {
+    return;
+  }
   const am = new AccountManager(db);
   try {
     if (isNaN(account_id)) {
       account_id = await am.getIdByEmail(account_id);
     }
-    const ret = await am.changeStatus(account_id, active);
-    if (ret === 0) {
-      const error = new Error('Account not found');
-      error.t_code = 404;
-      throw error;
+    if (typeof active !== 'undefined' && typeof expire_at !== 'undefined') {
+      const ret = await am.update(account_id, active, expire_at);
+      if (ret === 0) {
+        const error = new Error('Account not found');
+        error.t_code = 404;
+        throw error;
+      }
+    } else if (typeof active !== 'undefined') {
+      const ret = await am.changeStatus(account_id, active);
+      if (ret === 0) {
+        const error = new Error('Account not found');
+        error.t_code = 404;
+        throw error;
+      }
+    } else {
+      const ret = await am.updateExpire(account_id, expire_at);
+      if (ret === 0) {
+        const error = new Error('Account not found');
+        error.t_code = 404;
+        throw error;
+      }
     }
     EventHelper.emit('theo:change', {
       func: 'account',
@@ -58,7 +77,9 @@ export const adminEditAccount = async (db, account_id, active) => {
     });
     return true;
   } catch (err) {
+    console.error('Uops', err);
     err.t_code = 500;
+    err.reason = err.message;
     throw err;
   }
 };

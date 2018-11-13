@@ -16,19 +16,35 @@ class PermissionManager {
     }
   }
 
-  match(user, host) {
-    const sql =
-      'select distinct k.public_key, k.public_key_sig ' +
-      ' from accounts a, public_keys k, permissions p, groups g, groups_accounts ga ' +
-      'where ' +
-      'k.account_id = a.id ' +
+  static _getMatchSqlWhere() {
+    return (
+      'where ? like p.host and ? like p.user ' +
+      'and k.account_id = a.id ' +
       'and g.id = p.group_id ' +
       'and g.id = ga.group_id ' +
       'and a.id = ga.account_id ' +
       'and a.active = 1 ' +
       'and g.active = 1 ' +
-      'and ? like p.host and ? like p.user ';
-    return this.db.all(sql, [host, user]);
+      'and (a.expire_at = 0 or a.expire_at > ?) '
+    );
+  }
+
+  match(user, host) {
+    const sql =
+      'select distinct k.public_key, k.public_key_sig ' +
+      ' from accounts a, public_keys k, groups g, groups_accounts ga, permissions p ' +
+      PermissionManager._getMatchSqlWhere();
+    const now = new Date().getTime();
+    return this.db.all(sql, [host, user, now]);
+  }
+
+  search(user, host) {
+    const sql =
+      'select distinct a.id, a.email, p.host, p.user ' +
+      ' from accounts a, public_keys k, groups g, groups_accounts ga, permissions p ' +
+      PermissionManager._getMatchSqlWhere();
+    const now = new Date().getTime();
+    return this.db.all(sql, [host, user, now]);
   }
 
   async match_old(user, host) {

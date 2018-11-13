@@ -62,3 +62,15 @@ export const getAuthorizedKeysAsJson = async (db, user, host) => {
   }
   return { keys, cache: false };
 };
+
+export const getAuthorizedKeysAsFullJson = async (db, user, host) => {
+  const pm = new PermissionManager(db);
+  let keys;
+  try {
+    keys = await pm.search(user, host);
+  } catch (err) {
+    err.t_code = 500;
+    throw err;
+  }
+  return keys;
+};

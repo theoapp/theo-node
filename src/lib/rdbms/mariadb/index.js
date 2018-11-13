@@ -4,11 +4,11 @@ import MariadbClient from './client';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 
 class MariadbManager extends DbManager {
-  dbVersion = 7;
+  dbVersion = 8;
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128) not null, name varchar(128) not null, ' +
-    'active INTEGER not null default 1, updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (email))';
+    'active INTEGER not null default 1, expire_at BIGINT UNSIGNED not null default 0, updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (email))';
 
   CREATE_TABLE_GROUPS =
     'create table groups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128) not null, active INTEGER not null default 1, ' +
@@ -141,6 +141,9 @@ class MariadbManager extends DbManager {
     }
     if (fromVersion < 7) {
       await runV7migrationMariaDb(this.client);
+    }
+    if (fromVersion < 8) {
+      await this.client.run('alter table accounts add expire_at BIGINT UNSIGNED not null default 0');
     }
     await this.updateVersion();
   }

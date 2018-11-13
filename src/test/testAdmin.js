@@ -272,6 +272,24 @@ describe('Test account', function() {
       assert.equal(resAccount.permissions.length, 0);
     });
   });
+
+  describe('Add 1 account with expired date', function() {
+    it('should return an account object with expired date', async function() {
+      const account = {
+        email: 'expired@example.com',
+        name: 'Expired',
+        expire_at: '2018-01-01'
+      };
+      try {
+        await adminCreateAccount(db, account);
+      } catch (err) {
+        console.error(err);
+        assert.equal(true, false);
+      }
+      const resAccount = await adminGetAccount(db, account.email);
+      assert.equal(resAccount.expire_at, 1514764800000);
+    });
+  });
 });
 
 describe('Test group', function() {

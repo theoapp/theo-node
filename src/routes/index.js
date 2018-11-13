@@ -3,6 +3,8 @@ import handleKeys from './keys';
 import handleGroups from './groups';
 import { requireAdminAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
 import DbHelper from '../lib/helpers/DbHelper';
+import handlePermissions from './permissions';
+
 export const initRoutes = server => {
   server.get('/', (req, res, next) => {
     res.json({ status: 200 });
@@ -16,6 +18,10 @@ export const initRoutes = server => {
 
   // /accounts
   handleAccounts(server);
+
+  // /permissions
+
+  handlePermissions(server);
 
   server.post('/flushdb', requireAdminAuthMiddleware, async (req, res, next) => {
     if (!process.env.MODE || process.env.MODE !== 'test') {

@@ -2,6 +2,7 @@ import KeyManager from './KeyManager';
 import PermissionManager from './PermissionManager';
 import GroupAccountManager from './GroupAccountManager';
 import BaseCacheManager from './BaseCacheManager';
+import { getTimestampFromISO8601 } from '../utils/dateUtils';
 
 const MAX_ROWS = 100;
 
@@ -100,7 +101,7 @@ class AccountManager extends BaseCacheManager {
   }
 
   async get(id) {
-    const sql = 'select id, name, email, active from accounts where id = ? ';
+    const sql = 'select id, name, email, active, expire_at from accounts where id = ? ';
     const row = await this.db.get(sql, [id]);
     if (!row) {
       throw new Error('Account not found');
@@ -109,7 +110,7 @@ class AccountManager extends BaseCacheManager {
   }
 
   async getByEmail(email) {
-    const sql = 'select id, name, email, active from accounts where email = ? ';
+    const sql = 'select id, name, email, active, expire_at from accounts where email = ? ';
     const row = await this.db.get(sql, [email]);
     if (!row) {
       throw new Error('Account not found');
@@ -127,8 +128,12 @@ class AccountManager extends BaseCacheManager {
   }
 
   async create(account) {
-    const sql = 'insert into accounts (email, name, active, created_at) values (?, ?, 1 , ?) ';
-    const lastId = await this.db.insert(sql, [account.email, account.name, new Date().getTime()]);
+    let expire_at = 0;
+    if (account.expire_at) {
+      expire_at = getTimestampFromISO8601(account.expire_at);
+    }
+    const sql = 'insert into accounts (email, name, active, expire_at, created_at) values (?, ?, 1, ?, ?) ';
+    const lastId = await this.db.insert(sql, [account.email, account.name, expire_at, new Date().getTime()]);
     this.invalidateCache();
     return lastId;
   }
@@ -137,6 +142,22 @@ class AccountManager extends BaseCacheManager {
     const sql = 'update accounts set active = ?, updated_at = ? where id = ? ';
     active = !!active;
     const changes = await this.db.update(sql, [active, new Date().getTime(), id]);
+    this.invalidateCache();
+    return changes;
+  }
+
+  async updateExpire(id, expire_at) {
+    expire_at = getTimestampFromISO8601(expire_at);
+    const sql = 'update accounts set expire_at = ?, updated_at = ? where id = ? ';
+    const changes = await this.db.update(sql, [expire_at, new Date().getTime(), id]);
+    this.invalidateCache();
+    return changes;
+  }
+
+  async update(id, active, expire_at) {
+    expire_at = getTimestampFromISO8601(expire_at);
+    const sql = 'update accounts set active = ?, expire_at = ?, updated_at = ? where id = ? ';
+    const changes = await this.db.update(sql, [active, expire_at, new Date().getTime(), id]);
     this.invalidateCache();
     return changes;
   }
@@ -157,7 +178,7 @@ class AccountManager extends BaseCacheManager {
 
   async getKeysIfActive(id) {
     const sql =
-      'select k.public_key, k.public_key_sig from public_keys k, accounts a where a.id = k.account_id and a.active = 1 and a.id = ?';
+      'select k.public_key, k.public_key_sig from public_keys k, accounts a where a.id = k.account_id and a.active = 1 and (a.expire_at = 0 or a.expire_at > now()) and a.id = ?';
     return this.db.all(sql, [id]);
   }
 }
