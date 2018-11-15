@@ -2,6 +2,8 @@ import { loadCacheManager } from '../helpers/CacheHelper';
 
 let _cm;
 
+export const MAX_ROWS = 100;
+
 class BaseCacheManager {
   constructor(db) {
     this.db = db;

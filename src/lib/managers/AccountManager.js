@@ -1,10 +1,8 @@
 import KeyManager from './KeyManager';
 import PermissionManager from './PermissionManager';
 import GroupAccountManager from './GroupAccountManager';
-import BaseCacheManager from './BaseCacheManager';
+import BaseCacheManager, { MAX_ROWS } from './BaseCacheManager';
 import { getTimestampFromISO8601 } from '../utils/dateUtils';
-
-const MAX_ROWS = 100;
 
 class AccountManager extends BaseCacheManager {
   async getAllCount(where = false, whereArgs = []) {
@@ -13,7 +11,7 @@ class AccountManager extends BaseCacheManager {
     return row.total;
   }
 
-  async getAll(limit = 10, offset = 0) {
+  async getAll(limit = 10, offset = 0, skipCount = false) {
     if (limit > MAX_ROWS) {
       limit = MAX_ROWS;
     }
@@ -23,7 +21,10 @@ class AccountManager extends BaseCacheManager {
     if (!offset || offset < 0) {
       offset = 0;
     }
-    const total = await this.getAllCount();
+    let total = -1;
+    if (!skipCount) {
+      total = await this.getAllCount();
+    }
     let sql = 'select id, email, name, active from accounts order by name';
     if (limit) {
       sql += ' limit ' + limit;
@@ -132,8 +133,14 @@ class AccountManager extends BaseCacheManager {
     if (account.expire_at) {
       expire_at = getTimestampFromISO8601(account.expire_at);
     }
-    const sql = 'insert into accounts (email, name, active, expire_at, created_at) values (?, ?, 1, ?, ?) ';
-    const lastId = await this.db.insert(sql, [account.email, account.name, expire_at, new Date().getTime()]);
+    const sql = 'insert into accounts (email, name, active, expire_at, created_at) values (?, ?, ?, ?, ?) ';
+    const lastId = await this.db.insert(sql, [
+      account.email,
+      account.name,
+      account.active || 1,
+      expire_at,
+      new Date().getTime()
+    ]);
     this.invalidateCache();
     return lastId;
   }
