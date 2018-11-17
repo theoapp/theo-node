@@ -111,15 +111,40 @@ const setEnv = () => {
 
 setEnv();
 
-const ah = AppHelper(settings);
+if (!settings.admin.token && settings.client.tokens.length === 0) {
+  console.error('\n !!! WARNING !!! ');
+  console.error(' No admin token nor client tokens found ');
+  console.error(' !!! WARNING !!! \n');
+}
 
+console.log(`
+    ________ ________ ____ _____
+   /_______/____/___/____/_____/
+    /   /  /   /   /  __/ _   /
+   /   /  /   -   /  __/ /_/ /
+  /___/  /___/___/____/_____/
+  
+
+      _______________
+     /              /|
+    /              / |
+   /______________/  |
+   |\\  |__________|  |
+   | \\/  🔑 🔑 🔑 |  /
+   |  \\🔑  🔑  🔑 | /
+   |   |__________|/
+   \\ \\ |
+    \\  |
+     \\ |
+      \\|
+
+`);
+const ah = AppHelper(settings);
 if (process.env.USE_PLUGINS && (process.env.USE_PLUGINS === '1' || process.env.USE_PLUGINS === 'true')) {
   loadPlugins();
 }
-
 let dh;
 let dm;
-
 try {
   dh = DbHelper(ah.getSettings('db'));
   dm = dh.getManager();
@@ -132,7 +157,6 @@ try {
   console.error(e);
   process.exit(99);
 }
-
 const initDb = () => {
   try {
     dh.init()
@@ -151,7 +175,6 @@ const initDb = () => {
     process.exit(99);
   }
 };
-
 const testDB = async () => {
   try {
     const client = dm.getClient();
@@ -162,7 +185,6 @@ const testDB = async () => {
     return false;
   }
 };
-
 let ch;
 let cm;
 try {
@@ -179,21 +201,17 @@ if (ch) {
     });
   }
 }
-
 const startServer = () => {
   // HTTP server
-
   const server = restify.createServer({
     name: packageJson.name + '/' + packageJson.version
   });
-
   server.use(restify.plugins.acceptParser(server.acceptable));
   server.use(restify.plugins.dateParser());
   server.use(restify.plugins.queryParser());
   server.use(restify.plugins.gzipResponse());
   server.use(restify.plugins.bodyParser());
   server.use(authMiddleware);
-
   server.use(async (req, res, next) => {
     const client = dm.getClient();
     await client.open();
@@ -203,13 +221,11 @@ const startServer = () => {
     });
     next();
   });
-
   initRoutes(server);
   server.listen(settings.server.http_port, function() {
     console.log('%s listening at %s', server.name, server.url);
   });
 };
-
 process.on('SIGINT', async () => {
   console.log('Caught interrupt signal');
   try {
@@ -220,7 +236,6 @@ process.on('SIGINT', async () => {
   } catch (e) {}
   process.exit();
 });
-
 const startTestDb = async retry => {
   if (retry >= DB_CONN_MAX_RETRY) {
     console.error("Givin' it up, failed to connect to db after %s retries", DB_CONN_MAX_RETRY);
@@ -236,5 +251,4 @@ const startTestDb = async retry => {
     }, retry * 1000);
   }
 };
-
 startTestDb(0);
