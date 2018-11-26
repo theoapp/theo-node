@@ -28,11 +28,12 @@ services:
       - traefik.frontend.rule=Host:${THEO_FQDN}
       - traefik.docker.network=http_network
     environment:
-      - DATA_PATH=/data/${THEO_DATA_FILE}
-      - ADMIN_TOKEN=${THEO_ADMIN_TOKEN}
-      - CLIENT_TOKENS=${THEO_CLIENT_TOKENS}
-      - CACHE_ENABLED=redis
-      - CACHE_URI=redis://theo_cache:6379
+      - DB_ENGINE
+      - DB_STORAGE
+      - ADMIN_TOKEN
+      - CLIENT_TOKENS
+      - CACHE_ENABLED
+      - CACHE_URI
     volumes:
       - ${VOLUMES_ROOT_PATH}/data:/data
     networks:
@@ -47,7 +48,7 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${VOLUMES_ROOT_PATH}/traefik/traefik.toml:/traefik.toml:ro
-      - ${VOLUMES_ROOT_PATH}/traefik/acme:/etc/traefik/acme
+      - ${VOLUMES_ROOT_PATH}/traefik.toml:/traefik.toml:ro
+      - ${VOLUMES_ROOT_PATH}/acme:/etc/traefik/acme
     networks:
       - http_network
