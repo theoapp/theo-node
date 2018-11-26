@@ -4,8 +4,9 @@ import CachedManager from '../../managers/CacheManager';
 class RedisManager extends CachedManager {
   constructor(settings) {
     super(settings);
-    const options = {
+    this.options = {
       url: settings.uri,
+      password: settings.password,
       retry_strategy: function(options) {
         if (options.error && options.error.code === 'ECONNREFUSED') {
           // End reconnecting on a specific error and flush all commands with
@@ -25,13 +26,30 @@ class RedisManager extends CachedManager {
         return Math.min(options.attempt * 100, 3000);
       }
     };
-    this.redis = redis.createClient(options);
-    console.log('RedisManager started');
-    this.redis.on('error', () => {});
+    this.testConn()
+      .then()
+      .catch();
+  }
+  async testConn() {
+    try {
+      const conn = await this.open();
+      console.log('Redis server: ', conn.server_info.redis_version);
+      this.close(conn);
+    } catch (e) {
+      console.error('Failed to test redis connection', e);
+    }
   }
   set(key, value) {
-    return new Promise((resolve, reject) => {
-      this.redis.set(key, value, err => {
+    return new Promise(async (resolve, reject) => {
+      let redis;
+      try {
+        redis = await this.open();
+      } catch (e) {
+        reject(e);
+        return;
+      }
+      redis.set(key, value, err => {
+        this.close(redis);
         if (err) {
           return reject(err);
         }
@@ -40,8 +58,16 @@ class RedisManager extends CachedManager {
     });
   }
   get(key) {
-    return new Promise((resolve, reject) => {
-      this.redis.get(key, (err, data) => {
+    return new Promise(async (resolve, reject) => {
+      let redis;
+      try {
+        redis = await this.open();
+      } catch (e) {
+        reject(e);
+        return;
+      }
+      redis.get(key, (err, data) => {
+        this.close(redis);
         if (err) {
           return reject(err);
         }
@@ -50,8 +76,16 @@ class RedisManager extends CachedManager {
     });
   }
   del(key) {
-    return new Promise((resolve, reject) => {
-      this.redis.del(key, value, err => {
+    return new Promise(async (resolve, reject) => {
+      let redis;
+      try {
+        redis = await this.open();
+      } catch (e) {
+        reject(e);
+        return;
+      }
+      redis.del(key, value, err => {
+        this.close(redis);
         if (err) {
           return reject(err);
         }
@@ -60,10 +94,17 @@ class RedisManager extends CachedManager {
     });
   }
   flush() {
-    console.log('Flushing Redis');
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+      let redis;
       try {
-        this.redis.flushdb(err => {
+        redis = await this.open();
+      } catch (e) {
+        reject(e);
+        return;
+      }
+      try {
+        redis.flushdb(err => {
+          this.close(redis);
           if (err) {
             return reject(err);
           }
@@ -74,10 +115,21 @@ class RedisManager extends CachedManager {
       }
     });
   }
-  close() {
+  close(conn) {
     try {
-      this.redis.close();
+      conn.close();
     } catch (e) {}
+  }
+  open() {
+    return new Promise((resolve, reject) => {
+      const conn = redis.createClient(this.options);
+      conn.on('error', e => {
+        reject(e);
+      });
+      conn.on('ready', () => {
+        resolve(conn);
+      });
+    });
   }
 }
 
