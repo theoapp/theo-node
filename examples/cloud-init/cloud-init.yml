@@ -13,7 +13,8 @@ write_files:
       curl -L -s -o /usr/sbin/theo-agent \
         https://github.com/theoapp/theo-agent/releases/download/$(curl -L -s -H 'Accept: application/json' https://github.com/theoapp/theo-agent/releases/latest |sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')/theo-agent-linux-amd64
       chmod 755 /usr/sbin/theo-agent
-      /usr/sbin/theo-agent -install -no-interactive -sshd-config -url "https://keys.authkeys.io" -token PmNyJaMCHerPsJyrDXkQm2MbvcDxjffDeb6Q4fxLnyqEr2DRjmFV7XyBcLjPtH2j
+      # Replace THEO_APP_URL and VALID_CLIENT_TOKEN accordingly with you installation
+      /usr/sbin/theo-agent -install -no-interactive -sshd-config -url THEO_APP_URL -token VALID_CLIENT_TOKEN
 
 runcmd:
   - /usr/sbin/download-install-theo.sh
