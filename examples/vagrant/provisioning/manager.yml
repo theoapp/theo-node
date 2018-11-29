@@ -1,0 +1,38 @@
+- hosts: all
+
+  tasks:
+  - name: Download nvm
+    get_url:
+      url: https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh
+      dest: /tmp/nvm-install.sh
+      mode: 0775
+  - name: Install nvm
+    shell: /tmp/nvm-install.sh
+
+  - name: Install Node.js
+    shell: '. {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install v8'
+    args:
+      creates: "{{ ansible_env.HOME }}/.nvm/versions/node"
+      chdir: "{{ ansible_env.HOME }}"
+      executable: /bin/bash
+  - name: Add server to hosts file
+    become: true
+    lineinfile: dest=/etc/hosts regexp='.*server$' line="192.168.56.254 server" state=present
+  - name: Create dir theo
+    file:
+      path: "{{ ansible_env.HOME }}/.theo"
+      state: directory
+      mode: 0775
+      recurse: yes
+  - name: Create theo settings
+    file:
+      path: "{{ ansible_env.HOME }}/.theo/env"
+      state: touch
+  - name: Setup theo-cli
+    lineinfile:
+      path: "{{ ansible_env.HOME }}/.theo/env"
+      regexp: "^#? *{{ item.key | regex_escape() }}="
+      line: "{{ item.key }}={{ item.value }}"
+    with_items:
+      - { key: THEO_URL, value: "http://server:9100" }
+      - { key: THEO_TOKEN, value: "demo-client-token" }

@@ -1,0 +1,21 @@
+#cloud-config
+
+users:
+  - name: theo-agent
+    shell: /bin/false
+
+write_files:
+  - path: /usr/sbin/download-install-theo.sh
+    owner: root:root
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      curl -L -s -o /usr/sbin/theo-agent \
+        https://github.com/theoapp/theo-agent/releases/download/$(curl -L -s -H 'Accept: application/json' https://github.com/theoapp/theo-agent/releases/latest |sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')/theo-agent-linux-amd64
+      chmod 755 /usr/sbin/theo-agent
+      /usr/sbin/theo-agent -install -no-interactive -sshd-config -url "https://keys.authkeys.io" -token PmNyJaMCHerPsJyrDXkQm2MbvcDxjffDeb6Q4fxLnyqEr2DRjmFV7XyBcLjPtH2j
+
+runcmd:
+  - /usr/sbin/download-install-theo.sh
+  - systemctl restart ssh.service
+

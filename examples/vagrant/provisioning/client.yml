@@ -1,0 +1,21 @@
+- hosts: all
+  become: yes
+  tasks:
+  - name: Add the user 'theo-agent'
+    user:
+      name: theo-agent
+      comment: Theo Agent
+      shell: /bin/false
+  - name: Download theo-agent
+    get_url:
+      url: https://github.com/theoapp/theo-agent/releases/download/v0.5.1/theo-agent-linux-amd64
+      dest: /usr/sbin/theo-agent
+      mode: 0775
+  - name: Add server to hosts file
+    lineinfile: dest=/etc/hosts regexp='.*server$' line="192.168.56.254 server" state=present
+  - name: Install theo agent
+    shell: theo-agent -install -no-interactive -sshd-config -url http://server:9100 -token "demo-client-token"
+  - name: reload service ssh, in all cases
+    systemd:
+      name: ssh
+      state: reloaded

@@ -1,0 +1,25 @@
+- hosts: all
+  become: yes
+  roles:
+  - { role: "nickjj.docker", tags: ["docker"] }
+  tasks:
+  - name: Create dir
+    file:
+        path: /srv/theo/data
+        state: directory
+        owner: root
+        group: root
+        mode: 0775
+        recurse: yes
+  - name: run theo image
+    shell: >
+        docker run -d --name theo -p 9100:9100 \
+          -e DB_ENGINE=sqlite \
+          -e DB_STORAGE=/data/theo.sql \
+          -e ADMIN_TOKEN=demo-admin-token \
+          -e CLIENT_TOKENS=demo-client-token \
+          -v /srv/theo/data:/data \
+          theoapp/theo
+
+
+
