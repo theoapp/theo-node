@@ -4,7 +4,10 @@ import MariadbClient from './client';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 
 class MariadbManager extends DbManager {
-  dbVersion = 8;
+  dbVersion = 9;
+
+  CREATE_TABLE_AUTH_TOKENS =
+    'create table auth_tokens (token varchar(128) PRIMARY KEY, type varchar(5), created_at BIGINT UNSIGNED)';
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128) not null, name varchar(128) not null, ' +
@@ -95,6 +98,7 @@ class MariadbManager extends DbManager {
   }
 
   async initDb() {
+    await this.client.run(this.CREATE_TABLE_AUTH_TOKENS);
     await this.client.run(this.CREATE_TABLE_ACCOUNTS);
     await this.client.run(this.CREATE_TABLE_PUBLIC_KEYS);
     await this.client.run(this.CREATE_TABLE_GROUPS);
@@ -145,12 +149,15 @@ class MariadbManager extends DbManager {
     if (fromVersion < 8) {
       await this.client.run('alter table accounts add expire_at BIGINT UNSIGNED not null default 0');
     }
+    if (fromVersion < 9) {
+      await this.client.run(this.CREATE_TABLE_AUTH_TOKENS);
+    }
     await this.updateVersion();
   }
 
   async flushDb() {
     console.log('Flushing db...');
-    const tables = 'public_keys, groups_accounts, permissions, groups, accounts, _version'.split(',');
+    const tables = 'public_keys, groups_accounts, permissions, groups, accounts, auth_tokens, _version'.split(',');
     for (let i = 0; i < tables.length; i++) {
       const sqlDrop = 'drop table ' + tables[i];
       try {

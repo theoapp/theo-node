@@ -84,19 +84,29 @@ const setDbEnv = () => {
 };
 
 const setEnv = () => {
-  const adminToken = process.env.ADMIN_TOKEN || false;
-  if (adminToken) {
-    settings.admin.token = adminToken;
+  const coreToken = process.env.CORE_TOKEN || false;
+  if (coreToken) {
+    settings.core = {
+      token: coreToken
+    };
   }
-  const clientTokens = process.env.CLIENT_TOKENS || false;
-  if (clientTokens) {
-    settings.client.tokens = clientTokens.split(',');
+  if (!settings.core || settings.core.token) {
+    const adminToken = process.env.ADMIN_TOKEN || false;
+    if (adminToken) {
+      settings.admin.token = adminToken;
+    }
+    const clientTokens = process.env.CLIENT_TOKENS || false;
+    if (clientTokens) {
+      settings.client.tokens = clientTokens.split(',');
+    }
   }
+
   const httpPort = process.env.HTTP_PORT || false;
   if (httpPort) {
     settings.server.http_port = Number(httpPort);
   }
   const cache = process.env.CACHE_ENABLED || false;
+
   if (cache) {
     settings.cache = {
       type: cache,
@@ -160,8 +170,19 @@ try {
 const initDb = () => {
   try {
     dh.init()
-      .then(() => {
+      .then(async () => {
         console.log('Db %s initiated', dm.getEngine());
+        if (settings.core && settings.core.token) {
+          // Load tokens..
+          try {
+            const client = dm.getClient();
+            await client.open();
+            await ah.loadAuthTokens(client);
+          } catch (e) {
+            console.error('Unable to load auth tokens... bye bye', e);
+            process.exit(4);
+          }
+        }
         startServer();
       })
       .catch(e => {

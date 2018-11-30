@@ -6,7 +6,9 @@ import { runV7migrationSqliteDb } from '../../../migrations/v7fixGroups';
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 8;
+  dbVersion = 9;
+
+  CREATE_TABLE_AUTH_TOKENS = 'create table auth_tokens (token text PRIMARY KEY, type varchar(5), created_at INTEGER)';
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), ' +
@@ -92,6 +94,7 @@ class SqliteManager extends DbManager {
   }
 
   async initDb() {
+    await this.client.run(this.CREATE_TABLE_AUTH_TOKENS);
     await this.client.run(this.CREATE_TABLE_ACCOUNTS);
     await this.client.run(this.CREATE_TABLE_PUBLIC_KEYS);
     await this.client.run(this.CREATE_TABLE_PERMISSIONS);
@@ -151,6 +154,9 @@ class SqliteManager extends DbManager {
     if (fromVersion < 8) {
       await this.client.run('alter table accounts add expire_at INTEGER not null default 0');
     }
+    if (fromVersion < 9) {
+      await this.client.run(this.CREATE_TABLE_AUTH_TOKENS);
+    }
     await this.updateVersion();
   }
 
@@ -159,7 +165,7 @@ class SqliteManager extends DbManager {
       this.close();
       this.prepareDb(IN_MEMORY_DB);
     } else {
-      const tables = 'public_keys, groups_accounts, permissions, groups, accounts, _version'.split(',');
+      const tables = 'public_keys, groups_accounts, permissions, groups, accounts, auth_tokens, _version'.split(',');
       for (let i = 0; i < tables.length; i++) {
         const sqlDrop = 'drop table ' + tables[i];
         try {

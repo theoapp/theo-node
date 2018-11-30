@@ -9,8 +9,6 @@ export const authMiddleware = (req, res, next) => {
       next();
       return;
     }
-    const _sm = AppHelper();
-    const _settings = _sm.getSettings('admin');
     try {
       const token = pieces[1].trim();
       let gotcb = false;
@@ -20,17 +18,23 @@ export const authMiddleware = (req, res, next) => {
         if (!err && auth) {
           req.is_authorized = true;
           req.is_admin = auth.is_admin || false;
+          req.is_core = auth.is_core || false;
         }
         next();
       });
       if (!done) {
-        if (token === _settings.token) {
+        const _sm = AppHelper();
+        const _settings = _sm.getSettings();
+        if (_settings.core && token === _settings.core.token) {
+          req.is_authorized = true;
+          req.is_admin = true;
+          req.is_core = true;
+        } else if (token === _settings.admin.token) {
           req.is_authorized = true;
           req.is_admin = true;
         } else {
-          const _client = _sm.getSettings('client');
-          if (_client.tokens) {
-            if (_client.tokens.includes(token)) {
+          if (_settings.client.tokens) {
+            if (_settings.client.tokens.includes(token)) {
               req.is_authorized = true;
             }
           }
@@ -40,6 +44,15 @@ export const authMiddleware = (req, res, next) => {
     } catch (e) {
       next();
     }
+    return;
+  }
+  next();
+};
+
+export const requireCoreAuthMiddleware = (req, res, next) => {
+  if (!req.is_authorized && !req.is_core) {
+    res.status(401);
+    res.json({ status: 401, reason: 'Unauthorized' });
     return;
   }
   next();
