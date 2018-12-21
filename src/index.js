@@ -121,7 +121,11 @@ const setEnv = () => {
 
 setEnv();
 
-if (!settings.admin.token && settings.client.tokens.length === 0) {
+if (settings.core) {
+  console.log('\n !!! INFO !!! ');
+  console.log(' Using core mode ');
+  console.error(' !!! INFO !!! \n');
+} else if (!settings.admin.token && settings.client.tokens.length === 0) {
   console.error('\n !!! WARNING !!! ');
   console.error(' No admin token nor client tokens found ');
   console.error(' !!! WARNING !!! \n');
