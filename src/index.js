@@ -239,7 +239,14 @@ const startServer = () => {
   server.use(authMiddleware);
   server.use(async (req, res, next) => {
     const client = dm.getClient();
-    await client.open();
+    try {
+      await client.open();
+    } catch (err) {
+      // Ops..
+      res.status(500);
+      res.json({ status: 500, reason: 'A problem occured, please retry' });
+      return;
+    }
     req.db = client;
     res.on('finish', () => {
       client.close();
