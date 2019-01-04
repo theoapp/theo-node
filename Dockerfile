@@ -27,4 +27,5 @@ COPY --from=builder /usr/src/app/build ./build/
 
 EXPOSE 9100
 
+USER node
 CMD [ "npm", "start" ]
