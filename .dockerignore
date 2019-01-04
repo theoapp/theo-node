@@ -4,7 +4,8 @@
 .gitignore
 .idea
 .npmrc
+node_modules
+build
 README.md
 data
 env.sample
-build/test
