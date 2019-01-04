@@ -1,14 +1,30 @@
-FROM node:8-alpine
+# builder image
+FROM node:8-alpine AS builder
 
-EXPOSE 9100
-
-
-RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-ARG NODE_ENV
-ENV NODE_ENV $NODE_ENV
+COPY package*.json ./
 
-COPY . /usr/src/app
+RUN npm install --no-optional
+
+COPY . .
+
+RUN npm run build
+
+# production image
+FROM node:8-alpine
+
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install --no-optional &&\
+    npm cache clean --force
+
+COPY --from=builder /usr/src/app/build ./build/
+
+EXPOSE 9100
 
 CMD [ "npm", "start" ]
