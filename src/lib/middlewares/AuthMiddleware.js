@@ -4,13 +4,13 @@ import EventHelper from '../helpers/EventHelper';
 export const authMiddleware = (req, res, next) => {
   const authorization = req.header('Authorization');
   if (authorization) {
-    const pieces = authorization.split(' ');
-    if (pieces[0] !== 'Bearer') {
+    const m = /^[Bb]earer\s+(\S+)$/.exec(authorization);
+    if (m === null) {
       next();
       return;
     }
     try {
-      const token = pieces[1].trim();
+      const [, token] = m;
       let gotcb = false;
       const done = EventHelper.emit('theo:authorize', token, (err, auth) => {
         if (gotcb) return;
