@@ -2,6 +2,8 @@ import DbManager from '../../managers/DbManager';
 import sqlite3 from 'sqlite3';
 import SqliteClient from './client';
 import { runV7migrationSqliteDb } from '../../../migrations/v7fixGroups';
+import fs from 'fs';
+import { dirname } from 'path';
 
 const IN_MEMORY_DB = ':memory:';
 
@@ -54,6 +56,22 @@ class SqliteManager extends DbManager {
   }
 
   prepareDb(storage) {
+    if (!this.is_in_memory) {
+      // If db file does not exists...
+      if (!fs.existsSync(storage)) {
+        // if parent directory does not exists..
+        const parentDir = dirname(storage);
+        if (!fs.existsSync(parentDir)) {
+          // let create it..
+          try {
+            fs.mkdirSync(parentDir, { recursive: true });
+          } catch (err) {
+            console.error('ERROR creating dir structure for Sqlite db file: %s', storage, err.message);
+            throw err;
+          }
+        }
+      }
+    }
     this.db = new sqlite3.Database(storage);
     this.db.run('PRAGMA foreign_keys = ON');
   }
