@@ -13,19 +13,24 @@ jobs:
   include:
     - stage: test
       script:
-        - docker run --rm -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm i -g npm && npm i --no-optional && npm run build'
-        - docker run -d --rm --name theo -e MODE=test -e DATA_PATH=":memory:" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm start'
-        - docker run --rm --link theo -e "THEO_URL=http://theo:9100" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm test'
+        - docker run --rm -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm i --no-optional && npm run build'
+        - docker run -d --rm --name theo -e MODE=test -e DATA_PATH=":memory:" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm start'
+        - docker run --rm --link theo -e "THEO_URL=http://theo:9100" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm test'
         - docker stop theo
         - docker run -d --rm --name memcached memcached:1.5-alpine
-        - docker run -d --rm --name theo --link memcached -e CACHE_ENABLED=memcached -e "CACHE_URI=memcached:11211" -e MODE=test -e DB_STORAGE=":memory:" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm start'
-        - docker run --rm --link theo -e "THEO_URL=http://theo:9100" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm test'
+        - docker run -d --rm --name theo --link memcached -e CACHE_ENABLED=memcached -e "CACHE_URI=memcached:11211" -e MODE=test -e DB_STORAGE=":memory:" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm start'
+        - docker run --rm --link theo -e "THEO_URL=http://theo:9100" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm test'
         - docker stop theo
         - docker stop memcached
+        - docker run -d --rm --name redis redis:4.0-alpine
+        - docker run -d --rm --name theo --link redis -e CACHE_ENABLED=redis -e "CACHE_URI=redis://redis:6379" -e MODE=test -e DB_STORAGE=":memory:" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm start'
+        - docker run --rm --link theo -e "THEO_URL=http://theo:9100" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm test'
+        - docker stop theo
+        - docker stop redis
         - docker run -d --rm --name mariadb -e MYSQL_ROOT_PASSWORD=example -e MYSQL_DATABASE=theo -e MYSQL_USER=theouser -e MYSQL_PASSWORD=theopwd mariadb
-        - docker run -d --rm --name theo --link mariadb -e MODE=test -e DB_ENGINE=mariadb -e DB_HOST=mariadb -e DB_USER=theouser -e DB_PASSWORD=theopwd -e DB_NAME=theo -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm start'
+        - docker run -d --rm --name theo --link mariadb -e MODE=test -e DB_ENGINE=mariadb -e DB_HOST=mariadb -e DB_USER=theouser -e DB_PASSWORD=theopwd -e DB_NAME=theo -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm start'
         - sleep 10
-        - docker run --rm --link theo --link mariadb -e DB_ENGINE=mariadb -e DB_HOST=mariadb -e DB_USER=theouser -e DB_PASSWORD=theopwd -e DB_NAME=theo -e "THEO_URL=http://theo:9100" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:8-alpine sh -c 'npm test'
+        - docker run --rm --link theo --link mariadb -e DB_ENGINE=mariadb -e DB_HOST=mariadb -e DB_USER=theouser -e DB_PASSWORD=theopwd -e DB_NAME=theo -e "THEO_URL=http://theo:9100" -e "ADMIN_TOKEN=testadmin" -e "CLIENT_TOKENS=test1client,test2client" -v $PWD:/usr/local/src -w /usr/local/src node:10-alpine sh -c 'npm test'
         - docker stop theo
         - docker stop mariadb
     - stage: build
