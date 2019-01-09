@@ -12,29 +12,28 @@ dotenv.config();
 
 const DB_CONN_MAX_RETRY = 10;
 
-let settings;
+let settings = {
+  admin: {
+    token: ''
+  },
+  client: {
+    tokens: []
+  },
+  server: {
+    http_port: 9100
+  },
+  db: {
+    engine: 'sqlite',
+    storage: './data/theo.db'
+  },
+  keys: {
+    sign: false
+  }
+};
 const settingsJson = process.env.SETTINGS_FILE;
 if (settingsJson) {
-  settings = require(settingsJson);
-} else {
-  settings = {
-    admin: {
-      token: ''
-    },
-    client: {
-      tokens: []
-    },
-    server: {
-      http_port: 9100
-    },
-    db: {
-      engine: 'sqlite',
-      storage: './data/theo.db'
-    },
-    keys: {
-      sign: false
-    }
-  };
+  const _settings = require(settingsJson);
+  settings = Object.assign({}, settings, _settings);
 }
 
 const setDbEnv = () => {
@@ -128,10 +127,18 @@ const setEnv = () => {
 
 setEnv();
 
+let subscribe_core_token = false;
+
 if (settings.core) {
   console.log('\n !!! INFO !!! ');
   console.log(' Using core mode ');
   console.error(' !!! INFO !!! \n');
+  if (settings.cache && settings.cache.type === 'redis') {
+    const cluster_mode = process.env.CLUSTER_MODE || '0';
+    if (cluster_mode === '1') {
+      subscribe_core_token = true;
+    }
+  }
 } else if (!settings.admin.token && settings.client.tokens.length === 0) {
   console.error('\n !!! WARNING !!! ');
   console.error(' No admin token nor client tokens found ');
@@ -217,6 +224,20 @@ const testDB = async () => {
     return false;
   }
 };
+const redisSubscribe = () => {
+  return new Promise(async (resolve, reject) => {
+    const client = await cm.open();
+    client.on('message', async (channel, message) => {
+      if (message === 'flush_tokens') {
+        console.log('Flushing tokens!');
+        const client = dm.getClient();
+        await client.open();
+        await ah.loadAuthTokens(client);
+      }
+    });
+    client.subscribe('core_tokens');
+  });
+};
 let ch;
 let cm;
 try {
@@ -227,10 +248,14 @@ try {
 if (ch) {
   cm = ch.getManager();
   if (cm) {
-    console.log('Flushing CacheManager');
-    cm.flush().catch(er => {
-      console.error('Failed to initialize CacheManager', er.message);
-    });
+    if (!subscribe_core_token) {
+      console.log('Flushing CacheManager');
+      cm.flush().catch(er => {
+        console.error('Failed to initialize CacheManager', er.message);
+      });
+    } else {
+      redisSubscribe().finally();
+    }
   }
 }
 const startServer = () => {

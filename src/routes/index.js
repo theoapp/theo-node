@@ -7,6 +7,7 @@ import AppHelper from '../lib/helpers/AppHelper';
 import handlePermissions from './permissions';
 import handleImpExp from './impexp';
 import AuthTokenManager from '../lib/managers/AuthTokenManager';
+import { loadCacheManager } from '../lib/helpers/CacheHelper';
 
 export const initRoutes = server => {
   server.get('/', (req, res, next) => {
@@ -63,12 +64,30 @@ export const initRoutes = server => {
       for (let i = 0; i < tokens.clients.length; i++) {
         await atm.create(tokens.clients[i], 'agent');
       }
-      const ah = AppHelper();
-      ah.reloadAuthToken(tokens);
-      res.send(204);
+
+      if (process.env.CLUSTER_MODE && process.env.CLUSTER_MODE === '1') {
+        setImmediate(async () => {
+          const cm = loadCacheManager();
+          try {
+            const client = await cm.open();
+            client.publish('core_tokens', 'flush_tokens');
+            cm.close(client);
+            res.send(204);
+          } catch (e) {
+            console.error('Error while flushing cache tokens', e);
+            res.status(500);
+            res.json({ code: 500, reason: e.message });
+          }
+        });
+      } else {
+        const ah = AppHelper();
+        ah.reloadAuthToken(tokens);
+        res.send(204);
+      }
     } catch (err) {
       console.error('Error while pushing tokens', err);
-      res.send(500);
+      res.status(500);
+      res.json({ code: 500, reason: 'Fail to update tokens' });
     }
   });
 };

@@ -3,10 +3,19 @@ import CachedManager from '../../managers/CacheManager';
 
 class RedisManager extends CachedManager {
   constructor(settings) {
-    super(settings);
+    super(settings.options);
+    // parse options..
+    const _options = {};
+    if (settings.options) {
+      let parts = settings.options.split(',');
+      parts.forEach(part => {
+        let keyval = part.split('=');
+        _options[keyval[0]] = keyval[1];
+      });
+    }
     this.options = {
       url: settings.uri,
-      password: settings.password,
+      password: _options.password,
       retry_strategy: function(options) {
         if (options.error && options.error.code === 'ECONNREFUSED') {
           // End reconnecting on a specific error and flush all commands with
