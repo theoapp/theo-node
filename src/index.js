@@ -30,6 +30,9 @@ if (settingsJson) {
     db: {
       engine: 'sqlite',
       storage: './data/theo.db'
+    },
+    keys: {
+      sign: false
     }
   };
 }
@@ -115,6 +118,10 @@ const setEnv = () => {
         options: process.env.CACHE_OPTIONS || false
       }
     };
+  }
+  const keySign = process.env.KEY_SIGN || '0';
+  if (keySign === '1') {
+    settings.keys.sign = true;
   }
   setDbEnv();
 };

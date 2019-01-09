@@ -5,6 +5,7 @@ import { getKeysImporterModule, getKeysImporterModulesList } from '../keys_impor
 import GroupManager from '../managers/GroupManager';
 import GroupAccountManager from '../managers/GroupAccountManager';
 import EventHelper from './EventHelper';
+import AppHelper from './AppHelper';
 
 export const adminCreateAccount = async (db, account) => {
   if (!account.email) {
@@ -156,6 +157,14 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
       let __key = keys[i];
       let key;
       if (typeof __key === 'string') {
+        const ah = AppHelper();
+        const settingsKeys = ah.getSettings('keys');
+        if (settingsKeys && settingsKeys.sign) {
+          const err = new Error('Key must be signed');
+          err.t_code = 400;
+          throw err;
+        }
+
         const _key = __key.trim();
         if (!_key) {
           continue;
