@@ -81,7 +81,7 @@ class MariadbManager extends DbManager {
   }
 
   async createVersionTable() {
-    const sqlCreateTable = 'create table _version (current INTEGER PRIMARY KEY)';
+    const sqlCreateTable = 'create table _version (value INTEGER PRIMARY KEY)';
     try {
       await this.client.run(sqlCreateTable);
     } catch (e) {
@@ -109,12 +109,12 @@ class MariadbManager extends DbManager {
   }
 
   async getCurrentVersion() {
-    const sqlCheck = 'select current from _version';
+    const sqlCheck = 'select value from _version';
     return this.client.get(sqlCheck);
   }
 
   async updateVersion() {
-    const sql = 'update _version set current = ' + this.dbVersion;
+    const sql = 'update _version set value = ' + this.dbVersion;
     return this.client.run(sql);
   }
 
