@@ -2,19 +2,20 @@ import DbManager from '../../managers/DbManager';
 import mysql from 'mysql2';
 import MariadbClient from './client';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
+import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 
 class MariadbManager extends DbManager {
-  dbVersion = 9;
+  dbVersion = 10;
 
   CREATE_TABLE_AUTH_TOKENS =
-    'create table auth_tokens (token varchar(128) PRIMARY KEY, type varchar(5), created_at BIGINT UNSIGNED)';
+    'create table auth_tokens (token varchar(128) binary PRIMARY KEY, type varchar(5), created_at BIGINT UNSIGNED)';
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128) not null, name varchar(128) not null, ' +
     'active INTEGER not null default 1, expire_at BIGINT UNSIGNED not null default 0, updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (email))';
 
   CREATE_TABLE_GROUPS =
-    'create table groups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128) not null, active INTEGER not null default 1, ' +
+    'create table tgroups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128) not null, active INTEGER not null default 1, ' +
     'updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (name))';
 
   CREATE_TABLE_GROUPS_ACCOUNTS =
@@ -24,8 +25,8 @@ class MariadbManager extends DbManager {
     'updated_at BIGINT UNSIGNED, ' +
     'created_at BIGINT UNSIGNED, ' +
     'UNIQUE (account_id, group_id), ' +
-    'FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE, ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
+    'CONSTRAINT groups_accounts_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE, ' +
+    'CONSTRAINT groups_accounts_account_id FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PUBLIC_KEYS =
     'create table public_keys (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
@@ -38,11 +39,11 @@ class MariadbManager extends DbManager {
   CREATE_TABLE_PERMISSIONS =
     'create table permissions (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
     'group_id INTEGER, ' +
-    'user varchar(512) not null, ' +
-    'host varchar(512) not null, ' +
+    'user varchar(256) binary not null, ' +
+    'host varchar(256) binary not null, ' +
     'created_at BIGINT UNSIGNED, ' +
     'INDEX k_permissions_host_user (host, user),' +
-    'CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE)';
+    'CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE)';
 
   constructor(settings) {
     super(settings);
@@ -80,7 +81,7 @@ class MariadbManager extends DbManager {
   }
 
   async createVersionTable() {
-    const sqlCreateTable = 'create table _version (value int)';
+    const sqlCreateTable = 'create table _version (current INTEGER PRIMARY KEY)';
     try {
       await this.client.run(sqlCreateTable);
     } catch (e) {
@@ -107,8 +108,13 @@ class MariadbManager extends DbManager {
     await this.updateVersion();
   }
 
+  async getCurrentVersion() {
+    const sqlCheck = 'select current from _version';
+    return this.client.get(sqlCheck);
+  }
+
   async updateVersion() {
-    const sql = 'update _version set value = ' + this.dbVersion;
+    const sql = 'update _version set current = ' + this.dbVersion;
     return this.client.run(sql);
   }
 
@@ -152,12 +158,16 @@ class MariadbManager extends DbManager {
     if (fromVersion < 9) {
       await this.client.run(this.CREATE_TABLE_AUTH_TOKENS);
     }
+    if (fromVersion < 10) {
+      await this.client.run(this.CREATE_TABLE_GROUPS);
+      await runV10migrationMariaDb(this.client);
+    }
     await this.updateVersion();
   }
 
   async flushDb() {
     console.log('Flushing db...');
-    const tables = 'public_keys, groups_accounts, permissions, groups, accounts, auth_tokens, _version'.split(',');
+    const tables = 'public_keys, groups_accounts, permissions, tgroups, accounts, auth_tokens, _version'.split(',');
     for (let i = 0; i < tables.length; i++) {
       const sqlDrop = 'drop table ' + tables[i];
       try {

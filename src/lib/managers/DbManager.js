@@ -11,6 +11,9 @@ class DbManager {
   upgradeDb(fromVersion) {
     throw new Error('Not implemented');
   }
+  getCurrentVersion() {
+    throw new Error('Not implemented');
+  }
   createVersionTable() {
     throw new Error('Not implemented');
   }

@@ -34,7 +34,6 @@ class DbHelper {
   }
 
   async checkDb() {
-    const sqlCheck = 'select value from _version';
     let currentVersion;
     const client = this.manager.getClient();
     try {
@@ -46,7 +45,7 @@ class DbHelper {
       process.exit(99);
     }
     try {
-      const row = await client.get(sqlCheck);
+      const row = await this.manager.getCurrentVersion();
       currentVersion = row.value;
     } catch (e) {
       currentVersion = false;

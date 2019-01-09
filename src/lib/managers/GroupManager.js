@@ -4,7 +4,7 @@ import BaseCacheManager, { MAX_ROWS } from './BaseCacheManager';
 
 class GroupManager extends BaseCacheManager {
   async getAllCount(where = false, whereArgs = []) {
-    const sql = 'select count(*) total from groups ' + (where || '');
+    const sql = 'select count(*) total from tgroups ' + (where || '');
     const row = await this.db.get(sql, whereArgs);
     return row.total;
   }
@@ -23,7 +23,7 @@ class GroupManager extends BaseCacheManager {
     if (!skipCount) {
       total = await this.getAllCount();
     }
-    let sql = 'select id, name, active, created_at from groups order by name asc';
+    let sql = 'select id, name, active, created_at from tgroups order by name asc';
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -57,7 +57,7 @@ class GroupManager extends BaseCacheManager {
     }
 
     const total = await this.getAllCount(where, whereArgs);
-    let sql = 'select id, name, active, created_at from groups   ' + where + ' order by name';
+    let sql = 'select id, name, active, created_at from tgroups   ' + where + ' order by name';
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -74,7 +74,7 @@ class GroupManager extends BaseCacheManager {
   }
 
   async get(id) {
-    const sql = 'select id, name, active from groups where id = ? ';
+    const sql = 'select id, name, active from tgroups where id = ? ';
     const group = await this.db.get(sql, [id]);
     if (!group) {
       const error = new Error('Group not found');
@@ -85,7 +85,7 @@ class GroupManager extends BaseCacheManager {
   }
 
   async getIdByName(name) {
-    const sql = 'select id from groups where name = ? ';
+    const sql = 'select id from tgroups where name = ? ';
     const group = await this.db.get(sql, [name]);
     if (!group) {
       const error = new Error('Group not found');
@@ -96,19 +96,19 @@ class GroupManager extends BaseCacheManager {
   }
 
   async create(name, active = 1) {
-    const sql = 'insert into groups (name, active, created_at) values (?, ?, ?) ';
+    const sql = 'insert into tgroups (name, active, created_at) values (?, ?, ?) ';
     return this.db.insert(sql, [name, active, new Date().getTime()]);
   }
 
   async delete(id) {
-    const sql = 'delete from groups where id = ?';
+    const sql = 'delete from tgroups where id = ?';
     const changes = await this.db.delete(sql, [id]);
     this.invalidateCache();
     return changes;
   }
 
   async changeStatus(id, active) {
-    const sql = 'update groups set active = ?, updated_at = ? where id = ? ';
+    const sql = 'update tgroups set active = ?, updated_at = ? where id = ? ';
     active = !!active;
     const changes = await this.db.update(sql, [active, new Date().getTime(), id]);
     this.invalidateCache();
@@ -116,7 +116,7 @@ class GroupManager extends BaseCacheManager {
   }
 
   async setUpdatedAt(id) {
-    const sql = 'update groups set updated_at = ? where id = ? ';
+    const sql = 'update tgroups set updated_at = ? where id = ? ';
     const changes = await this.db.update(sql, [new Date().getTime(), id]);
     this.invalidateCache();
     return changes;
@@ -133,7 +133,7 @@ class GroupManager extends BaseCacheManager {
 
   async getAccountsIfActive(id) {
     const sql =
-      'select account_id from groups g, groups_accounts ga, accounts a where a.id = ga.account_id and a.active = 1 and ga.group_id = g.id and g.active = 1 and g.id = ?';
+      'select account_id from tgroups g, groups_accounts ga, accounts a where a.id = ga.account_id and a.active = 1 and ga.group_id = g.id and g.active = 1 and g.id = ?';
     return this.db.all(sql, [id]);
   }
 }

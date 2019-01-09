@@ -32,7 +32,7 @@ class PermissionManager {
   match(user, host) {
     const sql =
       'select distinct k.public_key, k.public_key_sig ' +
-      ' from accounts a, public_keys k, groups g, groups_accounts ga, permissions p ' +
+      ' from accounts a, public_keys k, tgroups g, groups_accounts ga, permissions p ' +
       PermissionManager._getMatchSqlWhere();
     const now = new Date().getTime();
     return this.db.all(sql, [host, user, now]);
@@ -41,7 +41,7 @@ class PermissionManager {
   search(user, host) {
     const sql =
       'select distinct a.id, a.email, p.host, p.user ' +
-      ' from accounts a, public_keys k, groups g, groups_accounts ga, permissions p ' +
+      ' from accounts a, public_keys k, tgroups g, groups_accounts ga, permissions p ' +
       PermissionManager._getMatchSqlWhere();
     const now = new Date().getTime();
     return this.db.all(sql, [host, user, now]);

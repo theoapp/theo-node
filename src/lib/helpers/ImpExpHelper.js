@@ -37,7 +37,6 @@ export const imp = async (db, dump) => {
           const permission = group.permissions[ii];
           await pm.create(id, permission.user, permission.host);
         }
-        groups[group.name] = id;
       } catch (e) {
         console.error('IMP: Failed to create group %s', group.name, e);
       }

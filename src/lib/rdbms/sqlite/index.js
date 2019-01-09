@@ -8,7 +8,7 @@ import { dirname } from 'path';
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 9;
+  dbVersion = 10;
 
   CREATE_TABLE_AUTH_TOKENS = 'create table auth_tokens (token text PRIMARY KEY, type varchar(5), created_at INTEGER)';
 
@@ -18,7 +18,7 @@ class SqliteManager extends DbManager {
     'expire_at INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
 
   CREATE_TABLE_GROUPS =
-    'create table groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, ' +
+    'create table tgroups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, ' +
     'updated_at INTEGER, created_at INTEGER, UNIQUE (name))';
 
   CREATE_TABLE_GROUPS_ACCOUNTS =
@@ -28,7 +28,7 @@ class SqliteManager extends DbManager {
     'updated_at INTEGER, ' +
     'created_at INTEGER, ' +
     'UNIQUE (account_id, group_id), ' +
-    'FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE, ' +
+    'FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE, ' +
     'FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PUBLIC_KEYS =
@@ -45,7 +45,7 @@ class SqliteManager extends DbManager {
     'user varchar(512), ' +
     'host varchar(512), ' +
     'created_at INTEGER, ' +
-    'FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE)';
+    'FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE)';
 
   CREATE_INDEX_PERMISSIONS = 'create index k_permissions_host_user on permissions (host, user)';
 
@@ -175,7 +175,35 @@ class SqliteManager extends DbManager {
     if (fromVersion < 9) {
       await this.client.run(this.CREATE_TABLE_AUTH_TOKENS);
     }
+    if (fromVersion < 10) {
+      await this.client.run(this.CREATE_TABLE_GROUPS);
+      await this.client.run(
+        'insert into tgroups (id, name, active, updated_at, created_at) select id, name, active, updated_at, created_at from groups'
+      );
+      await this.client.run('create table permissions_tmp as select * from permissions');
+      await this.client.run('drop table permissions');
+      await this.client.run(this.CREATE_TABLE_PERMISSIONS);
+      await this.client.run(
+        'insert into permissions (id, group_id, user, host, created_at) select id, group_id, user, host, created_at from permissions_tmp'
+      );
+      await this.client.run('drop table permissions_tmp');
+
+      await this.client.run('create table groups_accounts_tmp as select * from groups_accounts');
+      await this.client.run('drop table groups_accounts');
+      await this.client.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
+      await this.client.run(
+        'insert into groups_accounts (id, account_id, group_id, created_at) select id, account_id, group_id, created_at from groups_accounts_tmp'
+      );
+      await this.client.run('drop table groups_accounts_tmp');
+
+      await this.client.run('drop table groups');
+    }
     await this.updateVersion();
+  }
+
+  async getCurrentVersion() {
+    const sqlCheck = 'select value from _version';
+    return this.client.get(sqlCheck);
   }
 
   async flushDb() {
@@ -183,7 +211,7 @@ class SqliteManager extends DbManager {
       this.close();
       this.prepareDb(IN_MEMORY_DB);
     } else {
-      const tables = 'public_keys, groups_accounts, permissions, groups, accounts, auth_tokens, _version'.split(',');
+      const tables = 'public_keys, groups_accounts, permissions, tgroups, accounts, auth_tokens, _version'.split(',');
       for (let i = 0; i < tables.length; i++) {
         const sqlDrop = 'drop table ' + tables[i];
         try {
