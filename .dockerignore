@@ -6,6 +6,8 @@
 .npmrc
 node_modules
 build
-README.md
+*.md
 data
 env.sample
+docker-compose
+DockerfileTest

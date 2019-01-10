@@ -1,0 +1,24 @@
+version: '3.1'
+
+services:
+  db:
+    image: mysql/mysql-server:8.0
+    container_name: mysql-server
+    volumes:
+      - ./my-8.0.cnf:/etc/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  theo:
+    image: theo:test
+    container_name: theo
+    environment:
+      MODE: test
+      DB_ENGINE: mysql
+      DB_HOST: db
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      CLIENT_TOKENS: ${CLIENT_TOKENS}
+    depends_on:
+      - db

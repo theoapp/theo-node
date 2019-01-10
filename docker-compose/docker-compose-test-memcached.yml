@@ -1,0 +1,17 @@
+version: '3.1'
+
+services:
+  cache:
+    image: memcached:1.5-alpine
+  theo:
+    image: theo:test
+    container_name: theo
+    environment:
+      - MODE=test
+      - DB_STORAGE=":memory:"
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - CLIENT_TOKENS=${CLIENT_TOKENS}
+      - CACHE_ENABLED=memcached
+      - CACHE_URI=cache:11211
+    depends_on:
+      - cache
