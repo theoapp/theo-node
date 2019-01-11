@@ -11,7 +11,12 @@
     "run:dev": "nodemon  --watch build ./build/index.js",
     "start:dev": "concurrently --kill-others \"npm run build:dev\" \"sleep 5 && npm run run:dev\"",
     "start": "node ./build/index.js",
-    "test": "mocha build/test"
+    "test": "mocha build/test",
+    "test:standalone": "mocha build/test/testStandAlone*",
+    "test:api": "mocha build/test/testRest*",
+    "test:core": "mocha build/test/testCore.js",
+    "test:core:restart": "mocha build/test/testCoreOnRestart.js",
+    "test:cluster": "mocha build/test/testCluster.js"
   },
   "author": "Michele <michele@azzolari.it> (macno)",
   "license": "Apache-2.0",

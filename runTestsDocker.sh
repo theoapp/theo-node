@@ -6,7 +6,9 @@ docker build -t theo:test .
 # Build theo test image
 docker build --target builder -t theo-tester .
 
-source docker-compose/test_env
+source ./docker-compose/test_env
+
+docker run theo-tester npm run test:standalone
 
 # sqlite
 docker-compose -p theotests -f docker-compose/docker-compose-test.yml up -d
@@ -14,7 +16,7 @@ docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
     -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
     -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
-    theo-tester npm test
+    theo-tester npm run test:api
 RETVAL=$?
 if [[ ${RETVAL} -gt 0 ]]; then
     docker logs theo | tail -n 30
@@ -33,7 +35,7 @@ docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
     -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
     -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
-    theo-tester npm test
+    theo-tester npm run test:api
 RETVAL=$?
 if [[ ${RETVAL} -gt 0 ]]; then
     docker logs theo | tail -n 30
@@ -54,7 +56,7 @@ docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
     -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
     -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
-    theo-tester npm test
+    theo-tester npm run test:api
 RETVAL=$?
 if [[ ${RETVAL} -gt 0 ]]; then
     docker logs theo | tail -n 30
@@ -75,7 +77,7 @@ docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
     -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
     -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
-    theo-tester npm test
+    theo-tester npm run test:api
 RETVAL=$?
 if [[ ${RETVAL} -gt 0 ]]; then
     docker logs theo | tail -n 20
@@ -101,7 +103,7 @@ docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
     -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
     -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
-    theo-tester npm test
+    theo-tester npm run test:api
 RETVAL=$?
 if [[ ${RETVAL} -gt 0 ]]; then
     docker logs theo | tail -n 20
@@ -118,40 +120,25 @@ sleep 1
 docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml up -d
 echo Waiting for db to start..
 sleep 10
-
-curl -H "Authorization: Bearer ${CORE_TOKEN}" \
-  -H "Content-type: application/json" \
-  -d '{"tokens":{"admin":"ch4ng3Me","clients":["njknsjd2412fnjkasnj","knkjnknfjfnjenkln"]}}' http://localhost:9100/tokens
-
 docker run --network theotests_default --rm --link theo \
+    -e "CORE_TOKEN=${CORE_TOKEN}" \
     -e "THEO_URL=http://theo:9100" \
-    -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
-    -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
-    theo-tester npm test
+    theo-tester npm run test:core
 RETVAL=$?
 if [[ ${RETVAL} -gt 0 ]]; then
-    docker logs theo | tail -n 20
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml down
     echo "ERR docker-compose-test-mariadb-redis-core FAILED"
     exit ${RETVAL}
 fi
 
-curl -H "Authorization: Bearer ${CORE_TOKEN}" \
-  -H "Content-type: application/json" \
-  -d '{"tokens":{"admin":"ch4ng3MeX","clients":["njknsjd2412fnjkasnjX","knkjnknfjfnjenklnX"]}}' http://localhost:9100/tokens
-
+docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml restart theo
 docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
-    -e "ADMIN_TOKEN=${ADMIN_TOKEN}X" \
-    -e "CLIENT_TOKENS=njknsjd2412fnjkasnjX,knkjnknfjfnjenklnX" \
-    theo-tester npm test
+    -e "CORE_TOKEN=${CORE_TOKEN}" \
+    theo-tester npm run test:core:restart
 RETVAL=$?
-if [[ ${RETVAL} -gt 0 ]]; then
-    docker logs theo | tail -n 20
-fi
-
 docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml down
 if [[ ${RETVAL} -gt 0 ]]; then
-    echo "ERR docker-compose-test-mariadb-redis-core FAILED"
+    echo "ERR docker-compose-test-mariadb-redis-core restart FAILED "
     exit ${RETVAL}
 fi
