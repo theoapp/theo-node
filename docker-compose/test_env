@@ -6,5 +6,6 @@ export MYSQL_USER=theouser
 export MYSQL_PASSWORD=theopwd
 
 # tokens
+export CORE_TOKEN=SuperSecretT0ken
 export ADMIN_TOKEN=ch4ng3Me
 export CLIENT_TOKENS=njknsjd2412fnjkasnj,knkjnknfjfnjenkln

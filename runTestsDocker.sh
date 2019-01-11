@@ -111,3 +111,47 @@ if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test-mysql FAILED"
     exit ${RETVAL}
 fi
+
+sleep 1
+
+# mariadb + redis CORE
+docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml up -d
+echo Waiting for db to start..
+sleep 10
+
+curl -H "Authorization: Bearer ${CORE_TOKEN}" \
+  -H "Content-type: application/json" \
+  -d '{"tokens":{"admin":"ch4ng3Me","clients":["njknsjd2412fnjkasnj","knkjnknfjfnjenkln"]}}' http://localhost:9100/tokens
+
+docker run --network theotests_default --rm --link theo \
+    -e "THEO_URL=http://theo:9100" \
+    -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
+    -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
+    theo-tester npm test
+RETVAL=$?
+if [[ ${RETVAL} -gt 0 ]]; then
+    docker logs theo | tail -n 20
+    docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml down
+    echo "ERR docker-compose-test-mariadb-redis-core FAILED"
+    exit ${RETVAL}
+fi
+
+curl -H "Authorization: Bearer ${CORE_TOKEN}" \
+  -H "Content-type: application/json" \
+  -d '{"tokens":{"admin":"ch4ng3MeX","clients":["njknsjd2412fnjkasnjX","knkjnknfjfnjenklnX"]}}' http://localhost:9100/tokens
+
+docker run --network theotests_default --rm --link theo \
+    -e "THEO_URL=http://theo:9100" \
+    -e "ADMIN_TOKEN=${ADMIN_TOKEN}X" \
+    -e "CLIENT_TOKENS=njknsjd2412fnjkasnjX,knkjnknfjfnjenklnX" \
+    theo-tester npm test
+RETVAL=$?
+if [[ ${RETVAL} -gt 0 ]]; then
+    docker logs theo | tail -n 20
+fi
+
+docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml down
+if [[ ${RETVAL} -gt 0 ]]; then
+    echo "ERR docker-compose-test-mariadb-redis-core FAILED"
+    exit ${RETVAL}
+fi

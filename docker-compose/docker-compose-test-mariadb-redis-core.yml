@@ -1,0 +1,30 @@
+version: '3.1'
+
+services:
+  db:
+    image: mariadb:10.2
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  cache:
+    image: redis:4.0-alpine
+  theo:
+    image: theo:test
+    container_name: theo
+    environment:
+      MODE: test
+      DB_ENGINE: mariadb
+      DB_HOST: db
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      CORE_TOKEN: ${CORE_TOKEN}
+      CACHE_ENABLED: redis
+      CACHE_URI: redis://cache:6379
+    depends_on:
+      - cache
+      - db
+    ports:
+      - 9100:9100
