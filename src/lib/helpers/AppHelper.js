@@ -19,7 +19,7 @@ class AppHelper {
 
   reloadAuthToken(tokens) {
     this.settings.admin.token = tokens.admin;
-    this.settings.client.tokens = tokens.client;
+    this.settings.client.tokens = tokens.clients;
   }
 }
 

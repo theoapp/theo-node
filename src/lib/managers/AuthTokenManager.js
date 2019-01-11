@@ -16,7 +16,7 @@ class AuthTokenManager {
     });
     return {
       admin: adminToken,
-      client: agentTokens
+      clients: agentTokens
     };
   }
   create(token, type) {
