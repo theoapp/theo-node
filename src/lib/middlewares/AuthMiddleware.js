@@ -50,7 +50,7 @@ export const authMiddleware = (req, res, next) => {
 };
 
 export const requireCoreAuthMiddleware = (req, res, next) => {
-  if (!req.is_authorized && !req.is_core) {
+  if (!req.is_authorized || !req.is_core) {
     res.status(401);
     res.json({ status: 401, reason: 'Unauthorized' });
     return;
@@ -59,7 +59,7 @@ export const requireCoreAuthMiddleware = (req, res, next) => {
 };
 
 export const requireAdminAuthMiddleware = (req, res, next) => {
-  if (!req.is_authorized && !req.is_admin) {
+  if (!req.is_authorized || !req.is_admin) {
     res.status(401);
     res.json({ status: 401, reason: 'Unauthorized' });
     return;
