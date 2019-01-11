@@ -10,7 +10,7 @@ import packageJson from '../package';
 
 dotenv.config();
 
-const DB_CONN_MAX_RETRY = 10;
+const DB_CONN_MAX_RETRY = 15;
 
 let settings = {
   admin: {
@@ -221,6 +221,11 @@ const testDB = async () => {
     await client.close();
     return true;
   } catch (e) {
+    if (e.code && e.code === 'ER_NOT_SUPPORTED_AUTH_MODE') {
+      console.error('This mysql client does not support server version.');
+      process.exit(91);
+    }
+    console.error('testDB err', e);
     return false;
   }
 };
