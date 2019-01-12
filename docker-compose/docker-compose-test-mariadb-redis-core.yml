@@ -26,5 +26,3 @@ services:
     depends_on:
       - cache
       - db
-    ports:
-      - 9100:9100
