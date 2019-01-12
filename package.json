@@ -1,6 +1,6 @@
 {
   "name": "theo",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Theo is your keys manager",
   "main": "index.js",
   "repository": "theoapp/theo-node",
