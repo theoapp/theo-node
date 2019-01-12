@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 import assert from 'assert';
 import fetch from 'node-fetch';
 
-const base_url = process.env.THEO_URL || 'http://localhost:9100';
 dotenv.config();
+const base_url = process.env.THEO_URL || 'http://localhost:9100';
 
 const tokensOne = {
   tokens: {
