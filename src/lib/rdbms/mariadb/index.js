@@ -89,10 +89,10 @@ class MariadbManager extends DbManager {
       throw e;
     }
     try {
-      const sqlInsertVersionZero = 'insert into _version values (0)';
+      const sqlInsertVersionZero = 'insert into _version values (-1)';
       await this.client.run(sqlInsertVersionZero);
     } catch (e) {
-      console.error('Unable to insert 0 version in _version table', e.message);
+      console.error('Unable to insert -1 version in _version table', e.message);
       throw e;
     }
     return 0;
@@ -109,13 +109,33 @@ class MariadbManager extends DbManager {
   }
 
   async getCurrentVersion() {
-    const sqlCheck = 'select value from _version';
-    return this.client.get(sqlCheck);
+    if (process.env.CLUSTER_MODE === '1') {
+      await this.client.run('SET AUTOCOMMIT=0');
+      let row;
+      try {
+        const sqlCheck = 'select value from _version for update';
+        row = await this.client.get(sqlCheck);
+        if (row.value === this.dbVersion) {
+          await this.client.run('ROLLBACK; SET AUTOCOMMIT=0');
+        }
+      } catch (err) {
+        await this.client.run('SET AUTOCOMMIT=0');
+        throw err;
+      }
+    } else {
+      return this.client.get(sqlCheck);
+    }
   }
 
   async updateVersion() {
     const sql = 'update _version set value = ' + this.dbVersion;
-    return this.client.run(sql);
+    if (process.env.CLUSTER_MODE === '1') {
+      await this.client.run(sql);
+      await this.client.run('COMMIT');
+      return this.client.run('set AUTOCOMMIT=0');
+    } else {
+      return this.client.run(sql);
+    }
   }
 
   async upgradeDb(fromVersion) {

@@ -51,14 +51,30 @@ class DbHelper {
       currentVersion = false;
     }
     console.log('Check db: currentVersion %s targetVersion %s', currentVersion, this.manager.dbVersion);
-    try {
-      if (currentVersion === false) {
+
+    if (currentVersion === false) {
+      try {
         currentVersion = await this.manager.createVersionTable();
+      } catch (err) {
+        // Concurrent creation..
+        await client.close();
+        return true;
       }
+    }
+
+    try {
       if (currentVersion === 0) {
         const ret = await this.manager.initDb();
         await client.close();
         return ret;
+      }
+      if (currentVersion < 0) {
+        const cluster_mode = process.env.CLUSTER_MODE || '0';
+        if (cluster_mode === '1') {
+          // Some other nodes are creating the tables..
+          await client.close();
+          return ret;
+        }
       }
       if (this.manager.dbVersion === currentVersion) {
         await client.close();

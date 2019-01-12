@@ -30,22 +30,30 @@ let settings = {
     sign: false
   }
 };
+
 const settingsJson = process.env.SETTINGS_FILE;
 if (settingsJson) {
   const _settings = require(settingsJson);
   settings = Object.assign({}, settings, _settings);
 }
 
+const cluster_mode = process.env.CLUSTER_MODE || '0';
+
 const setDbEnv = () => {
   if (process.env.DB_ENGINE) {
     settings.db.engine = process.env.DB_ENGINE;
   }
   if (settings.db.engine === 'sqlite') {
+    if (cluster_mode === '1') {
+      console.error('DB ERROR! Engine mariadb/mysql is required for CLUSTER_MODE');
+      process.exit(1);
+    }
     if (process.env.DB_STORAGE) {
       settings.db.storage = process.env.DB_STORAGE;
     } else {
       const sqlite_path = process.env.DATA_PATH || false;
       if (sqlite_path) {
+        console.warn('DB WARNING! DATA_PATH has been deprecated, please use DB_STORAGE');
         settings.db.storage = sqlite_path;
       }
     }
@@ -134,7 +142,6 @@ if (settings.core) {
   console.log(' Using core mode ');
   console.error(' !!! INFO !!! \n');
   if (settings.cache && settings.cache.type === 'redis') {
-    const cluster_mode = process.env.CLUSTER_MODE || '0';
     if (cluster_mode === '1') {
       subscribe_core_token = true;
     }
@@ -316,8 +323,16 @@ const startTestDb = async retry => {
     initDb();
   } else {
     setTimeout(() => {
-      startTestDb(retry + 1);
+      startTestDb(retry + 1).finally();
     }, retry * 1000);
   }
 };
-startTestDb(0);
+if (cluster_mode === '1') {
+  const timeout = parseInt(Math.random()*1000);
+  console.log('CLUSTER_MODE: waiting %s to start node', timeout);
+  setTimeout(function() {
+    startTestDb(0).finally();
+  }, timeout);
+} else {
+  startTestDb(0).finally();
+}
