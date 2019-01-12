@@ -4,7 +4,6 @@ services:
 install: true
 stages:
   - test
-  - build
   - name: push-image
     if: type != pull_request
 
@@ -14,9 +13,7 @@ jobs:
     - stage: test
       script:
         - ./runTestsDocker.sh
-    - stage: build
-      script:
-        - docker build -t theo .
+        - ./runTestsCluster.sh skip_build
     - stage: push-image
       if: tag IS present
       script:
