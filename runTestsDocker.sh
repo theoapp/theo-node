@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 
-# Build theo server image
-docker build -t theo:test .
-
 # Build theo test image
 docker build --target builder -t theo-tester .
+RETVAL=$?
+if [[ ${RETVAL} -gt 0 ]]; then
+    echo "ERR docker build FAILED"
+    exit ${RETVAL}
+fi
+
+# Build theo server image
+docker build -t theo:test .
+RETVAL=$?
+if [[ ${RETVAL} -gt 0 ]]; then
+    echo "ERR docker build FAILED"
+    exit ${RETVAL}
+fi
 
 source ./docker-compose/test_env
 
