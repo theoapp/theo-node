@@ -25,7 +25,14 @@ class AppHelper {
 
 const getInstance = settings => {
   if (!_instance) {
+    if (!settings) {
+      throw new Error('AppHelper needs to be initialized with settings');
+    }
     _instance = new AppHelper(settings);
+  } else {
+    if (settings) {
+      _instance.settings = settings;
+    }
   }
   return _instance;
 };
