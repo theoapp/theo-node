@@ -34,7 +34,7 @@ export const adminCreateAccount = async (db, account) => {
     }
     return am.getFull(id);
   } catch (err) {
-    err.t_code = 500;
+    if (!err.t_code) err.t_code = 500;
     throw err;
   }
 };
@@ -79,7 +79,7 @@ export const adminEditAccount = async (db, account_id, active, expire_at) => {
     return true;
   } catch (err) {
     console.error('Uops', err);
-    err.t_code = 500;
+    if (!err.t_code) err.t_code = 500;
     err.reason = err.message;
     throw err;
   }
@@ -152,16 +152,18 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
     public_keys: []
   };
   const km = new KeyManager(db);
+  const ah = AppHelper();
+  const settingsKeys = ah.getSettings('keys');
+  const signRequired = settingsKeys && settingsKeys.sign === true;
   try {
     for (let i = 0; i < keys.length; i++) {
       let __key = keys[i];
       let key;
       if (typeof __key === 'string') {
-        const ah = AppHelper();
-        const settingsKeys = ah.getSettings('keys');
-        if (settingsKeys && settingsKeys.sign) {
+        if (signRequired) {
           const err = new Error('Key must be signed');
           err.t_code = 400;
+          console.error('Key must be signed!');
           throw err;
         }
 
@@ -181,6 +183,11 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
         if (!_key) {
           continue;
         }
+        if (!_signature && signRequired) {
+          const err = new Error('Key must be signed');
+          err.t_code = 400;
+          throw err;
+        }
         const id = await km.create(account_id, _key, _signature);
         key = {
           id,
@@ -197,12 +204,22 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
     });
     return ret;
   } catch (err) {
-    err.t_code = 500;
+    if (!err.t_code) {
+      err.t_code = 500;
+    }
     throw err;
   }
 };
 
 export const adminAddAccountKeyFromService = async (db, account_id, service, username) => {
+  const ah = AppHelper();
+  const settingsKeys = ah.getSettings('keys');
+  if (settingsKeys && settingsKeys.sign) {
+    const err = new Error('Import function is not available when REQUIRE_SIGNED_KEY is set');
+    err.t_code = 400;
+    throw err;
+  }
+
   const am = new AccountManager(db);
   try {
     if (isNaN(account_id)) {

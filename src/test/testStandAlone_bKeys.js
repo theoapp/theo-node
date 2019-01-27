@@ -31,7 +31,7 @@ const settings = {
   }
 };
 
-const ah = AppHelper(settings);
+let ah;
 let dh;
 const loadDb = function() {
   return new Promise((resolve, reject) => {
@@ -89,6 +89,7 @@ describe('Check keys', function() {
   this.timeout(10000);
   let db;
   before(async function() {
+    ah = AppHelper(settings);
     try {
       db = await loadDb();
     } catch (err) {}

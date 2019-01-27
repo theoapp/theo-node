@@ -1,6 +1,7 @@
 import { requireAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
 import { getAuthorizedKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysHelper';
 import { dnsReverse } from '../lib/utils/dnsUtils';
+import AppHelper from '../lib/helpers/AppHelper';
 
 const checkUserHost = async function(db, accept, user, host, res) {
   if (accept && accept.indexOf('application/json') >= 0) {
@@ -8,6 +9,13 @@ const checkUserHost = async function(db, accept, user, host, res) {
     res.header('X-From-Cache', cache);
     res.json(keys);
   } else {
+    const ah = AppHelper();
+    const settingsKeys = ah.getSettings('keys');
+    if (settingsKeys && settingsKeys.sign) {
+      const err = new Error('Not Acceptable when FORCE_SIGNED_KEY is true');
+      err.t_code = 406;
+      throw err;
+    }
     const { keys, cache } = await getAuthorizedKeys(db, user, host);
     res.header('X-From-Cache', cache);
     res.header('Content-Type', 'text/plain');

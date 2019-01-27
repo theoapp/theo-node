@@ -14,6 +14,7 @@
     "test": "mocha build/test",
     "test:standalone": "mocha build/test/testStandAlone*",
     "test:api": "mocha build/test/testRest*",
+    "test:api:signed": "mocha build/test/testSigned*",
     "test:core": "mocha build/test/testCore.js",
     "test:core:restart": "mocha build/test/testCoreOnRestart.js",
     "test:cluster": "mocha build/test/testCluster.js"

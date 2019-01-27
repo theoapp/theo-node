@@ -20,6 +20,7 @@ source ./docker-compose/test_env
 
 docker run theo-tester npm run test:standalone
 
+
 # sqlite
 docker-compose -p theotests -f docker-compose/docker-compose-test.yml up -d
 docker run --network theotests_default --rm --link theo \
@@ -32,6 +33,25 @@ if [[ ${RETVAL} -gt 0 ]]; then
     docker logs theo | tail -n 30
 fi
 docker-compose -p theotests -f docker-compose/docker-compose-test.yml down
+if [[ ${RETVAL} -gt 0 ]]; then
+    echo "ERR docker-compose-test FAILED"
+    exit ${RETVAL}
+fi
+
+sleep 1
+
+# sqlite + REQUIRE_SIGNED_KEY
+docker-compose -p theotests -f docker-compose/docker-compose-test-signed.yml up -d
+docker run --network theotests_default --rm --link theo \
+    -e "THEO_URL=http://theo:9100" \
+    -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
+    -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
+    theo-tester npm run test:api:signed
+RETVAL=$?
+if [[ ${RETVAL} -gt 0 ]]; then
+    docker logs theo | tail -n 30
+fi
+docker-compose -p theotests -f docker-compose/docker-compose-test-signed.yml down
 if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test FAILED"
     exit ${RETVAL}

@@ -1,0 +1,12 @@
+version: '3.1'
+
+services:
+  theo:
+    image: theo:test
+    container_name: theo
+    environment:
+      - MODE=test
+      - DB_STORAGE=":memory:"
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - CLIENT_TOKENS=${CLIENT_TOKENS}
+      - REQUIRE_SIGNED_KEY=1
