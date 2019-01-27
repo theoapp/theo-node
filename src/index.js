@@ -7,6 +7,7 @@ import { loadPlugins } from './lib/helpers/PluginHelper';
 import { initRoutes } from './routes';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import packageJson from '../package';
+import EventHelper from './lib/helpers/EventHelper';
 
 dotenv.config();
 
@@ -126,7 +127,7 @@ const setEnv = () => {
       }
     };
   }
-  const keySign = process.env.KEY_SIGN || '0';
+  const keySign = process.env.REQUIRE_SIGNED_KEY || '0';
   if (keySign === '1') {
     settings.keys.sign = true;
   }
@@ -152,7 +153,8 @@ if (settings.core) {
   console.error(' !!! WARNING !!! \n');
 }
 
-console.log(`
+if (process.env.MODE !== 'test') {
+  console.log(`
     ________ ________ ____ _____
    /_______/____/___/____/_____/
     /   /  /   /   /  __/ _   /
@@ -174,9 +176,10 @@ console.log(`
       \\|
 
 `);
+}
 const ah = AppHelper(settings);
-if (process.env.USE_PLUGINS && (process.env.USE_PLUGINS === '1' || process.env.USE_PLUGINS === 'true')) {
-  loadPlugins();
+if (process.env.LOAD_PLUGINS) {
+  loadPlugins(process.env.LOAD_PLUGINS);
 }
 let dh;
 let dm;
@@ -196,7 +199,7 @@ const initDb = () => {
   try {
     dh.init()
       .then(async () => {
-        console.log('Db %s initiated', dm.getEngine());
+        console.log('[ %s ] Db %s initiated', new Date().toISOString(), dm.getEngine());
         if (settings.core && settings.core.token) {
           // Load tokens..
           try {
@@ -280,6 +283,7 @@ const startServer = () => {
   server.use(restify.plugins.queryParser());
   server.use(restify.plugins.gzipResponse());
   server.use(restify.plugins.bodyParser());
+  server.use(requestLogger);
   server.use(authMiddleware);
   server.use(async (req, res, next) => {
     const client = dm.getClient();
@@ -299,8 +303,38 @@ const startServer = () => {
   });
   initRoutes(server);
   server.listen(settings.server.http_port, function() {
-    console.log('%s listening at %s', server.name, server.url);
+    console.log('[ %s ] %s listening at %s', new Date().toISOString(), server.name, server.url);
   });
+};
+const requestLogger = function(req, res, next) {
+  const startAt = new Date();
+  const weblog = {
+    data: startAt,
+    userAgent: req.header('User-Agent'),
+    url: req.url,
+    method: req.method,
+    component: 'web'
+  };
+  const { connection } = req;
+  const { end } = res;
+  req.log = weblog;
+  req.dontLog = false;
+  res.end = function(chunk, encoding) {
+    const endAt = new Date();
+    res.end = end;
+    res.end(chunk, encoding);
+    if (!req.dontLog) {
+      weblog.client = connection.remoteAddress;
+      weblog.responseStatus = res.statusCode;
+      weblog.executionTime = endAt.getTime() - startAt.getTime();
+      const done = EventHelper.emit('theo:http-request', weblog, req, res);
+      if (!done) {
+        return console.info(JSON.stringify(weblog));
+      }
+      return done;
+    }
+  };
+  setImmediate(next);
 };
 process.on('SIGINT', async () => {
   console.log('Caught interrupt signal');
@@ -328,8 +362,8 @@ const startTestDb = async retry => {
   }
 };
 if (cluster_mode === '1') {
-  const timeout = parseInt(Math.random()*1000);
-  console.log('CLUSTER_MODE: waiting %s to start node', timeout);
+  const timeout = parseInt(Math.random() * 1000);
+  console.info('[ %s ] CLUSTER_MODE: waiting %s to start node', new Date().toISOString(), timeout);
   setTimeout(function() {
     startTestDb(0).finally();
   }, timeout);

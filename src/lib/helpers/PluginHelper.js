@@ -11,19 +11,22 @@ const loadPlugin = async name => {
   }
 };
 
-export const loadPlugins = async () => {
+export const loadPlugins = async plugins => {
+  const _plugins = plugins.split(',');
   try {
     const files = await getDirFiles(PLUGIN_PATH);
     if (files) {
       for (let i = 0; i < files.length; i++) {
-        try {
-          await loadPlugin(files[i]);
-        } catch (e) {
-          console.error('Failed to load plugin %s', files[i], e.message);
+        if (_plugins.indexOf(files[i]) >= 0) {
+          try {
+            await loadPlugin(files[i]);
+          } catch (e) {
+            console.error('[ %s ] Failed to load plugin %s:', new Date().toISOString(), files[i], e.message);
+          }
         }
       }
     }
   } catch (err) {
-    console.error('Unable to initialize plugins', err.message);
+    console.error('[ %s ] Unable to initialize plugins', new Date().toISOString(), err.message);
   }
 };
