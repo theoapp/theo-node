@@ -1,10 +1,11 @@
-## Theo
+![Theo](theo-logo-400.png)
 
+[![](https://images.microbadger.com/badges/version/theoapp/theo.svg)](https://microbadger.com/images/theoapp/theo "theoapp/theo")
 [![](https://images.microbadger.com/badges/image/theoapp/theo.svg)](https://microbadger.com/images/theoapp/theo) 
 [![Build Status](https://travis-ci.org/theoapp/theo-node.svg?branch=master)](https://travis-ci.org/theoapp/theo-node)
 [![Documentation Status](https://readthedocs.org/projects/theoapp/badge/?version=latest)](https://theoapp.readthedocs.io/en/latest/?badge=latest)
 
-Theo is a public key manager, you can use it as replacement for all of your `authorized_keys`   
+Theo is the authorized keys manager, you can use it as replacement for all of your `authorized_keys`   
 It allows you to set fine permissions (specific user and host) or to use wildcard (ex, using host `%.test.sample.com`) 
 
 ### Summary
