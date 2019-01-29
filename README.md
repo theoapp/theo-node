@@ -1,4 +1,4 @@
-![Theo](theo-logo-400.png)
+![Theo](theo-logo-500.png)
 
 [![](https://images.microbadger.com/badges/version/theoapp/theo.svg)](https://microbadger.com/images/theoapp/theo "theoapp/theo")
 [![](https://images.microbadger.com/badges/image/theoapp/theo.svg)](https://microbadger.com/images/theoapp/theo) 
@@ -31,3 +31,6 @@ OpenSSH server must be version >= 6.2 (since it has to support `AuthorizedKeysCo
 
 Available at [theoapp.readthedocs.io](https://theoapp.readthedocs.io/en/latest/)
 
+### Artwork
+
+Theo logo created by [Tomm](http://oyace.tumblr.com/)
