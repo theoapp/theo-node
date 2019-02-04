@@ -62,6 +62,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /accounts/search:
+    get:
+      summary: "Search accounts"
+      operationId: searchAccount
+      parameters:
+        - name: "limit"
+          in: "query"
+          description: "Number of accounts to retrieve"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "offset"
+          in: "query"
+          description: "Offset of the list"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "name"
+          in: "query"
+          description: "Search by name"
+          required: false
+          schema:
+            type: "string"
+            example: "mac"
+        - name: "email"
+          in: "query"
+          description: "Search by email"
+          required: false
+          schema:
+            type: "string"
+            example: "@authkeys.io"
+      responses:
+        200:
+          description: "List of account"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountsList"
+      security:
+        - bearerTokenAdmin: []
+
 components:
   securitySchemes:
     bearerTokenAdmin:
@@ -106,6 +149,8 @@ components:
         email:
           type: "string"
           example: "macno@authkeys.io"
+        active:
+          $ref: "#/components/schemas/Active"
     BasicList:
       type: "object"
       required:
@@ -171,6 +216,11 @@ components:
           type: "integer"
           format: "int64"
           example: 1539688358693
+    Active:
+      type: "integer"
+      format: "int32"
+      minimum: 0
+      maximum: 1
     AccountResponse:
       type: "object"
       required:
