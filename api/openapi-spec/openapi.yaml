@@ -104,6 +104,68 @@ paths:
                 $ref: "#/components/schemas/AccountsList"
       security:
         - bearerTokenAdmin: []
+  /accounts/{id}:
+    get:
+      summary: "Get account"
+      operationId: getAccount
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Account ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        200:
+          description: "Account"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        404:
+          description: "Account not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
+    put:
+      summary: "Edit account"
+      operationId: editAccount
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Account ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      requestBody:
+        description: "Fields to edit"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountEdit'
+      responses:
+        201:
+          description: "Done"
+        404:
+          description: "Account not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
 
 components:
   securitySchemes:
@@ -114,43 +176,6 @@ components:
       type: http
       scheme: bearer
   schemas:
-    AccountNew:
-      type: "object"
-      required:
-        - "name"
-        - "email"
-      properties:
-        name:
-          type: "string"
-          example: "Michele"
-        email:
-          type: "string"
-          example: "macno@authkeys.io"
-        keys:
-          type: "array"
-          items:
-            oneOf:
-              - type: "string"
-                example: "ssh-rsa AAA[...]xv macno@laptop"
-              - $ref: "#/components/schemas/PublicKeyNew"
-    AccountMinimal:
-      type: "object"
-      required:
-        - "id"
-        - "name"
-        - "email"
-      properties:
-        id:
-          type: "integer"
-          format: "int32"
-        name:
-          type: "string"
-          example: "Michele"
-        email:
-          type: "string"
-          example: "macno@authkeys.io"
-        active:
-          $ref: "#/components/schemas/Active"
     BasicList:
       type: "object"
       required:
@@ -172,6 +197,82 @@ components:
           type: "array"
           items:
             type: "string"
+    AccountNew:
+      type: "object"
+      required:
+        - "name"
+        - "email"
+      properties:
+        name:
+          type: "string"
+          example: "Michele"
+        email:
+          type: "string"
+          example: "macno@authkeys.io"
+        expire_at:
+          type: "integer"
+          format: "int64"
+          nullable: true
+        keys:
+          type: "array"
+          items:
+            oneOf:
+              - type: "string"
+                example: "ssh-rsa AAA[...]xv macno@laptop"
+              - $ref: "#/components/schemas/PublicKeyNew"
+    AccountEdit:
+      type: "object"
+      properties:
+        expire_at:
+          type: "integer"
+          format: "int64"
+          nullable: true
+        active:
+          $ref: "#/components/schemas/Active"
+    AccountMinimal:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "email"
+        - "active"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        name:
+          type: "string"
+          example: "Michele"
+        email:
+          type: "string"
+          example: "macno@authkeys.io"
+        active:
+          $ref: "#/components/schemas/Active"
+    Account:
+      allOf:
+        - $ref: '#/components/schemas/AccountMinimal'
+        - type: "object"
+          required:
+            - "expire_at"
+            - "public_keys"
+            - "groups"
+            - "permissions"
+          properties:
+            expire_at:
+              type: "integer"
+              format: "int64"
+              example: 0
+            public_keys:
+              type: "array"
+              items:
+                $ref: '#/components/schemas/PublicKey'
+            groups:
+              type: "array"
+              items:
+                $ref: '#/components/schemas/Group'
+            permissions:
+              items:
+                $ref: '#/components/schemas/Permission'
     AccountsList:
       allOf:
         - $ref: '#/components/schemas/BasicList'
@@ -203,7 +304,7 @@ components:
       properties:
         id:
           type: "integer"
-          format: "int32"
+          format: "int64"
           example: 213
         public_key:
           type: "string"
@@ -235,13 +336,51 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/PublicKey"
+    Group:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "active"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          example: 1234
+        name:
+          type: "string"
+          example: "developers"
+        active:
+          $ref: "#/components/schemas/Active"
+    Permission:
+      type: "object"
+      required:
+        - "id"
+        - "user"
+        - "host"
+        - "created_at"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          example: 1234
+        user:
+          type: "string"
+          example: "root"
+        host:
+          type: "string"
+          example: "server1"
+        created_at:
+          type: "integer"
+          format: "int64"
+          example: 1539688358693
     ErrorResponse:
       type: "object"
       required:
-        - "code"
+        - "status"
         - "reason"
       properties:
-        code:
+        status:
           type: "integer"
           format: "int32"
           example: 404
