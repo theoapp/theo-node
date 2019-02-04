@@ -60,7 +60,6 @@ export default function handleAccounts(server) {
 
   server.put('/accounts/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     const { active, expire_at } = req.body;
-    console.log('Mod: ', active, expire_at);
     try {
       const done = await adminEditAccount(req.db, req.params.id, active, expire_at);
       if (done) {
