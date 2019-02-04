@@ -8,9 +8,21 @@ info:
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+servers:
+  - url: https://test.theo.authkeys.io
+    description: Public UNTRUSTABLE test theo server
+tags:
+  - name: "account"
+    description: "Everything about accounts"
+  - name: "keys"
+    description: "Everything about accounts' public keys"
+  - name: "permissions"
+    description: "Everything about permissions"
 paths:
   /accounts:
     get:
+      tags:
+        - "account"
       summary: "Retrieves accounts"
       operationId: listAccount
       parameters:
@@ -44,6 +56,8 @@ paths:
       security:
         - bearerTokenAdmin: []
     post:
+      tags:
+        - "account"
       summary: "Create new account"
       operationId: addAccount
       security:
@@ -76,6 +90,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /accounts/search:
     get:
+      tags:
+        - "account"
       summary: "Search accounts"
       operationId: searchAccount
       parameters:
@@ -124,6 +140,8 @@ paths:
         - bearerTokenAdmin: []
   /accounts/{id}:
     get:
+      tags:
+        - "account"
       summary: "Get account"
       operationId: getAccount
       parameters:
@@ -156,6 +174,8 @@ paths:
       security:
         - bearerTokenAdmin: []
     put:
+      tags:
+        - "account"
       summary: "Edit account"
       operationId: editAccount
       parameters:
@@ -191,6 +211,8 @@ paths:
       security:
         - bearerTokenAdmin: []
     delete:
+      tags:
+        - "account"
       summary: "Delete account"
       operationId: deleteAccount
       parameters:
@@ -218,6 +240,9 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /accounts/{id}/keys:
     post:
+      tags:
+        - "account"
+        - "keys"
       summary: "Add keys to account"
       operationId: addKeysToAccount
       parameters:
@@ -269,6 +294,9 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /accounts/{id}/keys/{key_id}:
     delete:
+      tags:
+        - "account"
+        - "keys"
       summary: "Delete public key from account"
       operationId: deleteKeyFromAccount
       parameters:
@@ -303,6 +331,9 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /accounts/{id}/keys/import/{service}:
     post:
+      tags:
+        - "account"
+        - "keys"
       summary: "Add public keys to account loading them from external service"
       operationId: addKeysFromServiceToAccount
       parameters:
@@ -345,6 +376,98 @@ paths:
                 $ref: '#/components/schemas/InvalidPayloadErrorResponse'
         404:
           description: "Account not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /accounts/{id}/permissions:
+    post:
+      tags:
+        - "account"
+        - "permissions"
+      summary: "Add permissions to account"
+      operationId: addPermissionsToAccount
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Account ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      requestBody:
+        description: "New permission to add"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionNew'
+      responses:
+        200:
+          description: Account response
+          content:
+            application/json:
+              schema:
+                properties:
+                  account_id:
+                    type: "integer"
+                    format: "int64"
+                    example: 324
+                  permission_id:
+                    type: "integer"
+                    format: "int64"
+                    example: 435
+        400:
+          description: "Invalid payload"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidPayloadErrorResponse'
+        404:
+          description: "Account not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /accounts/{id}/permissions/{permission_id}:
+    delete:
+      tags:
+        - "account"
+        - "permissions"
+      summary: "Delete permission from account"
+      operationId: deletePermissionFromAccount
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Account ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "permission_id"
+          in: "path"
+          description: "Permission ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        201:
+          description: "Done"
+        404:
+          description: "Account/Permission not found"
           content:
             application/json:
               schema:
@@ -540,28 +663,34 @@ components:
           example: "developers"
         active:
           $ref: "#/components/schemas/Active"
-    Permission:
+    PermissionNew:
       type: "object"
       required:
-        - "id"
         - "user"
         - "host"
-        - "created_at"
       properties:
-        id:
-          type: "integer"
-          format: "int64"
-          example: 1234
         user:
           type: "string"
           example: "root"
         host:
           type: "string"
           example: "server1"
-        created_at:
-          type: "integer"
-          format: "int64"
-          example: 1539688358693
+    Permission:
+      allOf:
+        - $ref: '#/components/schemas/PermissionNew'
+        - type: "object"
+          required:
+            - "id"
+            - "created_at"
+          properties:
+            id:
+              type: "integer"
+              format: "int64"
+              example: 1234
+            created_at:
+              type: "integer"
+              format: "int64"
+              example: 1539688358693
     ErrorResponse:
       type: "object"
       required:
