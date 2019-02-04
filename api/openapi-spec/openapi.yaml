@@ -56,12 +56,18 @@ paths:
             schema:
               $ref: '#/components/schemas/AccountNew'
       responses:
-        '200':
+        200:
           description: Account response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountResponse'
+        400:
+          description: "Invalid payload"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidPayloadErrorResponse'
         default:
           description: Error
           content:
@@ -203,7 +209,58 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /accounts/{id}/keys:
+    post:
+      summary: "Add keys to account"
+      operationId: addKeysToAccount
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Account ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      requestBody:
+        description: "New key(s) to add"
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                keys:
+                  type: "array"
+                  items:
+                    oneOf:
+                      - type: "string"
+                        example: "ssh-rsa AAA[...]xv macno@laptop"
+                      - $ref: "#/components/schemas/PublicKeyNew"
+      responses:
+        200:
+          description: Account response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        400:
+          description: "Invalid payload"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidPayloadErrorResponse'
+        404:
+          description: "Account not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
         default:
           description: "Error"
           content:
@@ -439,6 +496,15 @@ components:
               example: 404
             reason:
               example: "Item not found"
+    InvalidPayloadErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: "object"
+          properties:
+            status:
+              example: 400
+            reason:
+              example: "Invalid payload"
 externalDocs:
   description: "Find out more about Theo"
   url: "https://github.com/theoapp/"
