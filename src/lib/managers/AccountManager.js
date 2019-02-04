@@ -114,7 +114,9 @@ class AccountManager extends BaseCacheManager {
     const sql = 'select id, name, email, active, expire_at from accounts where email = ? ';
     const row = await this.db.get(sql, [email]);
     if (!row) {
-      throw new Error('Account not found');
+      const err = new Error('Account not found');
+      err.code = 404;
+      throw err;
     }
     return row;
   }
@@ -123,7 +125,9 @@ class AccountManager extends BaseCacheManager {
     const sql = 'select id from accounts where email = ? ';
     const row = await this.db.get(sql, [email]);
     if (!row) {
-      throw new Error('Account not found');
+      const err = new Error('Account not found');
+      err.code = 404;
+      throw err;
     }
     return row.id;
   }
