@@ -1,0 +1,185 @@
+openapi: "3.0.0"
+info:
+  description: "Theo node - The Authorized Keys Manager. You can find out more about Theo at [https://github.com/theoapp/](https://github.com/theoapp/)."
+  version: "0.12.0"
+  title: "Theo"
+  contact:
+    email: "team@authkeys.io"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+paths:
+  /accounts:
+    get:
+      summary: "Retrieves accounts"
+      operationId: listAccount
+      parameters:
+        - name: "limit"
+          in: "query"
+          description: "Number of accounts to retrieve"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "offset"
+          in: "query"
+          description: "Offset of the list"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+      responses:
+        200:
+          description: "List of account"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountsList"
+      security:
+        - bearerTokenAdmin: []
+    post:
+      summary: "Create new account"
+      operationId: addAccount
+      security:
+        - bearerTokenAdmin: []
+      requestBody:
+        description: Account to add
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountNew'
+      responses:
+        '200':
+          description: Account response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+components:
+  securitySchemes:
+    bearerTokenAdmin:
+      type: http
+      scheme: bearer
+    bearerTokenAgent:
+      type: http
+      scheme: bearer
+  schemas:
+    AccountNew:
+      type: "object"
+      required:
+        - "name"
+        - "email"
+      properties:
+        name:
+          type: "string"
+          example: "Michele"
+        email:
+          type: "string"
+          example: "macno@authkeys.io"
+        keys:
+          type: "array"
+          items:
+            oneOf:
+              - type: "string"
+                example: "ssh-rsa AAA[...]xv macno@laptop"
+              - $ref: "#/components/schemas/PublicKeyNew"
+    AccountMinimal:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "email"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        name:
+          type: "string"
+          example: "Michele"
+        email:
+          type: "string"
+          example: "macno@authkeys.io"
+    BasicList:
+      type: "object"
+      required:
+        - "total"
+        - "limit"
+        - "offset"
+        - "rows"
+      properties:
+        total:
+          type: "integer"
+          format: "int32"
+        limit:
+          type: "integer"
+          format: "int32"
+        offset:
+          type: "integer"
+          format: "int32"
+        rows:
+          type: "array"
+          items:
+            type: "string"
+    AccountsList:
+      allOf:
+        - $ref: '#/components/schemas/BasicList'
+        - type: "object"
+          properties:
+            rows:
+              type: "array"
+              items:
+                $ref: "#/components/schemas/AccountMinimal"
+    PublicKeyNew:
+      type: "object"
+      required:
+        - "key"
+      properties:
+        key:
+          type: "string"
+          example: "ssh-rsa AAA[...]xv macno@laptop"
+        signature:
+          type: "string"
+          example: "XgRI6y3[...]S0ZFHN"
+          nullable: true
+    PublicKey:
+      type: "object"
+      required:
+        - "id"
+        - "public_key"
+        - "public_key_sig"
+        - "created_at"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+          example: 213
+        public_key:
+          type: "string"
+          example: "ssh-rsa AAA[...]xv macno@laptop"
+        public_key_sig:
+          type: "string"
+          example: "XgRI6y3[...]S0ZFHN"
+          nullable: true
+        created_at:
+          type: "integer"
+          format: "int64"
+          example: 1539688358693
+    AccountResponse:
+      type: "object"
+      required:
+        - "account_id"
+        - "public_keys"
+      properties:
+        account_id:
+          type: "integer"
+          format: "int32"
+          example: 146
+        public_keys:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/PublicKey"
+
+externalDocs:
+  description: "Find out more about Theo"
+  url: "https://github.com/theoapp/"
