@@ -301,6 +301,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /accounts/{id}/keys/import/{service}:
+    post:
+      summary: "Add public keys to account loading them from external service"
+      operationId: addKeysFromServiceToAccount
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Account ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "service"
+          in: "path"
+          description: "Service to fetch the keys from"
+          required: true
+          schema:
+            type: "string"
+            example: "github"
+      requestBody:
+        description: "Username to fetch"
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                username:
+                  type: "string"
+                  example: "macno"
+      responses:
+        200:
+          description: Account response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        400:
+          description: "Invalid payload"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidPayloadErrorResponse'
+        404:
+          description: "Account not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerTokenAdmin:
