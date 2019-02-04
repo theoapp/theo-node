@@ -267,6 +267,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /accounts/{id}/keys/{key_id}:
+    delete:
+      summary: "Delete public key from account"
+      operationId: deleteKeyFromAccount
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Account ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "key_id"
+          in: "path"
+          description: "Public Key ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        201:
+          description: "Done"
+        404:
+          description: "Account/Key not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerTokenAdmin:
