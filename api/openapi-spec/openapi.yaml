@@ -35,6 +35,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccountsList"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
         - bearerTokenAdmin: []
     post:
@@ -102,6 +108,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccountsList"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
         - bearerTokenAdmin: []
   /accounts/{id}:
@@ -125,6 +137,12 @@ paths:
                 $ref: "#/components/schemas/Account"
         404:
           description: "Account not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        default:
+          description: "Error"
           content:
             application/json:
               schema:
@@ -157,7 +175,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/NotFoundErrorResponse'
         default:
           description: "Error"
           content:
@@ -166,7 +184,32 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       security:
         - bearerTokenAdmin: []
-
+    delete:
+      summary: "Delete account"
+      operationId: deleteAccount
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Account ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        201:
+          description: "Done"
+        404:
+          description: "Account not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerTokenAdmin:
@@ -383,10 +426,19 @@ components:
         status:
           type: "integer"
           format: "int32"
-          example: 404
+          example: 500
         reason:
           type: "string"
-          example: "account not found"
+          example: "Internal Server Error"
+    NotFoundErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: "object"
+          properties:
+            status:
+              example: 404
+            reason:
+              example: "Item not found"
 externalDocs:
   description: "Find out more about Theo"
   url: "https://github.com/theoapp/"
