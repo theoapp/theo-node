@@ -26,6 +26,16 @@ export default function handleAccounts(server) {
     }
   });
 
+  server.post('/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
+    try {
+      const ret = await adminCreateAccount(req.db, req.body);
+      res.json(ret);
+    } catch (err) {
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
+
   server.get('/accounts/search', requireAdminAuthMiddleware, async (req, res, next) => {
     const am = new AccountManager(req.db);
     try {
@@ -35,16 +45,6 @@ export default function handleAccounts(server) {
     } catch (err) {
       res.status(500);
       res.json({ status: 500, reason: err.message });
-    }
-  });
-
-  server.post('/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
-    try {
-      const ret = await adminCreateAccount(req.db, req.body);
-      res.json(ret);
-    } catch (err) {
-      res.status(err.t_code || 500);
-      res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
 
@@ -103,16 +103,6 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.post('/accounts/:id/keys/import/:service', requireAdminAuthMiddleware, async (req, res, next) => {
-    try {
-      const ret = await adminAddAccountKeyFromService(req.db, req.params.id, req.params.service, req.body.username);
-      res.json(ret);
-    } catch (err) {
-      res.status(err.t_code || 500);
-      res.json({ status: err.t_code || 500, reason: err.message });
-    }
-  });
-
   server.del('/accounts/:id/keys/:key_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteAccountKey(req.db, req.params.id, Number(req.params.key_id));
@@ -123,6 +113,16 @@ export default function handleAccounts(server) {
         res.status(500);
         res.json({ status: 500, reason: 'Unkown error' });
       }
+    } catch (err) {
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
+
+  server.post('/accounts/:id/keys/import/:service', requireAdminAuthMiddleware, async (req, res, next) => {
+    try {
+      const ret = await adminAddAccountKeyFromService(req.db, req.params.id, req.params.service, req.body.username);
+      res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
