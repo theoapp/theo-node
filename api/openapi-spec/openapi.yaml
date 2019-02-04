@@ -56,6 +56,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountResponse'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerTokenAdmin:
@@ -179,7 +185,19 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/PublicKey"
-
+    ErrorResponse:
+      type: "object"
+      required:
+        - "code"
+        - "reason"
+      properties:
+        code:
+          type: "integer"
+          format: "int32"
+          example: 404
+        reason:
+          type: "string"
+          example: "account not found"
 externalDocs:
   description: "Find out more about Theo"
   url: "https://github.com/theoapp/"
