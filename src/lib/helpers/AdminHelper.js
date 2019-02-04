@@ -78,9 +78,7 @@ export const adminEditAccount = async (db, account_id, active, expire_at) => {
     });
     return true;
   } catch (err) {
-    console.error('Uops', err);
     if (!err.t_code) err.t_code = 500;
-    err.reason = err.message;
     throw err;
   }
 };
