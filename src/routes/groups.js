@@ -25,6 +25,16 @@ export default function handleGroups(server) {
     }
   });
 
+  server.post('/groups', requireAdminAuthMiddleware, async (req, res, next) => {
+    try {
+      const ret = await adminCreateGroup(req.db, req.body);
+      res.json(ret);
+    } catch (err) {
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
+
   server.get('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const ret = await adminGetGroup(req.db, req.params.id);
@@ -35,10 +45,22 @@ export default function handleGroups(server) {
     }
   });
 
-  server.post('/groups', requireAdminAuthMiddleware, async (req, res, next) => {
+  server.post('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const ret = await adminCreateGroup(req.db, req.body);
-      res.json(ret);
+      let done;
+      if (req.body.id) {
+        done = await adminCreateGroupAccount(req.db, req.params.id, req.body.id);
+      }
+      if (req.body.ids) {
+        done = await adminCreateGroupAccounts(req.db, req.params.id, req.body.ids);
+      }
+      if (done) {
+        res.status(201);
+        res.json({ status: 201 });
+      } else {
+        res.status(500);
+        res.json({ status: 500, reason: 'Unkown error' });
+      }
     } catch (err) {
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
@@ -65,28 +87,6 @@ export default function handleGroups(server) {
   server.del('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteGroup(req.db, req.params.id);
-      if (done) {
-        res.status(201);
-        res.json({ status: 201 });
-      } else {
-        res.status(500);
-        res.json({ status: 500, reason: 'Unkown error' });
-      }
-    } catch (err) {
-      res.status(err.t_code || 500);
-      res.json({ status: err.t_code || 500, reason: err.message });
-    }
-  });
-
-  server.post('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
-    try {
-      let done;
-      if (req.body.id) {
-        done = await adminCreateGroupAccount(req.db, req.params.id, req.body.id);
-      }
-      if (req.body.ids) {
-        done = await adminCreateGroupAccounts(req.db, req.params.id, req.body.ids);
-      }
       if (done) {
         res.status(201);
         res.json({ status: 201 });

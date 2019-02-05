@@ -105,7 +105,7 @@ paths:
       tags:
         - "account"
       summary: "Retrieves accounts"
-      operationId: listAccount
+      operationId: listAccounts
       parameters:
         - name: "limit"
           in: "query"
@@ -559,6 +559,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /groups:
+    get:
+      tags:
+        - "groups"
+      summary: "Retrieves groups"
+      operationId: listGroups
+      parameters:
+        - name: "limit"
+          in: "query"
+          description: "Number of groups to retrieve"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "offset"
+          in: "query"
+          description: "Offset of the list"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+      responses:
+        200:
+          description: "List of groups"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupsList"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
+
 components:
   securitySchemes:
     bearerTokenCore:
@@ -677,6 +714,33 @@ components:
               type: "array"
               items:
                 $ref: "#/components/schemas/AccountMinimal"
+    GroupMinimal:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "active"
+        - "created_at"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        name:
+          type: "string"
+          example: "Developers"
+        active:
+          $ref: '#/components/schemas/Active'
+        created_at:
+          $ref: '#/components/schemas/CreatedAt'
+    GroupsList:
+      allOf:
+        - $ref: '#/components/schemas/BasicList'
+        - type: "object"
+          properties:
+            rows:
+              type: "array"
+              items:
+                $ref: "#/components/schemas/GroupMinimal"
     PublicKeyNew:
       type: "object"
       required:
@@ -709,9 +773,8 @@ components:
           example: "XgRI6y3[...]S0ZFHN"
           nullable: true
         created_at:
-          type: "integer"
-          format: "int64"
-          example: 1539688358693
+          $ref: '#/components/schemas/CreatedAt'
+
     Active:
       type: "integer"
       format: "int32"
@@ -772,9 +835,11 @@ components:
               format: "int64"
               example: 1234
             created_at:
-              type: "integer"
-              format: "int64"
-              example: 1539688358693
+              $ref: '#/components/schemas/CreatedAt'
+    CreatedAt:
+      type: "integer"
+      format: "int64"
+      example: 1539688358693
     ErrorResponse:
       type: "object"
       required:
