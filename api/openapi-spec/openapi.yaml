@@ -12,6 +12,8 @@ servers:
   - url: https://test.theo.authkeys.io
     description: Public UNTRUSTABLE test theo server
 tags:
+  - name: "utils"
+    description: "Utils methods"
   - name: "account"
     description: "Everything about accounts"
   - name: "keys"
@@ -19,6 +21,85 @@ tags:
   - name: "permissions"
     description: "Everything about permissions"
 paths:
+  /:
+    get:
+      tags:
+        - "utils"
+      summary: "Get server status"
+      operationId: getStatus
+      responses:
+        200:
+          description: "Server status"
+          content:
+            application/json:
+              schema:
+                properties:
+                  status:
+                    type: "integer"
+                    format: "int32"
+                    example: 200
+  /flushdb:
+    post:
+      tags:
+        - "utils"
+      summary: "Flush all databases and cache. It's enabled ONLY when server runs in TEST mode"
+      operationId: flushDB
+      responses:
+        204:
+          description: "Db flushed"
+        403:
+          description: "Even if authenticated, the operation is forbidden (server is NOT RUNNING in TEST mode"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
+  /tokens:
+    post:
+      tags:
+        - "utils"
+      summary: "Replaces admin and clients tokens."
+      operationId: replaceTokens
+      requestBody:
+        description: New tokens
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                admin:
+                  type: "string"
+                  example: "j5jkl34h523hjlbnsdjgjhq45gh23fh"
+                clients:
+                  type: "array"
+                  items:
+                    type: "string"
+                    example: "j5jkl34h523hjlbnsdjgjhq45gh23fh"
+      responses:
+        204:
+          description: "Token refreshed"
+        400:
+          description: "Invalid payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidPayloadErrorResponse"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenCore: []
   /accounts:
     get:
       tags:
@@ -480,10 +561,13 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
+    bearerTokenCore:
+      type: http
+      scheme: bearer
     bearerTokenAdmin:
       type: http
       scheme: bearer
-    bearerTokenAgent:
+    bearerTokenClient:
       type: http
       scheme: bearer
   schemas:
@@ -722,6 +806,15 @@ components:
               example: 400
             reason:
               example: "Invalid payload"
+    ForbiddenErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: "object"
+          properties:
+            status:
+              example: 403
+            reason:
+              example: "Operation is forbidden"
 externalDocs:
   description: "Find out more about Theo"
   url: "https://github.com/theoapp/"
