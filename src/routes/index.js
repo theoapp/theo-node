@@ -31,8 +31,8 @@ export const initRoutes = server => {
 
   server.post('/flushdb', requireAdminAuthMiddleware, async (req, res, next) => {
     if (!process.env.MODE || process.env.MODE !== 'test') {
-      res.status(401);
-      res.json({ status: 401, reason: 'Operation not permitted' });
+      res.status(403);
+      res.json({ status: 403, reason: 'Operation is forbidden' });
       return;
     }
     try {
