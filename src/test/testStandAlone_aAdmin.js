@@ -90,12 +90,12 @@ describe('Test account', function() {
 
       const resAccount = await adminCreateAccount(db, reqAccount);
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 0);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 0);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -103,11 +103,11 @@ describe('Test account', function() {
     it('should return an account object with no keys nor permissions', async function() {
       const email = 'john.doe@example.com';
       const resAccount = await adminGetAccount(db, email);
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.email, email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 0);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.email, email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 0);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -125,7 +125,7 @@ describe('Test account', function() {
         error = er;
       }
       assert.notEqual(typeof error, 'undefined');
-      assert.equal(typeof resAccount, 'undefined');
+      assert.strictEqual(typeof resAccount, 'undefined');
     });
   });
 
@@ -143,7 +143,7 @@ describe('Test account', function() {
         error = er;
       }
       assert.notEqual(typeof error, 'undefined');
-      assert.equal(typeof resAccount, 'undefined');
+      assert.strictEqual(typeof resAccount, 'undefined');
     });
   });
 
@@ -157,13 +157,13 @@ describe('Test account', function() {
 
       const resAccount = await adminCreateAccount(db, reqAccount);
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 1);
-      assert.equal(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 1);
+      assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -177,14 +177,14 @@ describe('Test account', function() {
 
       const resAccount = await adminCreateAccount(db, reqAccount);
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 2);
-      assert.equal(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
-      assert.equal(resAccount.public_keys[1].public_key, reqAccount.keys[1]);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 2);
+      assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
+      assert.strictEqual(resAccount.public_keys[1].public_key, reqAccount.keys[1]);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -192,7 +192,7 @@ describe('Test account', function() {
     it('should return an account object with active set to 0', async function() {
       await adminEditAccount(db, 1, false);
       const account = await adminGetAccount(db, 1);
-      assert.equal(account.active, 0);
+      assert.strictEqual(account.active, 0);
     });
   });
 
@@ -200,7 +200,7 @@ describe('Test account', function() {
     it('should return an account object with active set to 1', async function() {
       await adminEditAccount(db, 1, true);
       const account = await adminGetAccount(db, 1);
-      assert.equal(account.active, 1);
+      assert.strictEqual(account.active, 1);
     });
   });
 
@@ -209,9 +209,9 @@ describe('Test account', function() {
       await adminDeleteAccount(db, 2);
       try {
         await adminGetAccount(db, 2);
-        assert.equal(true, false);
+        assert.strictEqual(true, false);
       } catch (err) {
-        assert.equal(err.t_code, 404);
+        assert.strictEqual(err.t_code, 404);
       }
     });
   });
@@ -223,11 +223,11 @@ describe('Test account', function() {
       const retKeys = await adminAddAccountKey(db, 1, keys);
       const resAccount = await adminGetAccount(db, 1);
 
-      assert.equal(retKeys.account_id, 1);
-      assert.equal(retKeys.public_keys.length, 1);
-      assert.equal(retKeys.public_keys[0].public_key, keys[0]);
-      assert.equal(resAccount.public_keys.length, 1);
-      assert.equal(resAccount.public_keys[0].public_key, keys[0]);
+      assert.strictEqual(retKeys.account_id, 1);
+      assert.strictEqual(retKeys.public_keys.length, 1);
+      assert.strictEqual(retKeys.public_keys[0].public_key, keys[0]);
+      assert.strictEqual(resAccount.public_keys.length, 1);
+      assert.strictEqual(resAccount.public_keys[0].public_key, keys[0]);
     });
   });
 
@@ -236,10 +236,10 @@ describe('Test account', function() {
       try {
         await adminDeleteAccountKey(db, 1, 4);
       } catch (err) {
-        assert.equal(true, false);
+        assert.strictEqual(true, false);
       }
       const resAccount = await adminGetAccount(db, 1);
-      assert.equal(resAccount.public_keys.length, 0);
+      assert.strictEqual(resAccount.public_keys.length, 0);
     });
   });
 
@@ -253,11 +253,11 @@ describe('Test account', function() {
       const retPermission = await adminAddAccountPermission(db, 1, permission.user, permission.host);
       const resAccount = await adminGetAccount(db, 1);
 
-      assert.equal(retPermission.account_id, 1);
-      assert.equal(typeof retPermission.permission_id, 'number');
-      assert.equal(resAccount.permissions.length, 1);
-      assert.equal(resAccount.permissions[0].user, permission.user);
-      assert.equal(resAccount.permissions[0].host, permission.host);
+      assert.strictEqual(retPermission.account_id, 1);
+      assert.strictEqual(typeof retPermission.permission_id, 'number');
+      assert.strictEqual(resAccount.permissions.length, 1);
+      assert.strictEqual(resAccount.permissions[0].user, permission.user);
+      assert.strictEqual(resAccount.permissions[0].host, permission.host);
     });
   });
 
@@ -267,10 +267,10 @@ describe('Test account', function() {
         await adminDeleteAccountPermission(db, 1, 1);
       } catch (err) {
         console.error(err);
-        assert.equal(true, false);
+        assert.strictEqual(true, false);
       }
       const resAccount = await adminGetAccount(db, 1);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -285,10 +285,10 @@ describe('Test account', function() {
         await adminCreateAccount(db, account);
       } catch (err) {
         console.error(err);
-        assert.equal(true, false);
+        assert.strictEqual(true, false);
       }
       const resAccount = await adminGetAccount(db, account.email);
-      assert.equal(resAccount.expire_at, 1514764800000);
+      assert.strictEqual(resAccount.expire_at, 1514764800000);
     });
   });
 });
@@ -320,11 +320,11 @@ describe('Test group', function() {
 
       group_id = resGroup.id;
 
-      assert.equal(typeof resGroup.id, 'number');
-      assert.equal(resGroup.name, reqGroup.name);
-      assert.equal(resGroup.active, 1);
-      assert.equal(resGroup.accounts.length, 0);
-      assert.equal(resGroup.permissions.length, 0);
+      assert.strictEqual(typeof resGroup.id, 'number');
+      assert.strictEqual(resGroup.name, reqGroup.name);
+      assert.strictEqual(resGroup.active, 1);
+      assert.strictEqual(resGroup.accounts.length, 0);
+      assert.strictEqual(resGroup.permissions.length, 0);
     });
   });
 
@@ -342,16 +342,16 @@ describe('Test group', function() {
         error = er;
       }
       assert.notEqual(typeof error, 'undefined');
-      assert.equal(typeof resGroup, 'undefined');
+      assert.strictEqual(typeof resGroup, 'undefined');
     });
   });
 
   describe('edit group status', function() {
     it('should return a group object with active = false and no accounts nor permissions', async function() {
       const res = await adminEditGroup(db, group_id, false);
-      assert.equal(res, true);
+      assert.strictEqual(res, true);
       const resGroup = await adminGetGroup(db, group_id);
-      assert.equal(resGroup.active, 0);
+      assert.strictEqual(resGroup.active, 0);
     });
   });
 
@@ -366,28 +366,29 @@ describe('Test group', function() {
       const resAccount = await adminCreateAccount(db, reqAccount);
       account_id = resAccount.id;
       const res = await adminCreateGroupAccount(db, group_id, account_id);
-      assert.equal(res, true);
+      assert.strictEqual(typeof res, 'number');
+      assert.ok(res > 0);
       const resGroup = await adminGetGroup(db, group_id);
-      assert.equal(resGroup.active, 0);
-      assert.equal(resGroup.accounts.length, 1);
-      assert.equal(resGroup.accounts[0].id, account_id);
-      assert.equal(resGroup.permissions.length, 0);
+      assert.strictEqual(resGroup.active, 0);
+      assert.strictEqual(resGroup.accounts.length, 1);
+      assert.strictEqual(resGroup.accounts[0].id, account_id);
+      assert.strictEqual(resGroup.permissions.length, 0);
 
       const resAccountWithGroup = await adminGetAccount(db, account_id);
-      assert.equal(resAccountWithGroup.groups.length, 2);
-      assert.equal(resAccountWithGroup.groups[0].id, group_id);
-      assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
+      assert.strictEqual(resAccountWithGroup.groups.length, 2);
+      assert.strictEqual(resAccountWithGroup.groups[0].id, group_id);
+      assert.strictEqual(resAccountWithGroup.groups[0].name, resGroup.name);
     });
   });
 
   describe('remove account from group', function() {
     it('should return a group object with active = false and 0 accounts and no permissions', async function() {
       const res = await adminDeleteGroupAccount(db, group_id, account_id);
-      assert.equal(res, true);
+      assert.strictEqual(res, 1);
       const resGroup = await adminGetGroup(db, group_id);
-      assert.equal(resGroup.active, 0);
-      assert.equal(resGroup.accounts.length, 0);
-      assert.equal(resGroup.permissions.length, 0);
+      assert.strictEqual(resGroup.active, 0);
+      assert.strictEqual(resGroup.accounts.length, 0);
+      assert.strictEqual(resGroup.permissions.length, 0);
     });
   });
 
@@ -400,12 +401,12 @@ describe('Test group', function() {
 
       const resPermission = await adminAddGroupPermission(db, group_id, permission.user, permission.host);
       const resGroup = await adminGetGroup(db, group_id);
-      assert.equal(resGroup.active, 0);
-      assert.equal(resGroup.accounts.length, 0);
-      assert.equal(resGroup.permissions.length, 1);
-      assert.equal(resGroup.permissions[0].id, resPermission.permission_id);
-      assert.equal(resGroup.permissions[0].user, permission.user);
-      assert.equal(resGroup.permissions[0].host, permission.host);
+      assert.strictEqual(resGroup.active, 0);
+      assert.strictEqual(resGroup.accounts.length, 0);
+      assert.strictEqual(resGroup.permissions.length, 1);
+      assert.strictEqual(resGroup.permissions[0].id, resPermission.permission_id);
+      assert.strictEqual(resGroup.permissions[0].user, permission.user);
+      assert.strictEqual(resGroup.permissions[0].host, permission.host);
     });
   });
 
@@ -419,23 +420,23 @@ describe('Test group', function() {
       const resPermission = await adminAddGroupPermission(db, group_id, permission.user, permission.host);
       permission_id = resPermission.permission_id;
       const resGroup = await adminGetGroup(db, group_id);
-      assert.equal(resGroup.active, 0);
-      assert.equal(resGroup.accounts.length, 0);
-      assert.equal(resGroup.permissions.length, 2);
-      assert.equal(resGroup.permissions[1].id, permission_id);
-      assert.equal(resGroup.permissions[1].user, permission.user);
-      assert.equal(resGroup.permissions[1].host, permission.host);
+      assert.strictEqual(resGroup.active, 0);
+      assert.strictEqual(resGroup.accounts.length, 0);
+      assert.strictEqual(resGroup.permissions.length, 2);
+      assert.strictEqual(resGroup.permissions[1].id, permission_id);
+      assert.strictEqual(resGroup.permissions[1].user, permission.user);
+      assert.strictEqual(resGroup.permissions[1].host, permission.host);
     });
   });
 
   describe('delete permission from group', function() {
     it('should return a group object with active = false and 0 accounts and 1 permission', async function() {
       const res = await adminDeleteGroupPermission(db, group_id, permission_id);
-      assert.equal(res, true);
+      assert.strictEqual(res, true);
       const resGroup = await adminGetGroup(db, group_id);
-      assert.equal(resGroup.active, 0);
-      assert.equal(resGroup.accounts.length, 0);
-      assert.equal(resGroup.permissions.length, 1);
+      assert.strictEqual(resGroup.active, 0);
+      assert.strictEqual(resGroup.accounts.length, 0);
+      assert.strictEqual(resGroup.permissions.length, 1);
     });
   });
 });

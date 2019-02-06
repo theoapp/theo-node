@@ -314,7 +314,7 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 201);
+      assert.equal(res2.status, 204);
 
       const res = await fetch(base_url + '/authorized_keys/edu/name', {
         method: 'GET',

@@ -550,7 +550,7 @@ describe('REST Test group', function() {
 
       account_id = resAccount.id;
 
-      const res2 = await fetch(base_url + '/groups/' + group_id, {
+      const res2 = await fetch(base_url + '/groups/' + group_id + '/account', {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
@@ -559,7 +559,7 @@ describe('REST Test group', function() {
         body: JSON.stringify({ id: account_id })
       });
 
-      assert.equal(res2.status, 201);
+      assert.equal(res2.status, 204);
 
       const res3 = await fetch(base_url + '/groups/' + group_id, {
         method: 'GET',
@@ -616,7 +616,7 @@ describe('REST Test group', function() {
 
       account_id = resAccount.id;
 
-      const res2 = await fetch(base_url + '/groups/' + group_id, {
+      const res2 = await fetch(base_url + '/groups/' + group_id + '/account', {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
@@ -625,7 +625,7 @@ describe('REST Test group', function() {
         body: JSON.stringify({ id: account_id })
       });
 
-      assert.equal(res2.status, 201);
+      assert.equal(res2.status, 204);
 
       const res3 = await fetch(base_url + '/groups/' + group_id, {
         method: 'GET',
@@ -643,6 +643,89 @@ describe('REST Test group', function() {
       assert.equal(resGroup.permissions.length, 0);
 
       const res4 = await fetch(base_url + '/accounts/' + account_id, {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+        }
+      });
+      assert.equal(res4.status, 200);
+      assert.equal(res4.headers.get('content-type'), 'application/json');
+      const resAccountWithGroup = await res4.json();
+
+      assert.equal(resAccountWithGroup.groups.length, 2);
+      assert.equal(resAccountWithGroup.groups[0].id, group_id);
+      assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
+    });
+  });
+
+  describe('add 3 more accounts to group', function() {
+    it('should return a group object with active = false and 5 accounts and no permissions', async function() {
+      const reqAccounts = [
+        {
+          name: 'john doe 4',
+          email: 'john.doe.4@example.com',
+          keys: ['ssh-rsa AAAAB3Nza john.doe.3@debian']
+        },
+        {
+          name: 'john doe 5',
+          email: 'john.doe.5@example.com',
+          keys: ['ssh-rsa AAAAB3Nza john.doe.3@debian']
+        },
+        {
+          name: 'john doe 6',
+          email: 'john.doe.6@example.com',
+          keys: ['ssh-rsa AAAAB3Nza john.doe.3@debian']
+        }
+      ];
+
+      const ids = [];
+      for (let i = 0; i < reqAccounts.length; i++) {
+        const res = await fetch(base_url + '/accounts', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(reqAccounts[i])
+        });
+
+        assert.equal(res.status, 200);
+        assert.equal(res.headers.get('content-type'), 'application/json');
+        ids.push(reqAccounts[i].email);
+      }
+
+      const res2 = await fetch(base_url + '/groups/' + group_id + '/accounts', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids })
+      });
+
+      assert.equal(res2.status, 200);
+      const resGroups = await res2.json();
+
+      for (let i = 0; i < resGroups.length; i++) {
+        assert.equal(resGroups[i].status, 200);
+      }
+
+      const res3 = await fetch(base_url + '/groups/' + group_id, {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+        }
+      });
+      assert.equal(res3.status, 200);
+      assert.equal(res3.headers.get('content-type'), 'application/json');
+
+      const resGroup = await res3.json();
+
+      assert.equal(resGroup.active, 1);
+      assert.equal(resGroup.accounts.length, 5);
+      assert.equal(resGroup.permissions.length, 0);
+
+      const res4 = await fetch(base_url + '/accounts/' + reqAccounts[2].email, {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
@@ -678,7 +761,7 @@ describe('REST Test group', function() {
         }
       });
 
-      assert.equal(res2.status, 201);
+      assert.equal(res2.status, 204);
 
       const res3 = await fetch(base_url + '/groups/' + group_id, {
         method: 'GET',
@@ -692,7 +775,7 @@ describe('REST Test group', function() {
       const resGroup = await res3.json();
 
       assert.equal(resGroup.active, 1);
-      assert.equal(resGroup.accounts.length, 1);
+      assert.equal(resGroup.accounts.length, 4);
       assert.notEqual(resGroup.accounts[0].id, resAccount.id);
       assert.equal(resGroup.permissions.length, 0);
 

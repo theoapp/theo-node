@@ -46,22 +46,34 @@ export default function handleGroups(server) {
   });
 
   server.post('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
+    res.set('X-Sunset', '1.0.0');
     try {
+      const { id, ids } = req.body;
+      if (id && ids) {
+        res.status(400);
+        res.json({ status: 400, reason: 'Only one between id and ids must be used' });
+        return;
+      }
+      if (!id && !ids) {
+        res.status(400);
+        res.json({ status: 400, reason: 'One between id and ids must be used' });
+        return;
+      }
       let done;
-      if (req.body.id) {
-        done = await adminCreateGroupAccount(req.db, req.params.id, req.body.id);
-      }
-      if (req.body.ids) {
-        done = await adminCreateGroupAccounts(req.db, req.params.id, req.body.ids);
-      }
-      if (done) {
-        res.status(201);
-        res.json({ status: 201 });
+      if (id) {
+        done = await adminCreateGroupAccount(req.db, req.params.id, id);
+        res.status(204);
+        res.end();
+      } else if (ids) {
+        done = await adminCreateGroupAccounts(req.db, req.params.id, ids);
+        res.status(200);
+        res.json(done);
       } else {
         res.status(500);
         res.json({ status: 500, reason: 'Unkown error' });
       }
     } catch (err) {
+      console.error(err);
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
     }
@@ -100,15 +112,51 @@ export default function handleGroups(server) {
     }
   });
 
+  server.post('/groups/:id/account', requireAdminAuthMiddleware, async (req, res, next) => {
+    try {
+      const { id } = req.body;
+      if (!id) {
+        res.status(400);
+        res.json({ status: 400, reason: 'Invalid payload' });
+        return;
+      }
+      await adminCreateGroupAccount(req.db, req.params.id, id);
+      res.status(204);
+      res.end();
+    } catch (err) {
+      console.error(err);
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
+
+  server.post('/groups/:id/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
+    try {
+      const { ids } = req.body;
+      if (!ids) {
+        res.status(400);
+        res.json({ status: 400, reason: 'Invalid payload' });
+        return;
+      }
+      const done = await adminCreateGroupAccounts(req.db, req.params.id, ids);
+      res.status(200);
+      res.json(done);
+    } catch (err) {
+      console.error(err);
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
+
   server.del('/groups/:id/:account_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteGroupAccount(req.db, req.params.id, req.params.account_id);
-      if (done) {
-        res.status(201);
-        res.json({ status: 201 });
+      if (done > 0) {
+        res.status(204);
+        res.end();
       } else {
-        res.status(500);
-        res.json({ status: 500, reason: 'Unkown error' });
+        res.status(404);
+        res.json({ status: 404, reason: 'Account was not in this group' });
       }
     } catch (err) {
       res.status(err.t_code || 500);

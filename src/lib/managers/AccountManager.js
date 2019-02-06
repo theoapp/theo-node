@@ -4,6 +4,8 @@ import GroupAccountManager from './GroupAccountManager';
 import BaseCacheManager, { MAX_ROWS } from './BaseCacheManager';
 import { getTimestampFromISO8601 } from '../utils/dateUtils';
 
+const SELECT_ACCOUNT_MIN = 'id, name, email, active, expire_at, created_at';
+
 class AccountManager extends BaseCacheManager {
   async getAllCount(where = false, whereArgs = []) {
     const sql = 'select count(*) total from accounts ' + (where || '');
@@ -25,7 +27,7 @@ class AccountManager extends BaseCacheManager {
     if (!skipCount) {
       total = await this.getAllCount();
     }
-    let sql = 'select id, email, name, active from accounts order by name';
+    let sql = 'select ' + SELECT_ACCOUNT_MIN + ' from accounts order by name';
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -65,7 +67,7 @@ class AccountManager extends BaseCacheManager {
       whereArgs.push(`%${email}%`);
     }
     const total = await this.getAllCount(where, whereArgs);
-    let sql = 'select id, email, name, active from accounts ' + where + ' order by name';
+    let sql = 'select ' + SELECT_ACCOUNT_MIN + ' from accounts ' + where + ' order by name';
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -102,20 +104,22 @@ class AccountManager extends BaseCacheManager {
   }
 
   async get(id) {
-    const sql = 'select id, name, email, active, expire_at from accounts where id = ? ';
+    const sql = 'select ' + SELECT_ACCOUNT_MIN + ' from accounts where id = ? ';
     const row = await this.db.get(sql, [id]);
     if (!row) {
-      throw new Error('Account not found');
+      const err = new Error('Account not found');
+      err.t_code = 404;
+      throw err;
     }
     return row;
   }
 
   async getByEmail(email) {
-    const sql = 'select id, name, email, active, expire_at from accounts where email = ? ';
+    const sql = 'select ' + SELECT_ACCOUNT_MIN + ' from accounts where email = ? ';
     const row = await this.db.get(sql, [email]);
     if (!row) {
       const err = new Error('Account not found');
-      err.code = 404;
+      err.t_code = 404;
       throw err;
     }
     return row;
@@ -126,7 +130,7 @@ class AccountManager extends BaseCacheManager {
     const row = await this.db.get(sql, [email]);
     if (!row) {
       const err = new Error('Account not found');
-      err.code = 404;
+      err.t_code = 404;
       throw err;
     }
     return row.id;

@@ -490,20 +490,29 @@ export const adminCreateGroupAccount = async (db, group_id, account_id) => {
   }
   const gam = new GroupAccountManager(db);
   try {
+    const gm = new GroupManager(db);
     if (isNaN(group_id)) {
-      const gm = new GroupManager(db);
       group_id = await gm.getIdByName(group_id);
+    } else {
+      // Check group id...
+      await gm.get(group_id);
     }
-    if (isNaN(account_id)) {
-      const am = new AccountManager(db);
-      account_id = await am.getIdByEmail(account_id);
-    }
-    await gam.create(group_id, account_id);
-    return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
     throw err;
   }
+  try {
+    const am = new AccountManager(db);
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    } else {
+      await am.get(account_id);
+    }
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+  return gam.create(group_id, account_id);
 };
 
 export const adminCreateGroupAccounts = async (db, group_id, accounts_id) => {
@@ -512,26 +521,52 @@ export const adminCreateGroupAccounts = async (db, group_id, accounts_id) => {
     error.t_code = 400;
     throw error;
   }
+  const ret = [];
   const gam = new GroupAccountManager(db);
+  const gm = new GroupManager(db);
   try {
     if (isNaN(group_id)) {
-      const gm = new GroupManager(db);
       group_id = await gm.getIdByName(group_id);
+    } else {
+      // Check group id...
+      await gm.get(group_id);
     }
-    for (let i = 0; i < accounts_id.length; i++) {
-      let account_id = accounts_id[i];
-      if (isNaN(account_id)) {
-        const am = new AccountManager(db);
-        account_id = await am.getIdByEmail(account_id);
-      }
-      console.log('Add user %s to group %s', account_id, group_id);
-      await gam.create(group_id, account_id);
-    }
-    return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
     throw err;
   }
+  const am = new AccountManager(db);
+  let invalidateCache = false;
+  for (let i = 0; i < accounts_id.length; i++) {
+    let account_id = accounts_id[i];
+    try {
+      if (isNaN(account_id)) {
+        account_id = await am.getIdByEmail(account_id);
+      } else {
+        await am.get(account_id);
+      }
+    } catch (err) {
+      if (!err.t_code) err.t_code = 500;
+      ret.push({ account: accounts_id[i], status: err.t_code, reason: err.message });
+      continue;
+    }
+    try {
+      await gam.create(group_id, account_id, true);
+      ret.push({ account: accounts_id[i], status: 200 });
+      invalidateCache = true;
+    } catch (err) {
+      if (!err.t_code) err.t_code = 500;
+      ret.push({ account: accounts_id[i], status: err.t_code, reason: err.message });
+    }
+  }
+  if (invalidateCache) {
+    try {
+      await gm.setUpdatedAt(group_id);
+    } catch (e) {
+      console.error('Failed to invalidate cache!', e.message);
+    }
+  }
+  return ret;
 };
 
 export const adminAddGroupPermission = async (db, group_id, user, host) => {
@@ -606,18 +641,26 @@ export const adminDeleteGroupAccount = async (db, group_id, account_id) => {
   }
   const gam = new GroupAccountManager(db);
   try {
+    const gm = new GroupManager(db);
     if (isNaN(group_id)) {
-      const gm = new GroupManager(db);
       group_id = await gm.getIdByName(group_id);
+    } else {
+      await gm.get(group_id);
     }
-    if (isNaN(account_id)) {
-      const am = new AccountManager(db);
-      account_id = await am.getIdByEmail(account_id);
-    }
-    await gam.delete(group_id, account_id);
-    return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
     throw err;
   }
+  try {
+    const am = new AccountManager(db);
+    if (isNaN(account_id)) {
+      account_id = await am.getIdByEmail(account_id);
+    } else {
+      await am.get(account_id);
+    }
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+  return gam.delete(group_id, account_id);
 };
