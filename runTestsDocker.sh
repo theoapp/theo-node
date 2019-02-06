@@ -18,8 +18,13 @@ fi
 
 source ./docker-compose/test_env
 
-docker run theo-tester npm run test:standalone
-
+docker run --name theo-tester theo-tester npm run test:standalone
+RETVAL=$?
+docker rm theo-tester
+if [[ ${RETVAL} -gt 0 ]]; then
+    echo "ERR test:standalone FAILED"
+    exit ${RETVAL}
+fi
 
 # sqlite
 docker-compose -p theotests -f docker-compose/docker-compose-test.yml up -d
@@ -53,7 +58,7 @@ if [[ ${RETVAL} -gt 0 ]]; then
 fi
 docker-compose -p theotests -f docker-compose/docker-compose-test-signed.yml down
 if [[ ${RETVAL} -gt 0 ]]; then
-    echo "ERR docker-compose-test FAILED"
+    echo "ERR docker-compose-test-signed FAILED"
     exit ${RETVAL}
 fi
 
