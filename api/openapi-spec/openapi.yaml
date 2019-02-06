@@ -20,6 +20,8 @@ tags:
     description: "Everything about accounts' public keys"
   - name: "permissions"
     description: "Everything about permissions"
+  - name: "groups"
+    description: "Everything about groups"
 paths:
   /:
     get:
@@ -123,7 +125,7 @@ paths:
             format: "int32"
       responses:
         200:
-          description: "List of account"
+          description: "List of accounts"
           content:
             application/json:
               schema:
@@ -206,7 +208,7 @@ paths:
             example: "@authkeys.io"
       responses:
         200:
-          description: "List of account"
+          description: "List of accounts"
           content:
             application/json:
               schema:
@@ -595,7 +597,223 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       security:
         - bearerTokenAdmin: []
-
+    post:
+      tags:
+        - "groups"
+      summary: "Create new group"
+      operationId: addGroup
+      requestBody:
+        description: "Group's name to create"
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - "name"
+              properties:
+                name:
+                  type: "string"
+                  example: "Developers"
+      responses:
+        200:
+          description: "Group"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
+  /groups/{id}:
+    get:
+      tags:
+        - "groups"
+      summary: "Retrieve a group"
+      operationId: getGroup
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Group ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+          example: 765
+      responses:
+        200:
+          description: "Group"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
+    post:
+      tags:
+        - "groups"
+      summary: "DEPRECATED: Use /groups/{id}/account(s). Add account(s) to a group"
+      operationId: deprecatedAddAccountsToGroup
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Group ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+          example: 765
+      requestBody:
+        description: "Account(s) to add to the group"
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/AccountId"
+                - $ref: "#/components/schemas/AccountIds"
+      responses:
+        200:
+          description: "Group"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        400:
+          description: "Invalid payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidPayloadErrorResponse"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
+  /groups/{id}/account:
+    post:
+      tags:
+        - "groups"
+      summary: "Add account to a group"
+      operationId: addAccountToGroup
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Group ID"
+          required: true
+          schema:
+            $ref: '#/components/schemas/Id'
+      requestBody:
+        description: "Account to add to the group"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountId"
+      responses:
+        204:
+          description: "Account added to a group"
+        400:
+          description: "Invalid payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidPayloadErrorResponse"
+        404:
+          description: "Entity not found (group or account)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundErrorResponse"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
+  /groups/{id}/accounts:
+    post:
+      tags:
+        - "groups"
+      summary: "Add accounts to a group"
+      operationId: addAccountsToGroup
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Group ID"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+          example: 765
+      requestBody:
+        description: "Accounts to add to a group"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountIds"
+      responses:
+        200:
+          description: "List of results"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  type: "object"
+                  required:
+                    - "status"
+                    - "account"
+                  properties:
+                    status:
+                      type: "integer"
+                      format: "int32"
+                      example: 400
+                    account:
+                      oneOf:
+                        - $ref: '#/components/schemas/Id'
+                        - type: "string"
+                          example: "macno@authkeys.io"
+                    reason:
+                      nullable: true
+                      type: "string"
+                      example: "Account not found"
+        400:
+          description: "Invalid payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidPayloadErrorResponse"
+        404:
+          description: "Group not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundErrorResponse"
+        default:
+          description: "Error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerTokenAdmin: []
 components:
   securitySchemes:
     bearerTokenCore:
@@ -629,6 +847,20 @@ components:
           type: "array"
           items:
             type: "string"
+    AccountId:
+      type: "object"
+      required:
+        - "id"
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+    AccountIds:
+      type: "object"
+      required:
+        - "ids"
+      properties:
+        ids:
+          $ref: '#/components/schemas/Ids'
     AccountNew:
       type: "object"
       required:
@@ -642,9 +874,7 @@ components:
           type: "string"
           example: "macno@authkeys.io"
         expire_at:
-          type: "integer"
-          format: "int64"
-          nullable: true
+          $ref: '#/components/schemas/ExpireAt'
         keys:
           type: "array"
           items:
@@ -668,10 +898,11 @@ components:
         - "name"
         - "email"
         - "active"
+        - "expire_at"
+        - "created_at"
       properties:
         id:
-          type: "integer"
-          format: "int64"
+          $ref: '#/components/schemas/Id'
         name:
           type: "string"
           example: "Michele"
@@ -680,6 +911,10 @@ components:
           example: "macno@authkeys.io"
         active:
           $ref: "#/components/schemas/Active"
+        expire_at:
+          $ref: "#/components/schemas/ExpireAt"
+        created_at:
+          $ref: "#/components/schemas/CreatedAt"
     Account:
       allOf:
         - $ref: '#/components/schemas/AccountMinimal'
@@ -691,9 +926,7 @@ components:
             - "permissions"
           properties:
             expire_at:
-              type: "integer"
-              format: "int64"
-              example: 0
+              $ref: '#/components/schemas/ExpireAt'
             public_keys:
               type: "array"
               items:
@@ -701,7 +934,7 @@ components:
             groups:
               type: "array"
               items:
-                $ref: '#/components/schemas/Group'
+                $ref: '#/components/schemas/GroupMinimal'
             permissions:
               items:
                 $ref: '#/components/schemas/Permission'
@@ -723,8 +956,7 @@ components:
         - "created_at"
       properties:
         id:
-          type: "integer"
-          format: "int64"
+          $ref: '#/components/schemas/Id'
         name:
           type: "string"
           example: "Developers"
@@ -732,6 +964,22 @@ components:
           $ref: '#/components/schemas/Active'
         created_at:
           $ref: '#/components/schemas/CreatedAt'
+    Group:
+      allOf:
+        - $ref: '#/components/schemas/GroupMinimal'
+        - type: "object"
+          required:
+            - "accounts"
+            - "permissions"
+          properties:
+            accounts:
+              type: "array"
+              items:
+                $ref: '#/components/schemas/AccountMinimal'
+            permissions:
+              type: "array"
+              items:
+                $ref: '#/components/schemas/Permission'
     GroupsList:
       allOf:
         - $ref: '#/components/schemas/BasicList'
@@ -762,9 +1010,7 @@ components:
         - "created_at"
       properties:
         id:
-          type: "integer"
-          format: "int64"
-          example: 213
+          $ref: '#/components/schemas/Id'
         public_key:
           type: "string"
           example: "ssh-rsa AAA[...]xv macno@laptop"
@@ -774,10 +1020,10 @@ components:
           nullable: true
         created_at:
           $ref: '#/components/schemas/CreatedAt'
-
     Active:
       type: "integer"
       format: "int32"
+      example: 1
       minimum: 0
       maximum: 1
     AccountResponse:
@@ -787,29 +1033,11 @@ components:
         - "public_keys"
       properties:
         account_id:
-          type: "integer"
-          format: "int32"
-          example: 146
+          $ref: '#/components/schemas/Id'
         public_keys:
           type: "array"
           items:
             $ref: "#/components/schemas/PublicKey"
-    Group:
-      type: "object"
-      required:
-        - "id"
-        - "name"
-        - "active"
-      properties:
-        id:
-          type: "integer"
-          format: "int64"
-          example: 1234
-        name:
-          type: "string"
-          example: "developers"
-        active:
-          $ref: "#/components/schemas/Active"
     PermissionNew:
       type: "object"
       required:
@@ -831,11 +1059,24 @@ components:
             - "created_at"
           properties:
             id:
-              type: "integer"
-              format: "int64"
-              example: 1234
+              $ref: '#/components/schemas/Id'
             created_at:
               $ref: '#/components/schemas/CreatedAt'
+    Id:
+      oneOf:
+        - type: "integer"
+          format: "int64"
+          example: 251
+        - type: "string"
+          example: "unique email/code"
+    Ids:
+      type: "array"
+      items:
+        $ref: '#/components/schemas/Id'
+    ExpireAt:
+      type: "integer"
+      format: "int64"
+      example: 0
     CreatedAt:
       type: "integer"
       format: "int64"
