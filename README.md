@@ -31,6 +31,29 @@ OpenSSH server must be version >= 6.2 (since it has to support `AuthorizedKeysCo
 
 Available at [theoapp.readthedocs.io](https://theoapp.readthedocs.io/en/latest/)
 
+### Public Test Instance 
+
+A public test instance is available at [theo.test.authkeys.io](https://theo.test.authkeys.io) 
+
+Database will be reset every 6 hours (0am 6am 12pm 18pm UTC) 
+
+Configured tokens:
+
+```bash
+ADMIN_TOKEN=RMkqF4B8h6jtv3upvy3QubzNyTrMdgn8
+
+CLIENT_TOKENS=h8LYYwGgTqKFYQ3mRN2hv8vK5CBGJvMs,gAWXaG9ZnhHAXsDbF6dv3NYEbPNuZKR7
+
+```
+
+Instance has the `REQUIRE_SIGNED_KEY` flag on, so you need to enable key sign/verify on your side:
+  
+* [Theo CLI](https://theoapp.readthedocs.io/en/latest/theo-cli/signed_keys.html)
+* [Theo agent](https://theoapp.readthedocs.io/en/latest/theo-agent/verify_signed_keys.html) 
+
+**Be aware that the instance is public, so everyone has access to the data, please use fake email**
+
 ### Artwork
 
 Theo logo created by [Tomm](http://oyace.tumblr.com/)
+
