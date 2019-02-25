@@ -31,7 +31,7 @@ describe('Core', function() {
         },
         body: JSON.stringify(tokensOne)
       });
-      assert.equal(res.status, 204);
+      assert.strictEqual(res.status, 204);
     });
   });
   describe('Check tokens', function() {
@@ -44,7 +44,7 @@ describe('Core', function() {
         },
         body: JSON.stringify(tokensOne)
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 200', async function() {
@@ -54,7 +54,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
     });
 
     it('should return 401', async function() {
@@ -64,7 +64,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.clients[0]
         }
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 200', async function() {
@@ -74,7 +74,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
     });
 
     it('should return 200', async function() {
@@ -84,7 +84,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.clients[0]
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
     });
 
     it('should return 200', async function() {
@@ -94,7 +94,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.clients[1]
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
     });
   });
 
@@ -108,7 +108,7 @@ describe('Core', function() {
         },
         body: JSON.stringify(tokensTwo)
       });
-      assert.equal(res.status, 204);
+      assert.strictEqual(res.status, 204);
     });
   });
   describe('Recheck tokens', function() {
@@ -121,7 +121,7 @@ describe('Core', function() {
         },
         body: JSON.stringify(tokensOne)
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 401', async function() {
@@ -131,7 +131,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 401', async function() {
@@ -141,7 +141,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensTwo.tokens.clients[0]
         }
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 401', async function() {
@@ -151,7 +151,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 200', async function() {
@@ -161,7 +161,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensTwo.tokens.admin
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
     });
 
     it('should return 200', async function() {
@@ -171,7 +171,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensTwo.tokens.clients[0]
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
     });
 
     it('should return 200', async function() {
@@ -181,7 +181,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensTwo.tokens.clients[1]
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
     });
   });
 });

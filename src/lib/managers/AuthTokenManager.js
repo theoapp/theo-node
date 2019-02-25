@@ -6,16 +6,16 @@ class AuthTokenManager {
     const sql = 'select token, type from auth_tokens';
     const tokens = await this.db.all(sql);
     const agentTokens = [];
-    let adminToken;
+    const adminTokens = [];
     tokens.forEach(token => {
       if (token.type === 'agent') {
         agentTokens.push(token.token);
       } else if (token.type === 'admin') {
-        adminToken = token.token;
+        adminTokens.push(token.token);
       }
     });
     return {
-      admin: adminToken,
+      admins: adminTokens,
       clients: agentTokens
     };
   }

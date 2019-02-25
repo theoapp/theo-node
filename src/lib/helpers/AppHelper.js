@@ -18,7 +18,11 @@ class AppHelper {
   }
 
   reloadAuthToken(tokens) {
-    this.settings.admin.token = tokens.admin;
+    this.settings.admin.token = undefined;
+    this.settings.admin.tokens = tokens.admins || [];
+    if (tokens.admin) {
+      this.settings.admin.tokens.push(tokens.admin);
+    }
     this.settings.client.tokens = tokens.clients;
   }
 }

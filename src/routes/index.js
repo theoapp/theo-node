@@ -53,18 +53,26 @@ export const initRoutes = server => {
   server.post('/tokens', requireCoreAuthMiddleware, async (req, res, next) => {
     try {
       const { tokens } = req.body;
-      if (!tokens.admin || !tokens.clients) {
+      if (!tokens.admin && !tokens.admins && !tokens.clients) {
         res.status(400);
         res.json({ code: 400, reason: 'Invalid payload' });
         return;
       }
       const atm = new AuthTokenManager(req.db);
       await atm.delete();
-      await atm.create(tokens.admin, 'admin');
-      for (let i = 0; i < tokens.clients.length; i++) {
-        await atm.create(tokens.clients[i], 'agent');
+      if (tokens.admin) {
+        await atm.create(tokens.admin, 'admin');
       }
-
+      if (tokens.admins) {
+        for (let i = 0; i < tokens.admins.length; i++) {
+          await atm.create(tokens.admins[i], 'admin');
+        }
+      }
+      if (tokens.clients) {
+        for (let i = 0; i < tokens.clients.length; i++) {
+          await atm.create(tokens.clients[i], 'agent');
+        }
+      }
       if (process.env.CLUSTER_MODE && process.env.CLUSTER_MODE === '1') {
         setImmediate(async () => {
           const cm = loadCacheManager();
