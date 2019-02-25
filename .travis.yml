@@ -12,8 +12,7 @@ jobs:
   include:
     - stage: test
       script:
-        - ./runTestsDocker.sh
-        - ./runTestsCluster.sh skip_build
+      - ./runTestsAll.sh
     - stage: push-image
       if: tag IS present
       script:
