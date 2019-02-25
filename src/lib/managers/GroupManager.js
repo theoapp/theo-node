@@ -101,6 +101,12 @@ class GroupManager extends BaseCacheManager {
     return group.id;
   }
 
+  async checkName(name) {
+    const sql = 'select id from tgroups where name = ? ';
+    const group = await this.db.get(sql, [name]);
+    return group ? group.id : false;
+  }
+
   async create(name, active = 1) {
     const sql = 'insert into tgroups (name, active, is_internal, created_at) values (?, ?, ?, ?) ';
     return this.db.insert(sql, [name, active, name.indexOf('@') > 0, new Date().getTime()]);

@@ -412,6 +412,12 @@ export const adminCreateGroup = async (db, group, onlyId = false) => {
     throw error;
   }
   const gm = new GroupManager(db);
+  const check = await gm.checkName(group.name);
+  if (check) {
+    const error = new Error('Group already exists');
+    error.t_code = 409;
+    throw error;
+  }
   try {
     const id = await gm.create(group.name);
     EventHelper.emit('theo:change', {
