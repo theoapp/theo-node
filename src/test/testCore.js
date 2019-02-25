@@ -3,29 +3,10 @@ import dotenv from 'dotenv';
 import assert from 'assert';
 import fetch from 'node-fetch';
 
+import { tokensOne, tokensTwo, tokensThree } from './testCoreTokens';
+
 dotenv.config();
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
-
-const tokensOne = {
-  tokens: {
-    admin: 'xYxYxY',
-    clients: ['ababababab', 'cdcdcdcdcdcd']
-  }
-};
-
-const tokensTwo = {
-  tokens: {
-    admin: 'wZwZwZwZwZ',
-    clients: ['efefefefef', 'ghghghghghgh']
-  }
-};
-
-const tokensThree = {
-  tokens: {
-    admins: ['q1q1q1q1q1q1q1q1', 'p0p0p0p0p0p0'],
-    clients: ['w2w2w2w2w2w2w2w2w2w2', 'e3e3e3e3e3e3e3e3e3e3e3e']
-  }
-};
 
 describe('Core', function() {
   describe('Send tokens', function() {

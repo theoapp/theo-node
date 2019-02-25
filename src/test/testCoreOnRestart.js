@@ -3,25 +3,12 @@ import dotenv from 'dotenv';
 import assert from 'assert';
 import fetch from 'node-fetch';
 
+import { tokensOne, tokensTwo, tokensThree } from './testCoreTokens';
+
 dotenv.config();
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 
-const tokensOne = {
-  tokens: {
-    admin: 'xYxYxY',
-    clients: ['ababababab', 'cdcdcdcdcdcd']
-  }
-};
-
-const tokensTwo = {
-  tokens: {
-    admin: 'wZwZwZwZwZ',
-    clients: ['efefefefef', 'ghghghghghgh']
-  }
-};
-
 describe('Core', function() {
-
   describe('Recheck tokens after restart', function() {
     it('should return 401', async function() {
       const res = await fetch(base_url + '/tokens', {
@@ -32,7 +19,7 @@ describe('Core', function() {
         },
         body: JSON.stringify(tokensOne)
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 401', async function() {
@@ -42,7 +29,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 401', async function() {
@@ -52,7 +39,7 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensTwo.tokens.clients[0]
         }
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
     it('should return 401', async function() {
@@ -62,37 +49,77 @@ describe('Core', function() {
           Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
-      assert.equal(res.status, 401);
+      assert.strictEqual(res.status, 401);
     });
 
-    it('should return 200', async function() {
+    it('should return 401', async function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensTwo.tokens.admin
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 401);
     });
 
-    it('should return 200', async function() {
+    it('should return 401', async function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensTwo.tokens.clients[0]
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 401);
     });
 
-    it('should return 200', async function() {
+    it('should return 401', async function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensTwo.tokens.clients[1]
         }
       });
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 401);
+    });
+
+    it('should return 200', async function() {
+      const res = await fetch(base_url + '/authorized_keys/host/user', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + tokensThree.tokens.admins[0]
+        }
+      });
+      assert.strictEqual(res.status, 200);
+    });
+
+    it('should return 200', async function() {
+      const res = await fetch(base_url + '/authorized_keys/host/user', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + tokensThree.tokens.admins[1]
+        }
+      });
+      assert.strictEqual(res.status, 200);
+    });
+
+    it('should return 200', async function() {
+      const res = await fetch(base_url + '/authorized_keys/host/user', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + tokensThree.tokens.clients[0]
+        }
+      });
+      assert.strictEqual(res.status, 200);
+    });
+
+    it('should return 200', async function() {
+      const res = await fetch(base_url + '/authorized_keys/host/user', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + tokensThree.tokens.clients[1]
+        }
+      });
+      assert.strictEqual(res.status, 200);
     });
   });
 });
