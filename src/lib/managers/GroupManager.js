@@ -9,7 +9,7 @@ class GroupManager extends BaseCacheManager {
     return row.total;
   }
 
-  async getAll(limit = 10, offset = 0, skipCount = false) {
+  async getAll(limit = 10, offset = 0, skipCount = false, order_by, sort) {
     if (limit > MAX_ROWS) {
       limit = MAX_ROWS;
     }
@@ -20,17 +20,21 @@ class GroupManager extends BaseCacheManager {
       offset = 0;
     }
     let total = -1;
+    let where = 'where is_internal = ? ';
+    let whereArgs = [0];
     if (!skipCount) {
-      total = await this.getAllCount();
+      total = await this.getAllCount(where, whereArgs);
     }
-    let sql = 'select id, name, active, created_at from tgroups order by name asc';
+    order_by = order_by || 'name';
+    sort = sort || 'asc';
+    let sql = `select id, name, active, created_at from tgroups ${where} order by ${order_by} ${sort}`;
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    const rows = await this.db.all(sql);
+    const rows = await this.db.all(sql, whereArgs);
     return {
       rows,
       limit,
@@ -39,7 +43,7 @@ class GroupManager extends BaseCacheManager {
     };
   }
 
-  async search(name, limit = 10, offset = 0) {
+  async search(name, limit = 10, offset = 0, order_by, sort) {
     if (limit > MAX_ROWS) {
       limit = MAX_ROWS;
     }
@@ -49,15 +53,17 @@ class GroupManager extends BaseCacheManager {
     if (!offset || offset < 0) {
       offset = 0;
     }
-    let where = '';
-    let whereArgs = [];
+    let where = 'where is_internal = ? ';
+    let whereArgs = [0];
+
     if (name) {
-      where = 'where name like ?';
+      where += 'and name like ?';
       whereArgs.push(`%${name}%`);
     }
 
     const total = await this.getAllCount(where, whereArgs);
-    let sql = 'select id, name, active, created_at from tgroups   ' + where + ' order by name';
+    order_by = order_by || 'name';
+    let sql = `select id, name, active, created_at from tgroups ${where} order by ${order_by} ${sort}`;
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -96,8 +102,8 @@ class GroupManager extends BaseCacheManager {
   }
 
   async create(name, active = 1) {
-    const sql = 'insert into tgroups (name, active, created_at) values (?, ?, ?) ';
-    return this.db.insert(sql, [name, active, new Date().getTime()]);
+    const sql = 'insert into tgroups (name, active, is_internal, created_at) values (?, ?, ?, ?) ';
+    return this.db.insert(sql, [name, active, name.indexOf('@') > 0, new Date().getTime()]);
   }
 
   async delete(id) {

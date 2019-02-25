@@ -5,7 +5,7 @@ import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 
 class MariadbManager extends DbManager {
-  dbVersion = 10;
+  dbVersion = 11;
 
   CREATE_TABLE_AUTH_TOKENS =
     'create table auth_tokens (token varchar(128) binary PRIMARY KEY, type varchar(5), created_at BIGINT UNSIGNED)';
@@ -15,7 +15,7 @@ class MariadbManager extends DbManager {
     'active INTEGER not null default 1, expire_at BIGINT UNSIGNED not null default 0, updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (email))';
 
   CREATE_TABLE_GROUPS =
-    'create table tgroups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128) not null, active INTEGER not null default 1, ' +
+    'create table tgroups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128) not null, is_internal tinyint(1) not null default 0, active INTEGER not null default 1, ' +
     'updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (name))';
 
   CREATE_TABLE_GROUPS_ACCOUNTS =
@@ -181,6 +181,10 @@ class MariadbManager extends DbManager {
     if (fromVersion < 10) {
       await this.client.run(this.CREATE_TABLE_GROUPS);
       await runV10migrationMariaDb(this.client);
+    }
+    if (fromVersion < 11) {
+      await this.client.run('alter table tgroups add is_internal tinyint(1) not null default 0');
+      await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
     }
     await this.updateVersion();
   }

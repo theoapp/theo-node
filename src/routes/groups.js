@@ -16,8 +16,13 @@ export default function handleGroups(server) {
   server.get('/groups', requireAdminAuthMiddleware, async (req, res, next) => {
     const gm = new GroupManager(req.db);
     try {
-      const { limit, offset } = req.query;
-      const ret = await gm.getAll(Number(limit), Number(offset));
+      const { limit, offset, order_by, sort, name } = req.query;
+      let ret;
+      if (name) {
+        ret = await gm.search(name, Number(limit), Number(offset), order_by, sort);
+      } else {
+        ret = await gm.getAll(Number(limit), Number(offset), false, order_by, sort);
+      }
       res.json(ret);
     } catch (err) {
       res.status(500);

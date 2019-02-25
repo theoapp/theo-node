@@ -8,7 +8,7 @@ import { dirname } from 'path';
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 10;
+  dbVersion = 11;
 
   CREATE_TABLE_AUTH_TOKENS = 'create table auth_tokens (token text PRIMARY KEY, type varchar(5), created_at INTEGER)';
 
@@ -18,7 +18,7 @@ class SqliteManager extends DbManager {
     'expire_at INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
 
   CREATE_TABLE_GROUPS =
-    'create table tgroups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, ' +
+    'create table tgroups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, is_internal INTEGER, ' +
     'updated_at INTEGER, created_at INTEGER, UNIQUE (name))';
 
   CREATE_TABLE_GROUPS_ACCOUNTS =
@@ -197,6 +197,10 @@ class SqliteManager extends DbManager {
       await this.client.run('drop table groups_accounts_tmp');
 
       await this.client.run('drop table groups');
+    }
+    if (fromVersion < 11) {
+      await this.client.run('alter table tgroups add is_internal INTEGER not null default 0');
+      await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
     }
     await this.updateVersion();
   }
