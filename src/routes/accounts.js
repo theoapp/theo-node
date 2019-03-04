@@ -16,8 +16,13 @@ export default function handleAccounts(server) {
   server.get('/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
     const am = new AccountManager(req.db);
     try {
-      const { limit, offset } = req.query;
-      const ret = await am.getAll(Number(limit), Number(offset));
+      const { search, limit, offset, order_by, sort } = req.query;
+      let ret;
+      if (search) {
+        ret = await am.search(search, search, Number(limit), Number(offset), order_by, sort);
+      } else {
+        ret = await am.getAll(Number(limit), Number(offset), false, order_by, sort);
+      }
       res.json(ret);
     } catch (err) {
       console.error('GET /accounts', err);
@@ -39,7 +44,16 @@ export default function handleAccounts(server) {
   server.get('/accounts/search', requireAdminAuthMiddleware, async (req, res, next) => {
     const am = new AccountManager(req.db);
     try {
-      const { name, email, limit, offset } = req.query;
+      const { search, limit, offset } = req.query;
+      let { name, email } = req.query;
+      if (search) {
+        if (!name) {
+          name = search;
+        }
+        if (!email) {
+          email = search;
+        }
+      }
       const accounts = await am.search(name, email, Number(limit), Number(offset));
       res.json(accounts);
     } catch (err) {
