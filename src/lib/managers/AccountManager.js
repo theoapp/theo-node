@@ -13,7 +13,7 @@ class AccountManager extends BaseCacheManager {
     return row.total;
   }
 
-  async getAll(limit = 10, offset = 0, skipCount = false) {
+  async getAll(limit = 10, offset = 0, skipCount = false, order_by, sort) {
     if (limit > MAX_ROWS) {
       limit = MAX_ROWS;
     }
@@ -27,7 +27,10 @@ class AccountManager extends BaseCacheManager {
     if (!skipCount) {
       total = await this.getAllCount();
     }
-    let sql = 'select ' + SELECT_ACCOUNT_MIN + ' from accounts order by name';
+    order_by = order_by || 'name';
+    sort = sort || 'asc';
+    let sql = `select ${SELECT_ACCOUNT_MIN} from accounts order by ${order_by} ${sort}`;
+
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -43,7 +46,7 @@ class AccountManager extends BaseCacheManager {
     };
   }
 
-  async search(name, email, limit = 10, offset = 0) {
+  async search(name, email, limit = 10, offset = 0, order_by, sort) {
     if (limit > MAX_ROWS) {
       limit = MAX_ROWS;
     }
@@ -56,7 +59,7 @@ class AccountManager extends BaseCacheManager {
     let where = '';
     let whereArgs = [];
     if (name && email) {
-      where = 'where name like ? and email like ?';
+      where = 'where ( name like ? or email like ? ) ';
       whereArgs.push(`%${name}%`);
       whereArgs.push(`%${email}%`);
     } else if (name) {
@@ -67,7 +70,9 @@ class AccountManager extends BaseCacheManager {
       whereArgs.push(`%${email}%`);
     }
     const total = await this.getAllCount(where, whereArgs);
-    let sql = 'select ' + SELECT_ACCOUNT_MIN + ' from accounts ' + where + ' order by name';
+    order_by = order_by || 'name';
+    sort = sort || 'asc';
+    let sql = `select ${SELECT_ACCOUNT_MIN} from accounts ${where} order by ${order_by} ${sort}`;
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -98,6 +103,11 @@ class AccountManager extends BaseCacheManager {
     const pm = new PermissionManager(this.db, this);
     for (let i = 0; i < account.groups.length; i++) {
       const permissions = await pm.getAllGroup(account.groups[i].id);
+      if (account.groups[i].is_internal) {
+        permissions.forEach(permission => (permission.is_internal = true));
+      } else {
+        permissions.forEach(permission => (permission.from_group = account.groups[i]));
+      }
       account.permissions = [].concat.apply(account.permissions, permissions);
     }
     return account;

@@ -36,7 +36,7 @@ class GroupAccountManager {
 
   getAllByAccount(account_id, limit, offset) {
     let sql =
-      'select ga.id, g.id, g.name, g.active, g.created_at from groups_accounts ga, tgroups g where g.id = ga.group_id and ga.account_id = ? order by name asc';
+      'select ga.id, g.id, g.name, g.active, g.is_internal, g.created_at from groups_accounts ga, tgroups g where g.id = ga.group_id and ga.account_id = ? order by name asc';
     if (limit) {
       sql += ' limit ' + limit;
     }
