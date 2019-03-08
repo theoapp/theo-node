@@ -31,7 +31,7 @@ class PermissionManager {
 
   match(user, host) {
     const sql =
-      'select distinct k.public_key, k.public_key_sig ' +
+      'select distinct k.public_key, k.public_key_sig, a.email ' +
       ' from accounts a, public_keys k, tgroups g, groups_accounts ga, permissions p ' +
       PermissionManager._getMatchSqlWhere();
     const now = new Date().getTime();
