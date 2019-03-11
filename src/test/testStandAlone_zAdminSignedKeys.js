@@ -10,6 +10,15 @@ import {
 } from '../lib/helpers/AdminHelper';
 import DbHelper, { releaseDHInstance } from '../lib/helpers/DbHelper';
 
+const publicKeySample =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoUQGPAFUl3xBX+1vxm/o1v4G1KHqXlvg/pVAHrs89isBTcXwNoo4C1YWjF0TCRjhltfvNMNYF8Q1fzEw1anjL+9X26GlXEXr4Nx9MIFFiEiTpUSPGlT13TOIIKW9eEQc9vHydgK1NdpEgz23kcPARWvXbcVtwoLDwfsE1Msvg1qWIN4UiDau/FTetFaq8fcXd3Cun0V+v5DLEfhSB3gNSxWwhdAEaQIpPSJk8VSHKiaOtQ6Besgw8+mjA5u0Mvm4Z9luZ8b7Ky2gUn49HwM/ez7KC9BhoiTsoE8iXjF11J3ttqju0wADZ4P8OQ7y6l7rgNqXyHejhLutvdI3ka3X/ jolly1@newsvine.com';
+
+const publicKeySample2 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCb80xLc+9jKls1BzxK6/tZKchHZtdz+GFX+eVINDBx//j6Efgp3J8gg1dVI21rAnYb1GTY0P5wozqe2EzEBCKVvlJHjMjpXk+/dkzLkUcbDlL8F/Rv6pIOn0OqNOuWtQ1c8i7qnDA/EzIGrKpDIdL1vXDxEqgzZmRQgNtNJv6mDfkCXL3JQQAVsoTqypI+BSMktX06MjCKLBLsWJRIfUYSgS3yDg6c8Yg7n1yK5sgiNE1mBgZe+Y8VXMcpy3jaiVQ1ifnIPrkvm0oaqZBmYNLDEKkxA9PPMiMo4ZOOF5icXh7MKc9aunqpRZK22dQwJdYvEi57je+ojI63Vil5gXbr jolly3@newsvine.com';
+
+const publicKeySample3 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMODOr5BfHfde7yHPYVHDWfqgPbHvtFI9coTBoiLZjADbAAKCVLTL+tddnP7oCJBOM0TEC9ySptIv2kzAcPN6shkQs4Y8AWB2HgAl6cWzNmirRxmbVcUDM7a32q9uIiUHyQ6UIHUsyIaTeFtlldf0AT14r9ilaTRBCEH3r2u4xxVntVpJerBBZijsjfl1KN1N0bG9z9pHkpoUiJpIxGDhG1malhypRKffBSeNo4HNwAAA/SyvJq1jvGdBlZhbZK6kN+AnTdQnA8tSd1BhjXRv3uxUeGBHrYxnlaOvFCNjYsSARZO5iFNclgT/mOM75+luOzLmgf+X5h2y3VFZqjEax jolly2@newsvine.com';
+
 const settings = {
   admin: {
     token: ''
@@ -78,7 +87,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian']
+        keys: [publicKeySample]
       };
       let error;
       let resAccount;
@@ -96,7 +105,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       const reqAccount = {
         name: 'john.doe.x',
         email: 'john.doe.x@example.com',
-        keys: [{ key: 'ssh-rsa AAAAB3Nza john.doe.x@debian', signature: 'xxx' }]
+        keys: [{ key: publicKeySample3, signature: 'xxx' }]
       };
 
       const resAccount = await adminCreateAccount(db, reqAccount);
@@ -118,8 +127,8 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
         keys: [
-          { key: 'ssh-rsa AAAAB3Nza john.doe.2@debian', signature: 'xxxx' },
-          { key: 'ssh-rsa AAAAB3Nza john.doe.3@debian', signature: 'xxxxx' }
+          { key: publicKeySample, signature: 'xxxx' },
+          { key: publicKeySample2, signature: 'xxxxx' }
         ]
       };
 
@@ -140,7 +149,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
 
   describe('add 1 key to an account', function() {
     it('should return an error because key is not signed', async function() {
-      const keys = ['ssh-rsa AAAAB3Nza john.doe.2@debian'];
+      const keys = [publicKeySample];
       let resAccount;
       let error;
       try {
@@ -152,7 +161,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       assert.equal(typeof resAccount, 'undefined');
     });
     it('should return an account object with 1 key and no permissions', async function() {
-      const keys = [{ key: 'ssh-rsa AAAAB3Nza john.doe.2@debian', signature: 'xxxx' }];
+      const keys = [{ key: publicKeySample, signature: 'xxxx' }];
 
       const retKeys = await adminAddAccountKey(db, 1, keys);
       const resAccount = await adminGetAccount(db, 1);

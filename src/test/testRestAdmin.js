@@ -6,6 +6,12 @@ import fetch from 'node-fetch';
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 dotenv.config();
 
+const publicKeySample2 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCb80xLc+9jKls1BzxK6/tZKchHZtdz+GFX+eVINDBx//j6Efgp3J8gg1dVI21rAnYb1GTY0P5wozqe2EzEBCKVvlJHjMjpXk+/dkzLkUcbDlL8F/Rv6pIOn0OqNOuWtQ1c8i7qnDA/EzIGrKpDIdL1vXDxEqgzZmRQgNtNJv6mDfkCXL3JQQAVsoTqypI+BSMktX06MjCKLBLsWJRIfUYSgS3yDg6c8Yg7n1yK5sgiNE1mBgZe+Y8VXMcpy3jaiVQ1ifnIPrkvm0oaqZBmYNLDEKkxA9PPMiMo4ZOOF5icXh7MKc9aunqpRZK22dQwJdYvEi57je+ojI63Vil5gXbr jolly3@newsvine.com';
+
+const publicKeySample3 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMODOr5BfHfde7yHPYVHDWfqgPbHvtFI9coTBoiLZjADbAAKCVLTL+tddnP7oCJBOM0TEC9ySptIv2kzAcPN6shkQs4Y8AWB2HgAl6cWzNmirRxmbVcUDM7a32q9uIiUHyQ6UIHUsyIaTeFtlldf0AT14r9ilaTRBCEH3r2u4xxVntVpJerBBZijsjfl1KN1N0bG9z9pHkpoUiJpIxGDhG1malhypRKffBSeNo4HNwAAA/SyvJq1jvGdBlZhbZK6kN+AnTdQnA8tSd1BhjXRv3uxUeGBHrYxnlaOvFCNjYsSARZO5iFNclgT/mOM75+luOzLmgf+X5h2y3VFZqjEax jolly2@newsvine.com';
+
 describe('REST Test account', function() {
   this.timeout(10000);
 
@@ -39,10 +45,10 @@ describe('REST Test account', function() {
       const res = await fetch(base_url + '/accounts', {
         method: 'GET'
       });
-      assert.equal(res.status, 401);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 401);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const data = await res.json();
-      assert.equal(data.status, 401);
+      assert.strictEqual(data.status, 401);
     });
   });
 
@@ -62,16 +68,16 @@ describe('REST Test account', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const resAccount = await res.json();
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 0);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 0);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -84,15 +90,15 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const resAccount = await res.json();
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.email, email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 0);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.email, email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 0);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -111,7 +117,7 @@ describe('REST Test account', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 400);
+      assert.strictEqual(res.status, 400);
     });
   });
 
@@ -130,7 +136,7 @@ describe('REST Test account', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 400);
+      assert.strictEqual(res.status, 400);
     });
   });
 
@@ -139,7 +145,7 @@ describe('REST Test account', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian']
+        keys: [publicKeySample2]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -151,17 +157,17 @@ describe('REST Test account', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const resAccount = await res.json();
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 1);
-      assert.equal(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 1);
+      assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -170,7 +176,7 @@ describe('REST Test account', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian', 'ssh-rsa AAAAB3Nza john.doe.3@debian']
+        keys: [publicKeySample2, publicKeySample3]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -182,18 +188,18 @@ describe('REST Test account', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const resAccount = await res.json();
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 2);
-      assert.equal(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
-      assert.equal(resAccount.public_keys[1].public_key, reqAccount.keys[1]);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 2);
+      assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
+      assert.strictEqual(resAccount.public_keys[1].public_key, reqAccount.keys[1]);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -208,7 +214,7 @@ describe('REST Test account', function() {
         body: JSON.stringify({ active: 0 })
       });
 
-      assert.equal(res.status, 201);
+      assert.strictEqual(res.status, 201);
 
       const res2 = await fetch(base_url + '/accounts/1', {
         method: 'GET',
@@ -216,11 +222,11 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 200);
-      assert.equal(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.status, 200);
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
 
       const resAccount = await res2.json();
-      assert.equal(resAccount.active, 0);
+      assert.strictEqual(resAccount.active, 0);
     });
   });
 
@@ -235,7 +241,7 @@ describe('REST Test account', function() {
         body: JSON.stringify({ active: 1 })
       });
 
-      assert.equal(res.status, 201);
+      assert.strictEqual(res.status, 201);
 
       const res2 = await fetch(base_url + '/accounts/1', {
         method: 'GET',
@@ -243,11 +249,11 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 200);
-      assert.equal(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.status, 200);
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
 
       const resAccount = await res2.json();
-      assert.equal(resAccount.active, 1);
+      assert.strictEqual(resAccount.active, 1);
     });
   });
 
@@ -259,7 +265,7 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res.status, 201);
+      assert.strictEqual(res.status, 201);
 
       const res2 = await fetch(base_url + '/accounts/2', {
         method: 'GET',
@@ -267,13 +273,13 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 404);
+      assert.strictEqual(res2.status, 404);
     });
   });
 
   describe('add 1 key to an account', function() {
     it('should return an account object with 1 key and no permissions', async function() {
-      const keys = ['ssh-rsa AAAAB3Nza john.doe.2@debian'];
+      const keys = [publicKeySample2];
 
       const res = await fetch(base_url + '/accounts/1/keys', {
         method: 'POST',
@@ -284,8 +290,8 @@ describe('REST Test account', function() {
         body: JSON.stringify({ keys })
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const retKeys = await res.json();
 
       const res2 = await fetch(base_url + '/accounts/1', {
@@ -294,15 +300,15 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 200);
-      assert.equal(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.status, 200);
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
       const resAccount = await res2.json();
 
-      assert.equal(retKeys.account_id, 1);
-      assert.equal(retKeys.public_keys.length, 1);
-      assert.equal(retKeys.public_keys[0].public_key, keys[0]);
-      assert.equal(resAccount.public_keys.length, 1);
-      assert.equal(resAccount.public_keys[0].public_key, keys[0]);
+      assert.strictEqual(retKeys.account_id, 1);
+      assert.strictEqual(retKeys.public_keys.length, 1);
+      assert.strictEqual(retKeys.public_keys[0].public_key, keys[0]);
+      assert.strictEqual(resAccount.public_keys.length, 1);
+      assert.strictEqual(resAccount.public_keys[0].public_key, keys[0]);
     });
   });
 
@@ -314,7 +320,7 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res.status, 201);
+      assert.strictEqual(res.status, 201);
 
       const res2 = await fetch(base_url + '/accounts/1', {
         method: 'GET',
@@ -322,11 +328,11 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 200);
-      assert.equal(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.status, 200);
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
       const resAccount = await res2.json();
 
-      assert.equal(resAccount.public_keys.length, 0);
+      assert.strictEqual(resAccount.public_keys.length, 0);
     });
   });
 
@@ -346,9 +352,9 @@ describe('REST Test account', function() {
         body: JSON.stringify(permission)
       });
 
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
 
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const retPermission = await res.json();
 
       const res2 = await fetch(base_url + '/accounts/1', {
@@ -357,15 +363,15 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 200);
-      assert.equal(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.status, 200);
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
       const resAccount = await res2.json();
 
-      assert.equal(retPermission.account_id, 1);
-      assert.equal(typeof retPermission.permission_id, 'number');
-      assert.equal(resAccount.permissions.length, 1);
-      assert.equal(resAccount.permissions[0].user, permission.user);
-      assert.equal(resAccount.permissions[0].host, permission.host);
+      assert.strictEqual(retPermission.account_id, 1);
+      assert.strictEqual(typeof retPermission.permission_id, 'number');
+      assert.strictEqual(resAccount.permissions.length, 1);
+      assert.strictEqual(resAccount.permissions[0].user, permission.user);
+      assert.strictEqual(resAccount.permissions[0].host, permission.host);
     });
   });
 
@@ -377,7 +383,7 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res.status, 201);
+      assert.strictEqual(res.status, 201);
 
       const res2 = await fetch(base_url + '/accounts/1', {
         method: 'GET',
@@ -385,11 +391,11 @@ describe('REST Test account', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 200);
-      assert.equal(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.status, 200);
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
       const resAccount = await res2.json();
 
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 });
@@ -439,18 +445,18 @@ describe('REST Test group', function() {
         body: JSON.stringify(reqGroup)
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
 
       const resGroup = await res.json();
 
       group_id = resGroup.id;
 
-      assert.equal(typeof resGroup.id, 'number');
-      assert.equal(resGroup.name, reqGroup.name);
-      assert.equal(resGroup.active, 1);
-      assert.equal(resGroup.accounts.length, 0);
-      assert.equal(resGroup.permissions.length, 0);
+      assert.strictEqual(typeof resGroup.id, 'number');
+      assert.strictEqual(resGroup.name, reqGroup.name);
+      assert.strictEqual(resGroup.active, 1);
+      assert.strictEqual(resGroup.accounts.length, 0);
+      assert.strictEqual(resGroup.permissions.length, 0);
     });
   });
 
@@ -469,7 +475,7 @@ describe('REST Test group', function() {
         body: JSON.stringify(reqGroup)
       });
 
-      assert.equal(res.status, 400);
+      assert.strictEqual(res.status, 400);
     });
   });
 
@@ -484,7 +490,7 @@ describe('REST Test group', function() {
         body: JSON.stringify({ active: 0 })
       });
 
-      assert.equal(res.status, 201);
+      assert.strictEqual(res.status, 201);
 
       const res2 = await fetch(base_url + '/groups/' + group_id, {
         method: 'GET',
@@ -492,11 +498,11 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 200);
-      assert.equal(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.status, 200);
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
 
       const resGroup = await res2.json();
-      assert.equal(resGroup.active, 0);
+      assert.strictEqual(resGroup.active, 0);
     });
   });
 
@@ -511,7 +517,7 @@ describe('REST Test group', function() {
         body: JSON.stringify({ active: 1 })
       });
 
-      assert.equal(res.status, 201);
+      assert.strictEqual(res.status, 201);
 
       const res2 = await fetch(base_url + '/groups/' + group_id, {
         method: 'GET',
@@ -519,11 +525,11 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 200);
-      assert.equal(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.status, 200);
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
 
       const resGroup = await res2.json();
-      assert.equal(resGroup.active, 1);
+      assert.strictEqual(resGroup.active, 1);
     });
   });
 
@@ -532,7 +538,7 @@ describe('REST Test group', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian']
+        keys: [publicKeySample2]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -544,8 +550,8 @@ describe('REST Test group', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const resAccount = await res.json();
 
       account_id = resAccount.id;
@@ -559,7 +565,7 @@ describe('REST Test group', function() {
         body: JSON.stringify({ id: account_id })
       });
 
-      assert.equal(res2.status, 204);
+      assert.strictEqual(res2.status, 204);
 
       const res3 = await fetch(base_url + '/groups/' + group_id, {
         method: 'GET',
@@ -567,15 +573,15 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res3.status, 200);
-      assert.equal(res3.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res3.status, 200);
+      assert.strictEqual(res3.headers.get('content-type'), 'application/json');
 
       const resGroup = await res3.json();
 
-      assert.equal(resGroup.active, 1);
-      assert.equal(resGroup.accounts.length, 1);
-      assert.equal(resGroup.accounts[0].id, account_id);
-      assert.equal(resGroup.permissions.length, 0);
+      assert.strictEqual(resGroup.active, 1);
+      assert.strictEqual(resGroup.accounts.length, 1);
+      assert.strictEqual(resGroup.accounts[0].id, account_id);
+      assert.strictEqual(resGroup.permissions.length, 0);
 
       const res4 = await fetch(base_url + '/accounts/' + account_id, {
         method: 'GET',
@@ -583,13 +589,13 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res4.status, 200);
-      assert.equal(res4.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res4.status, 200);
+      assert.strictEqual(res4.headers.get('content-type'), 'application/json');
       const resAccountWithGroup = await res4.json();
 
-      assert.equal(resAccountWithGroup.groups.length, 2);
-      assert.equal(resAccountWithGroup.groups[0].id, group_id);
-      assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
+      assert.strictEqual(resAccountWithGroup.groups.length, 2);
+      assert.strictEqual(resAccountWithGroup.groups[0].id, group_id);
+      assert.strictEqual(resAccountWithGroup.groups[0].name, resGroup.name);
     });
   });
 
@@ -598,7 +604,7 @@ describe('REST Test group', function() {
       const reqAccount = {
         name: 'john doe 3',
         email: 'john.doe.3@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.3@debian']
+        keys: [publicKeySample3]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -610,8 +616,8 @@ describe('REST Test group', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const resAccount = await res.json();
 
       account_id = resAccount.id;
@@ -625,7 +631,7 @@ describe('REST Test group', function() {
         body: JSON.stringify({ id: account_id })
       });
 
-      assert.equal(res2.status, 204);
+      assert.strictEqual(res2.status, 204);
 
       const res3 = await fetch(base_url + '/groups/' + group_id, {
         method: 'GET',
@@ -633,14 +639,14 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res3.status, 200);
-      assert.equal(res3.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res3.status, 200);
+      assert.strictEqual(res3.headers.get('content-type'), 'application/json');
 
       const resGroup = await res3.json();
 
-      assert.equal(resGroup.active, 1);
-      assert.equal(resGroup.accounts.length, 2);
-      assert.equal(resGroup.permissions.length, 0);
+      assert.strictEqual(resGroup.active, 1);
+      assert.strictEqual(resGroup.accounts.length, 2);
+      assert.strictEqual(resGroup.permissions.length, 0);
 
       const res4 = await fetch(base_url + '/accounts/' + account_id, {
         method: 'GET',
@@ -648,13 +654,13 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res4.status, 200);
-      assert.equal(res4.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res4.status, 200);
+      assert.strictEqual(res4.headers.get('content-type'), 'application/json');
       const resAccountWithGroup = await res4.json();
 
-      assert.equal(resAccountWithGroup.groups.length, 2);
-      assert.equal(resAccountWithGroup.groups[0].id, group_id);
-      assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
+      assert.strictEqual(resAccountWithGroup.groups.length, 2);
+      assert.strictEqual(resAccountWithGroup.groups[0].id, group_id);
+      assert.strictEqual(resAccountWithGroup.groups[0].name, resGroup.name);
     });
   });
 
@@ -664,17 +670,17 @@ describe('REST Test group', function() {
         {
           name: 'john doe 4',
           email: 'john.doe.4@example.com',
-          keys: ['ssh-rsa AAAAB3Nza john.doe.3@debian']
+          keys: [publicKeySample3]
         },
         {
           name: 'john doe 5',
           email: 'john.doe.5@example.com',
-          keys: ['ssh-rsa AAAAB3Nza john.doe.3@debian']
+          keys: [publicKeySample3]
         },
         {
           name: 'john doe 6',
           email: 'john.doe.6@example.com',
-          keys: ['ssh-rsa AAAAB3Nza john.doe.3@debian']
+          keys: [publicKeySample3]
         }
       ];
 
@@ -689,8 +695,8 @@ describe('REST Test group', function() {
           body: JSON.stringify(reqAccounts[i])
         });
 
-        assert.equal(res.status, 200);
-        assert.equal(res.headers.get('content-type'), 'application/json');
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(res.headers.get('content-type'), 'application/json');
         ids.push(reqAccounts[i].email);
       }
 
@@ -703,11 +709,11 @@ describe('REST Test group', function() {
         body: JSON.stringify({ ids })
       });
 
-      assert.equal(res2.status, 200);
+      assert.strictEqual(res2.status, 200);
       const resGroups = await res2.json();
 
       for (let i = 0; i < resGroups.length; i++) {
-        assert.equal(resGroups[i].status, 200);
+        assert.strictEqual(resGroups[i].status, 200);
       }
 
       const res3 = await fetch(base_url + '/groups/' + group_id, {
@@ -716,14 +722,14 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res3.status, 200);
-      assert.equal(res3.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res3.status, 200);
+      assert.strictEqual(res3.headers.get('content-type'), 'application/json');
 
       const resGroup = await res3.json();
 
-      assert.equal(resGroup.active, 1);
-      assert.equal(resGroup.accounts.length, 5);
-      assert.equal(resGroup.permissions.length, 0);
+      assert.strictEqual(resGroup.active, 1);
+      assert.strictEqual(resGroup.accounts.length, 5);
+      assert.strictEqual(resGroup.permissions.length, 0);
 
       const res4 = await fetch(base_url + '/accounts/' + reqAccounts[2].email, {
         method: 'GET',
@@ -731,13 +737,13 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res4.status, 200);
-      assert.equal(res4.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res4.status, 200);
+      assert.strictEqual(res4.headers.get('content-type'), 'application/json');
       const resAccountWithGroup = await res4.json();
 
-      assert.equal(resAccountWithGroup.groups.length, 2);
-      assert.equal(resAccountWithGroup.groups[0].id, group_id);
-      assert.equal(resAccountWithGroup.groups[0].name, resGroup.name);
+      assert.strictEqual(resAccountWithGroup.groups.length, 2);
+      assert.strictEqual(resAccountWithGroup.groups[0].id, group_id);
+      assert.strictEqual(resAccountWithGroup.groups[0].name, resGroup.name);
     });
   });
 
@@ -750,8 +756,8 @@ describe('REST Test group', function() {
         }
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const resAccount = await res.json();
 
       const res2 = await fetch(base_url + '/groups/' + group_id + '/' + resAccount.id, {
@@ -761,7 +767,7 @@ describe('REST Test group', function() {
         }
       });
 
-      assert.equal(res2.status, 204);
+      assert.strictEqual(res2.status, 204);
 
       const res3 = await fetch(base_url + '/groups/' + group_id, {
         method: 'GET',
@@ -769,15 +775,15 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res3.status, 200);
-      assert.equal(res3.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res3.status, 200);
+      assert.strictEqual(res3.headers.get('content-type'), 'application/json');
 
       const resGroup = await res3.json();
 
-      assert.equal(resGroup.active, 1);
-      assert.equal(resGroup.accounts.length, 4);
+      assert.strictEqual(resGroup.active, 1);
+      assert.strictEqual(resGroup.accounts.length, 4);
       assert.notEqual(resGroup.accounts[0].id, resAccount.id);
-      assert.equal(resGroup.permissions.length, 0);
+      assert.strictEqual(resGroup.permissions.length, 0);
 
       const res4 = await fetch(base_url + '/accounts/' + resAccount.id, {
         method: 'GET',
@@ -785,11 +791,11 @@ describe('REST Test group', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res4.status, 200);
-      assert.equal(res4.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res4.status, 200);
+      assert.strictEqual(res4.headers.get('content-type'), 'application/json');
       const resAccountWithGroup = await res4.json();
 
-      assert.equal(resAccountWithGroup.groups.length, 1);
+      assert.strictEqual(resAccountWithGroup.groups.length, 1);
     });
   });
 });

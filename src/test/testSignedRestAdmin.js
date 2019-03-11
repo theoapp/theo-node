@@ -6,6 +6,12 @@ import fetch from 'node-fetch';
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 dotenv.config();
 
+const publicKeySample2 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCb80xLc+9jKls1BzxK6/tZKchHZtdz+GFX+eVINDBx//j6Efgp3J8gg1dVI21rAnYb1GTY0P5wozqe2EzEBCKVvlJHjMjpXk+/dkzLkUcbDlL8F/Rv6pIOn0OqNOuWtQ1c8i7qnDA/EzIGrKpDIdL1vXDxEqgzZmRQgNtNJv6mDfkCXL3JQQAVsoTqypI+BSMktX06MjCKLBLsWJRIfUYSgS3yDg6c8Yg7n1yK5sgiNE1mBgZe+Y8VXMcpy3jaiVQ1ifnIPrkvm0oaqZBmYNLDEKkxA9PPMiMo4ZOOF5icXh7MKc9aunqpRZK22dQwJdYvEi57je+ojI63Vil5gXbr jolly3@newsvine.com';
+
+const publicKeySample3 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMODOr5BfHfde7yHPYVHDWfqgPbHvtFI9coTBoiLZjADbAAKCVLTL+tddnP7oCJBOM0TEC9ySptIv2kzAcPN6shkQs4Y8AWB2HgAl6cWzNmirRxmbVcUDM7a32q9uIiUHyQ6UIHUsyIaTeFtlldf0AT14r9ilaTRBCEH3r2u4xxVntVpJerBBZijsjfl1KN1N0bG9z9pHkpoUiJpIxGDhG1malhypRKffBSeNo4HNwAAA/SyvJq1jvGdBlZhbZK6kN+AnTdQnA8tSd1BhjXRv3uxUeGBHrYxnlaOvFCNjYsSARZO5iFNclgT/mOM75+luOzLmgf+X5h2y3VFZqjEax jolly2@newsvine.com';
+
 describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
   this.timeout(10000);
 
@@ -39,7 +45,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian']
+        keys: [publicKeySample2]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -61,8 +67,8 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
         keys: [
-          { key: 'ssh-rsa AAAAB3Nza john.doe.2@debian', signature: 'xxxx' },
-          { key: 'ssh-rsa AAAAB3Nza john.doe.3@debian', signature: 'xxxxx' }
+          { key: publicKeySample2, signature: 'xxxx' },
+          { key: publicKeySample3, signature: 'xxxxx' }
         ]
       };
 
@@ -94,7 +100,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
 
   describe('add 1 key to an account', function() {
     it('should return an error because key is not signed', async function() {
-      const keys = ['ssh-rsa AAAAB3Nza john.doe.2@debian'];
+      const keys = [publicKeySample2];
 
       const res = await fetch(base_url + '/accounts/1/keys', {
         method: 'POST',
@@ -108,7 +114,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
       assert.equal(res.status, 400);
     });
     it('should return success', async function() {
-      const keys = [{ key: 'ssh-rsa AAAAB3Nza john.doe.2@debian', signature: 'xxxxxx' }];
+      const keys = [{ key: publicKeySample2, signature: 'xxxxxx' }];
 
       const res = await fetch(base_url + '/accounts/1/keys', {
         method: 'POST',

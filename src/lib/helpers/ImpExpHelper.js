@@ -52,7 +52,10 @@ export const imp = async (db, dump) => {
         const id = await am.create(account);
         for (let ii = 0; ii < account.public_keys.length; ii++) {
           const public_key = account.public_keys[ii];
-          await km.create(id, public_key.public_key, public_key.public_key_sig);
+          if (!public_key.fingerprint) {
+            // TODO get fingerprint!
+          }
+          await km.create(id, public_key.public_key, public_key.fingerprint, public_key.public_key_sig);
         }
         for (let ii = 0; ii < account.groups.length; ii++) {
           const group = account.groups[ii];

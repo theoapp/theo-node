@@ -4,7 +4,6 @@ import assert from 'assert';
 import fetch from 'node-fetch';
 import accountsJson from './accounts';
 import groupsJson from './groups';
-import { adminGetGroup } from '../lib/helpers/AdminHelper';
 
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 
@@ -130,8 +129,8 @@ describe('REST Check keys', function() {
   describe('check accounts creation', function() {
     it('should return an account object with right number of keys and permissions', async function() {
       const resAccount = await getAccountByEmail('tevery0@newsvine.com');
-      assert.equal(resAccount.permissions.length, 5);
-      assert.equal(resAccount.public_keys.length, 5);
+      assert.strictEqual(resAccount.permissions.length, 5);
+      assert.strictEqual(resAccount.public_keys.length, 5);
     });
   });
 
@@ -140,10 +139,10 @@ describe('REST Check keys', function() {
       const res = await fetch(base_url + '/authorized_keys/mil/mil', {
         method: 'GET'
       });
-      assert.equal(res.status, 401);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 401);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const data = await res.json();
-      assert.equal(data.status, 401);
+      assert.strictEqual(data.status, 401);
     });
   });
 
@@ -155,10 +154,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer 123456789poiuyt'
         }
       });
-      assert.equal(res.status, 401);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.status, 401);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json');
       const data = await res.json();
-      assert.equal(data.status, 401);
+      assert.strictEqual(data.status, 401);
     });
   });
 
@@ -170,10 +169,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 14);
+      assert.strictEqual(text.split('\n').length, 14);
     });
   });
 
@@ -185,10 +184,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 13);
+      assert.strictEqual(text.split('\n').length, 13);
     });
   });
 
@@ -200,10 +199,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 1);
+      assert.strictEqual(text.split('\n').length, 1);
     });
   });
 
@@ -215,10 +214,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 10);
+      assert.strictEqual(text.split('\n').length, 10);
     });
   });
 
@@ -227,7 +226,10 @@ describe('REST Check keys', function() {
       const account = {
         name: 'John Doe',
         email: 'john.doe@example.com',
-        keys: ['7f92acf9229d222c36109a57a824ab24081530fa', 'a6a4097125cc1e317c812a494d87cf0096678855'],
+        keys: [
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD1Df4sV1iiEYsU/73PqxgUveYWk2HzvpOc+RsQhd0ziRKW+lGIWN9wMZ8EOoN565HrPedcDYEbYlCuZ/uvnmOE+1YwxSqeLq/cXRaDjd3KsqdKIgXYReh4HFSWwXdB9T+Qv0bOzRbW34qxDX5VPKb7iaIxphCLDY6WD+6goKn1xq/gSmzA8yteMzdX8K9qT+CeUVBHNIN+cWg5yfOs50jVvgTpr8dJj74NO2j/arxOtaadFrAZuRapN+Cn6AQiQAhp66DQ+H8yYxnEZP5G17uE8MS88qSXTmaW5i1uJDlS28SNgl1Icab1bv1fvZXHk3MSD8S4pPLytE3VpdKMLdaP scallar1b@1und1.de',
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDOinZyJR2WUMYqYJ7Urdt4hGrY6DE5iWMp28aLJsyZUwFFBZ01x86mc+rFXN6+V3YlhYbBz2wgeyWMESlE8E4x/jHcjxOjySof2/SKV26BZd0C0/thHnE96SHUC8ZAEBSnJe8mM7obfCeoEYVow8dCL4MhoH84kJFiW+Wutoe/Lvs4drGoDozOAVOvUebBpwJX9jJodRiMbM4Bf55rdO5FOX07EsMqKJTEEhkS3lS5BMwamvH0ZRX5i94vdtrkrzgXIxE1iggMIE3NdF3PStXt7Q2SHXg+9b9CcZ9nl65LLdCWZW5cyC1DRYfq0z6IujMCL7JRPOY3Pf09st7HinJr scallar1b@1und1.de'
+        ],
         permissions: [
           {
             user: 'name',
@@ -242,10 +244,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 12);
+      assert.strictEqual(text.split('\n').length, 12);
     });
   });
 
@@ -254,14 +256,20 @@ describe('REST Check keys', function() {
       const account = {
         name: 'John Doe 2',
         email: 'john.doe2@example.com',
-        keys: ['9a57a824ab24081530fa7f92acf9229d222c3610', '12a494d87cf0096678855a6a4097125cc1e317c8'],
+        keys: [
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDhUZ36vEwQl+JLfDeqRauGuisnNEbQARbGFhvrVupHhjykbCeMzAtfa7awRSLLtBpCPrqpsbinX9TlehEKsT9hE9ecI6joUaurYuwDJ0zABJUoXHDFgXTuM5YqVIPBqhJ5adqr2W/H2K7Ae0q09x9dekeQPHfRdStY7KbGYkL7oR9nCfHxLQeb8Y0R4P7dWfym6cFrBT9AYFwjgBJi5vndG1SmepJO1UlJDHo3m80SCpyK9L57Hk8ijRlsxdl34fmciTTbrhpnDUs1mOelIZ7Ek2jb+gwnmk2TMwTibLfJtDJm5lSK0z6WXcElDl8zuWuf0xAJ8FHcu4ql5fNQF3Wd eyurmanovev16@gmpg.org',
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzZjaqCTfqxKktG9sMWuM3qzvbPwSyIan0VKUlnbETlJ9+fVH56ZeVdyxza2j77QvehMyC9Rfwvx4dxLBwuygICjZWK6Crgz6ygyAPgADvsQgQ7g3h4gAMFra2EyHZIJ1+z23cH28BPkbREwZaN+7ld8xhK+K6xf9QdB15YYIjpVpaAArpk02NHeC5KH/xuruDSbEShvA7afrTRv8ySSXTedj1CdzeaQ0ccypgt7n5wUKD395WHUr1IjwV+URorx6GwB7OucxrL+G1cdFWNxtC5/c2wlk//1cEn2c3TgS/1EhYg65x+BXD1kw5a0UUFMMFo6C2RBzNIkIWS+GVaxnp eyurmanovev16@gmpg.org'
+        ],
         permissions: []
       };
       const resAccount = await createAccount(account);
       const account2 = {
         name: 'John Doe 3',
         email: 'john.doe3@example.com',
-        keys: ['12a494d8b24081530fa7f92acf9229d222c3610', '9a57a824a7cf0096678855a6a4097125cc1e317c8'],
+        keys: [
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDTy2/OjrEbQAG2j0QwD86OKkzpPdLlpOcAoEoYOtQVTieF+5S2NmchIm9aZ89CHs3bYVYoolaIFJ8cMCQHsao/SMqGIrVkTNw1/jpHe8Uk74KsFP4qHEfg25ub73iB/nB5dPi+FAyisLGLwC0o/5KJXd7pU9aBta+rNVSwVjdx9DeT1t4kzOBIoC48Al2is4tTmr3jW69B6HfQHMbUoiiRqYlfLRlRqwkIvMmrX3RtuzDyP5I1E+j1/3ITjyn/htwbgbUCmKfWqWW8nk6N+PE/sGDfPVthv7A6DWbXZDStu5xpB2q1JbKeUeb3kUhSnpBy87ahCYOWylIYvyf1NgTB ebatchley17@friendfeed.com',
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDn6L+GqagnNhiWkLHGo5ytI0YerMqtEcE6xkLm6xSauHTOg93T9owMo0TiNf2yh9hkWnVlLZpjJ7zvaxGbyFfSHlIO2KzVflDwocAbmNSerAzMwRbvFKXrHwp5+cn3nsKYI65mq+LiKe4SIPTJThZoRntcKFtUpSSVMUYkPbkDaFHZgJVixLdsV0PrxvroDWo3lP/OY9e/ubiFL9vMG+RB5ghJ3bDSzHyCC4oCQsDBMxG1wf0F5gvc4vlLPun8cDICVVY1cwlRzx86/GvXrJ7QPAjPrVELfURzWtSeIiMZJxerbpfnEXw4rE+13noBwbZAalkrsXloK27s7oYkvQwn ebatchley17@friendfeed.com'
+        ],
         permissions: []
       };
       const resAccount2 = await createAccount(account2);
@@ -273,10 +281,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 16);
+      assert.strictEqual(text.split('\n').length, 16);
     });
   });
 
@@ -298,10 +306,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 14);
+      assert.strictEqual(text.split('\n').length, 14);
     });
   });
 
@@ -314,7 +322,7 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
         }
       });
-      assert.equal(res2.status, 204);
+      assert.strictEqual(res2.status, 204);
 
       const res = await fetch(base_url + '/authorized_keys/edu/name', {
         method: 'GET',
@@ -322,10 +330,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 12);
+      assert.strictEqual(text.split('\n').length, 12);
     });
   });
 
@@ -338,7 +346,7 @@ describe('REST Check keys', function() {
         }
       });
 
-      assert.equal(res2.status, 201);
+      assert.strictEqual(res2.status, 201);
 
       const res = await fetch(base_url + '/authorized_keys/edu/name', {
         method: 'GET',
@@ -346,10 +354,10 @@ describe('REST Check keys', function() {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
         }
       });
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
-      assert.equal(text.split('\n').length, 10);
+      assert.strictEqual(text.split('\n').length, 10);
     });
   });
 });

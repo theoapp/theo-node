@@ -3,9 +3,10 @@ import mysql from 'mysql2';
 import MariadbClient from './client';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
+import { runV12migration } from '../../../migrations/v12fixFingerprints';
 
 class MariadbManager extends DbManager {
-  dbVersion = 11;
+  dbVersion = 12;
 
   CREATE_TABLE_AUTH_TOKENS =
     'create table auth_tokens (token varchar(128) binary PRIMARY KEY, type varchar(5), created_at BIGINT UNSIGNED)';
@@ -33,6 +34,7 @@ class MariadbManager extends DbManager {
     'account_id INTEGER NOT NULL, ' +
     'public_key varchar(1024) not null, ' +
     'public_key_sig varchar(1024), ' +
+    'fingerprint varchar(1024), ' +
     'created_at BIGINT UNSIGNED, ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
 
@@ -185,6 +187,10 @@ class MariadbManager extends DbManager {
     if (fromVersion < 11) {
       await this.client.run('alter table tgroups add is_internal tinyint(1) not null default 0');
       await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
+    }
+    if (fromVersion < 12) {
+      await this.client.run('alter table public_keys add fingerprint varchar(1024)');
+      await runV12migration(this.client);
     }
     await this.updateVersion();
   }

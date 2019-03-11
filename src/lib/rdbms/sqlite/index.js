@@ -4,11 +4,12 @@ import SqliteClient from './client';
 import { runV7migrationSqliteDb } from '../../../migrations/v7fixGroups';
 import fs from 'fs';
 import { dirname } from 'path';
+import { runV12migration } from '../../../migrations/v12fixFingerprints';
 
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 11;
+  dbVersion = 12;
 
   CREATE_TABLE_AUTH_TOKENS = 'create table auth_tokens (token text PRIMARY KEY, type varchar(5), created_at INTEGER)';
 
@@ -36,6 +37,7 @@ class SqliteManager extends DbManager {
     'account_id INTEGER, ' +
     'public_key varchar(1024), ' +
     'public_key_sig varchar(1024), ' +
+    'fingerprint varchar(1024), ' +
     'created_at INTEGER, ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
 
@@ -201,6 +203,10 @@ class SqliteManager extends DbManager {
     if (fromVersion < 11) {
       await this.client.run('alter table tgroups add is_internal INTEGER not null default 0');
       await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
+    }
+    if (fromVersion < 12) {
+      await this.client.run('alter table public_keys add fingerprint varchar(1024)');
+      await runV12migration(this.client);
     }
     await this.updateVersion();
   }

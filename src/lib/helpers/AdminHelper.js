@@ -6,6 +6,7 @@ import GroupManager from '../managers/GroupManager';
 import GroupAccountManager from '../managers/GroupAccountManager';
 import EventHelper from './EventHelper';
 import AppHelper from './AppHelper';
+import { SSHFingerprint } from "../utils/sshUtils";
 
 export const adminCreateAccount = async (db, account) => {
   if (!account.email) {
@@ -139,7 +140,8 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
     if (isNaN(account_id)) {
       account_id = await am.getIdByEmail(account_id);
     } else {
-      await am.get(account_id);
+      const account = await am.get(account_id);
+      account_id = account.id;
     }
   } catch (err) {
     err.t_code = 404;
@@ -169,7 +171,8 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
         if (!_key) {
           continue;
         }
-        const id = await km.create(account_id, _key);
+        const fingerprint = SSHFingerprint(_key);
+        const id = await km.create(account_id, _key, fingerprint);
         key = {
           id,
           public_key: keys[i]
@@ -186,7 +189,8 @@ export const adminAddAccountKey = async (db, account_id, keys) => {
           err.t_code = 400;
           throw err;
         }
-        const id = await km.create(account_id, _key, _signature);
+        const fingerprint = SSHFingerprint(_key);
+        const id = await km.create(account_id, _key, fingerprint, _signature);
         key = {
           id,
           public_key: keys[i]
@@ -266,7 +270,8 @@ export const adminAddAccountKeyFromService = async (db, account_id, service, use
       if (!_key) {
         continue;
       }
-      const id = await km.create(account_id, _key);
+      const fingerprint = ''; // TODO get ssh key's fingerprint
+      const id = await km.create(account_id, _key, fingerprint);
       const key = {
         id,
         public_key: keys[i]
@@ -338,6 +343,7 @@ export const adminAddAccountPermission = async (db, account_id, user, host) => {
       account_id = await am.getIdByEmail(account_id);
     }
     account = await am.get(account_id);
+    account_id = account.id;
   } catch (err) {
     err.t_code = 404;
     console.log('Throw 404');

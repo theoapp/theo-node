@@ -17,7 +17,8 @@
     "test:api:signed": "mocha build/test/testSigned*",
     "test:core": "mocha build/test/testCore.js",
     "test:core:restart": "mocha build/test/testCoreOnRestart.js",
-    "test:cluster": "mocha build/test/testCluster.js"
+    "test:cluster": "mocha build/test/testCluster.js",
+    "test:sshutils": "mocha build/test/testSSHUtils.js"
   },
   "author": "Michele <michele@azzolari.it> (macno)",
   "license": "Apache-2.0",
@@ -28,7 +29,8 @@
     "node-fetch": "^2.2.0",
     "redis": "^2.8.0",
     "restify": "^7.2.1",
-    "sqlite3": "^4.0.2"
+    "sqlite3": "^4.0.2",
+    "sshpk": "^1.16.1"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",

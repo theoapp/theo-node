@@ -12,7 +12,7 @@ class KeyManager {
 
   getAll(account_id, limit, offset) {
     let sql =
-      'select id, public_key, public_key_sig, created_at from public_keys where account_id = ? order by created_at ';
+      'select id, public_key, fingerprint, public_key_sig, created_at from public_keys where account_id = ? order by created_at ';
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -22,9 +22,10 @@ class KeyManager {
     return this.db.all(sql, [account_id]);
   }
 
-  async create(account_id, key, signature = null) {
-    const sql = 'insert into public_keys (account_id, public_key, public_key_sig, created_at) values (?, ?, ?, ?) ';
-    const id = await this.db.insert(sql, [account_id, key, signature, new Date().getTime()]);
+  async create(account_id, key, fingerprint, signature = null) {
+    const sql =
+      'insert into public_keys (account_id, public_key, fingerprint, public_key_sig, created_at) values (?, ?, ?, ?, ?) ';
+    const id = await this.db.insert(sql, [account_id, key, fingerprint, signature, new Date().getTime()]);
     await this.am.setUpdatedAt(account_id);
     return id;
   }

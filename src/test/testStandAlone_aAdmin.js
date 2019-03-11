@@ -21,6 +21,12 @@ import {
 } from '../lib/helpers/AdminHelper';
 import DbHelper, { releaseDHInstance } from '../lib/helpers/DbHelper';
 
+const publicKeySample =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoUQGPAFUl3xBX+1vxm/o1v4G1KHqXlvg/pVAHrs89isBTcXwNoo4C1YWjF0TCRjhltfvNMNYF8Q1fzEw1anjL+9X26GlXEXr4Nx9MIFFiEiTpUSPGlT13TOIIKW9eEQc9vHydgK1NdpEgz23kcPARWvXbcVtwoLDwfsE1Msvg1qWIN4UiDau/FTetFaq8fcXd3Cun0V+v5DLEfhSB3gNSxWwhdAEaQIpPSJk8VSHKiaOtQ6Besgw8+mjA5u0Mvm4Z9luZ8b7Ky2gUn49HwM/ez7KC9BhoiTsoE8iXjF11J3ttqju0wADZ4P8OQ7y6l7rgNqXyHejhLutvdI3ka3X/ jolly1@newsvine.com';
+
+const publicKeySample3 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMODOr5BfHfde7yHPYVHDWfqgPbHvtFI9coTBoiLZjADbAAKCVLTL+tddnP7oCJBOM0TEC9ySptIv2kzAcPN6shkQs4Y8AWB2HgAl6cWzNmirRxmbVcUDM7a32q9uIiUHyQ6UIHUsyIaTeFtlldf0AT14r9ilaTRBCEH3r2u4xxVntVpJerBBZijsjfl1KN1N0bG9z9pHkpoUiJpIxGDhG1malhypRKffBSeNo4HNwAAA/SyvJq1jvGdBlZhbZK6kN+AnTdQnA8tSd1BhjXRv3uxUeGBHrYxnlaOvFCNjYsSARZO5iFNclgT/mOM75+luOzLmgf+X5h2y3VFZqjEax jolly2@newsvine.com';
+
 const settings = {
   admin: {
     token: ''
@@ -124,7 +130,7 @@ describe('Test account', function() {
       } catch (er) {
         error = er;
       }
-      assert.notEqual(typeof error, 'undefined');
+      assert.notStrictEqual(typeof error, 'undefined');
       assert.strictEqual(typeof resAccount, 'undefined');
     });
   });
@@ -142,7 +148,7 @@ describe('Test account', function() {
       } catch (er) {
         error = er;
       }
-      assert.notEqual(typeof error, 'undefined');
+      assert.notStrictEqual(typeof error, 'undefined');
       assert.strictEqual(typeof resAccount, 'undefined');
     });
   });
@@ -152,7 +158,7 @@ describe('Test account', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian']
+        keys: [publicKeySample]
       };
 
       const resAccount = await adminCreateAccount(db, reqAccount);
@@ -172,7 +178,7 @@ describe('Test account', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian', 'ssh-rsa AAAAB3Nza john.doe.3@debian']
+        keys: [publicKeySample, publicKeySample3]
       };
 
       const resAccount = await adminCreateAccount(db, reqAccount);
@@ -218,7 +224,7 @@ describe('Test account', function() {
 
   describe('add 1 key to an account', function() {
     it('should return an account object with 1 key and no permissions', async function() {
-      const keys = ['ssh-rsa AAAAB3Nza john.doe.2@debian'];
+      const keys = [publicKeySample];
 
       const retKeys = await adminAddAccountKey(db, 1, keys);
       const resAccount = await adminGetAccount(db, 1);
@@ -341,7 +347,7 @@ describe('Test group', function() {
       } catch (er) {
         error = er;
       }
-      assert.notEqual(typeof error, 'undefined');
+      assert.notStrictEqual(typeof error, 'undefined');
       assert.strictEqual(typeof resGroup, 'undefined');
     });
   });
@@ -360,7 +366,7 @@ describe('Test group', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
-        keys: ['ssh-rsa AAAAB3Nza john.doe.2@debian']
+        keys: [publicKeySample]
       };
 
       const resAccount = await adminCreateAccount(db, reqAccount);
