@@ -6,7 +6,17 @@ import AppHelper from '../lib/helpers/AppHelper';
 const checkFingerPrint = async function(user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
     if (keys[i].fingerprint === fingerprint) {
-      console.log('%s logged in on %s as %s', keys[i].email, host, user);
+      const data = {
+        user,
+        host,
+        email: keys[i].email,
+        ts: new Date().getTime()
+      };
+      if (process.env.LOG_AUTH_KEYS_URL) {
+        RemoteLoggerHelper.log(data);
+      } else {
+        console.info(JSON.stringify(data));
+      }
       return;
     }
   }

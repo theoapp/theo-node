@@ -10,7 +10,6 @@ const execute = (method, path, data, headers = {}) => {
     if (dataType !== 'string') {
       data = JSON.stringify(data);
     }
-    headers['Content-Type'] = contentType;
     fetchOpts.body = data;
   }
   return fetch(path, fetchOpts).then(res => {
