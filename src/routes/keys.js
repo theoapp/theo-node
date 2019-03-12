@@ -2,6 +2,7 @@ import { requireAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
 import { getAuthorizedKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysHelper';
 import { dnsReverse } from '../lib/utils/dnsUtils';
 import AppHelper from '../lib/helpers/AppHelper';
+import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
 
 const checkFingerPrint = async function(user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
@@ -12,15 +13,14 @@ const checkFingerPrint = async function(user, host, fingerprint, keys) {
         email: keys[i].email,
         ts: new Date().getTime()
       };
+      console.info(JSON.stringify(data));
       if (process.env.LOG_AUTH_KEYS_URL) {
-        RemoteLoggerHelper.log(data);
-      } else {
-        console.info(JSON.stringify(data));
+        RemoteLoggerHelper.log(data).finally();
       }
       return;
     }
   }
-  console.log('Account not found for %s on %s', user, hostv);
+  console.log('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
 };
 
 const checkUserHost = async function(db, accept, user, host, res, fingerprint) {
