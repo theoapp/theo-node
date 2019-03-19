@@ -669,7 +669,7 @@ export const adminDeleteGroupAccount = async (db, group_id, account_id) => {
     if (isNaN(group_id)) {
       group_id = await gm.getIdByName(group_id);
     } else {
-      await gm.get(group_id);
+      await gm.get(group_id); // I need it to check if group exists!
     }
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -680,7 +680,7 @@ export const adminDeleteGroupAccount = async (db, group_id, account_id) => {
     if (isNaN(account_id)) {
       account_id = await am.getIdByEmail(account_id);
     } else {
-      await am.get(account_id);
+      await am.get(account_id); // I need it to check if account exists!
     }
   } catch (err) {
     if (!err.t_code) err.t_code = 500;

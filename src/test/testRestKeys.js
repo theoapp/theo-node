@@ -9,6 +9,14 @@ const base_url = process.env.THEO_URL || 'http://localhost:9100';
 
 dotenv.config();
 
+const awaitTimeout = ms => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, ms);
+  });
+};
+
 const addPermission = async (account_id, user, host) => {
   await fetch(base_url + '/accounts/' + account_id + '/permissions', {
     method: 'POST',
@@ -324,6 +332,7 @@ describe('REST Check keys', function() {
       });
       assert.strictEqual(res2.status, 204);
 
+      await awaitTimeout(400);
       const res = await fetch(base_url + '/authorized_keys/edu/name', {
         method: 'GET',
         headers: {
@@ -331,6 +340,8 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
+      const fromCache = res.headers.get('X-From-Cache');
+      assert.strictEqual(fromCache, 'false');
       assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 12);
@@ -347,7 +358,7 @@ describe('REST Check keys', function() {
       });
 
       assert.strictEqual(res2.status, 201);
-
+      await awaitTimeout(400);
       const res = await fetch(base_url + '/authorized_keys/edu/name', {
         method: 'GET',
         headers: {
@@ -355,6 +366,8 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
+      const fromCache = res.headers.get('X-From-Cache');
+      assert.strictEqual(fromCache, 'false');
       assert.strictEqual(res.headers.get('content-type'), 'text/plain');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 10);

@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+print_test_header () {
+    echo
+    echo "  #####  "
+    echo $1
+    echo "  #####  "
+    echo
+}
+
 # Build theo test image
 docker build --target builder -t theo-tester .
 RETVAL=$?
@@ -18,6 +26,7 @@ fi
 
 source ./docker-compose/test_env
 
+print_test_header Standalone
 docker run --name theo-tester theo-tester npm run test:standalone
 RETVAL=$?
 docker rm theo-tester
@@ -27,6 +36,7 @@ if [[ ${RETVAL} -gt 0 ]]; then
 fi
 
 # sqlite
+print_test_header sqlite
 docker-compose -p theotests -f docker-compose/docker-compose-test.yml up -d
 docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
@@ -46,6 +56,7 @@ fi
 sleep 1
 
 # sqlite + REQUIRE_SIGNED_KEY
+print_test_header "sqlite + REQUIRE_SIGNED_KEY"
 docker-compose -p theotests -f docker-compose/docker-compose-test-signed.yml up -d
 docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
@@ -65,6 +76,7 @@ fi
 sleep 1
 
 # sqlite + memcached
+print_test_header "sqlite + memcached"
 docker-compose -p theotests -f docker-compose/docker-compose-test-memcached.yml up -d
 docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
@@ -84,6 +96,7 @@ fi
 sleep 1
 
 # mariadb
+print_test_header mariadb
 docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb.yml up -d
 echo Waiting for db to start..
 sleep 10
@@ -105,6 +118,7 @@ fi
 sleep 1
 
 # mariadb + redis
+print_test_header "mariadb + redis"
 docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis.yml up -d
 echo Waiting for db to start..
 sleep 10
@@ -126,6 +140,7 @@ fi
 sleep 1
 
 # mysql
+print_test_header "mysql"
 docker-compose -p theotests -f docker-compose/docker-compose-test-mysql.yml up -d
 echo Waiting for db to start..
 # On travis it takes a lot to start...
@@ -152,6 +167,7 @@ fi
 sleep 1
 
 # mariadb + redis CORE
+print_test_header "mariadb + redis CORE"
 docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml up -d
 echo Waiting for db to start..
 sleep 10
@@ -166,6 +182,7 @@ if [[ ${RETVAL} -gt 0 ]]; then
     exit ${RETVAL}
 fi
 
+print_test_header "mariadb + redis CORE AFTER RESTART"
 docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml restart theo
 docker run --network theotests_default --rm --link theo \
     -e "THEO_URL=http://theo:9100" \
