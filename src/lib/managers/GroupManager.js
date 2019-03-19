@@ -119,6 +119,13 @@ class GroupManager extends BaseCacheManager {
     return changes;
   }
 
+  async deleteInternal(name) {
+    const sql = 'delete from tgroups where name = ? and is_internal = 1';
+    const changes = await this.db.delete(sql, [name]);
+    this.invalidateCache();
+    return changes;
+  }
+
   async changeStatus(id, active) {
     const sql = 'update tgroups set active = ?, updated_at = ? where id = ? ';
     active = !!active;

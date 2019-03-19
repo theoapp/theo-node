@@ -111,9 +111,14 @@ export const adminGetAccount = async (db, account_id) => {
 
 export const adminDeleteAccount = async (db, account_id) => {
   const am = new AccountManager(db);
+  let accountEmail;
   try {
     if (isNaN(account_id)) {
+      accountEmail = Object.assign('', account_id);
       account_id = await am.getIdByEmail(account_id);
+    } else {
+      const account = await am.get(account_id);
+      accountEmail = account.email;
     }
     const ret = await am.delete(account_id);
     if (ret === 0) {
@@ -121,6 +126,13 @@ export const adminDeleteAccount = async (db, account_id) => {
       error.t_code = 404;
       throw error;
     }
+    const gm = new GroupManager(db);
+    try {
+      await gm.deleteInternal(accountEmail);
+    } catch (e) {
+      // I don't care
+    }
+
     EventHelper.emit('theo:change', {
       func: 'account',
       action: 'delete',
