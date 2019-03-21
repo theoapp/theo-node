@@ -8,8 +8,11 @@ import { initRoutes } from './routes';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import packageJson from '../package';
 import EventHelper from './lib/helpers/EventHelper';
+import { common_debug, common_error, common_info, common_warn, initLogger } from './lib/utils/logUtils';
 
 dotenv.config();
+
+initLogger();
 
 const DB_CONN_MAX_RETRY = 15;
 
@@ -46,7 +49,7 @@ const setDbEnv = () => {
   }
   if (settings.db.engine === 'sqlite') {
     if (cluster_mode === '1') {
-      console.error('DB ERROR! Engine mariadb/mysql is required for CLUSTER_MODE');
+      common_error('DB ERROR! Engine mariadb/mysql is required for CLUSTER_MODE');
       process.exit(1);
     }
     if (process.env.DB_STORAGE) {
@@ -139,18 +142,18 @@ setEnv();
 let subscribe_core_token = false;
 
 if (settings.core) {
-  console.log('\n !!! INFO !!! ');
-  console.log(' Using core mode ');
-  console.error(' !!! INFO !!! \n');
+  common_info(' !!! INFO !!! ');
+  common_info(' Using core mode ');
+  common_info(' !!! INFO !!! \n');
   if (settings.cache && settings.cache.type === 'redis') {
     if (cluster_mode === '1') {
       subscribe_core_token = true;
     }
   }
 } else if (!settings.admin.token && settings.client.tokens.length === 0) {
-  console.error('\n !!! WARNING !!! ');
-  console.error(' No admin token nor client tokens found ');
-  console.error(' !!! WARNING !!! \n');
+  common_warn('\n !!! WARNING !!! ');
+  common_warn(' No admin token nor client tokens found ');
+  common_warn(' !!! WARNING !!! \n');
 }
 
 if (process.env.MODE !== 'test') {
@@ -163,6 +166,7 @@ if (process.env.MODE !== 'test') {
      |_| |_| |_| |___| |_____|
 
 `);
+  common_info('Theo starts');
 }
 const ah = AppHelper(settings);
 if (process.env.LOAD_PLUGINS) {
@@ -174,11 +178,11 @@ try {
   dh = DbHelper(ah.getSettings('db'));
   dm = dh.getManager();
   if (!dm) {
-    console.error('Unable to load DB Manager!!!');
+    common_error('Unable to load DB Manager!!!');
     process.exit(99);
   }
 } catch (e) {
-  console.error('Failed to load DB Manager!!!', e.message);
+  common_error('Failed to load DB Manager!!! %s', e.message);
   console.error(e);
   process.exit(99);
 }
@@ -186,7 +190,7 @@ const initDb = () => {
   try {
     dh.init()
       .then(async () => {
-        console.log('[ %s ] Db %s initiated', new Date().toISOString(), dm.getEngine());
+        common_info('Db %s initiated', dm.getEngine());
         if (settings.core && settings.core.token) {
           // Load tokens..
           try {
@@ -194,19 +198,20 @@ const initDb = () => {
             await client.open();
             await ah.loadAuthTokens(client);
           } catch (e) {
-            console.error('Unable to load auth tokens... bye bye', e);
+            common_error('Unable to load auth tokens... bye bye %s', e.message);
+            console.error(e);
             process.exit(4);
           }
         }
         startServer();
       })
       .catch(e => {
-        console.error('Failed to initialize db', e.message);
+        common_error('Failed to initialize db %s', e.message);
         console.error(e);
         process.exit(99);
       });
   } catch (e) {
-    console.error('Failed to load DB Manager!!!', e.message);
+    common_error('Failed to load DB Manager!!! %s', e.message);
     console.error(e);
     process.exit(99);
   }
@@ -219,7 +224,7 @@ const testDB = async () => {
     return true;
   } catch (e) {
     if (e.code && e.code === 'ER_NOT_SUPPORTED_AUTH_MODE') {
-      console.error('This mysql client does not support server version.');
+      common_error('This mysql client does not support server version.');
       process.exit(91);
     }
     console.error('testDB err', e);
@@ -245,15 +250,15 @@ let cm;
 try {
   ch = CacheHelper(ah.getSettings('cache'));
 } catch (err) {
-  console.error('Unable to create CacheHelper', err);
+  common_error('Unable to create CacheHelper %s', err.message);
 }
 if (ch) {
   cm = ch.getManager();
   if (cm) {
     if (!subscribe_core_token) {
-      console.log('Flushing CacheManager');
+      common_info('Flushing CacheManager');
       cm.flush().catch(er => {
-        console.error('Failed to initialize CacheManager', er.message);
+        common_error('Failed to initialize CacheManager: %s', er.message);
       });
     } else {
       redisSubscribe().finally();
@@ -290,7 +295,7 @@ const startServer = () => {
   });
   initRoutes(server);
   server.listen(settings.server.http_port, function() {
-    console.log('[ %s ] %s listening at %s', new Date().toISOString(), server.name, server.url);
+    common_info('%s listening at %s', server.name, server.url);
   });
 };
 const requestLogger = function(req, res, next) {
@@ -324,7 +329,7 @@ const requestLogger = function(req, res, next) {
   setImmediate(next);
 };
 process.on('SIGINT', async () => {
-  console.log('Caught interrupt signal');
+  common_debug('Caught interrupt signal');
   try {
     await dh.close();
     if (cm) {
@@ -335,10 +340,10 @@ process.on('SIGINT', async () => {
 });
 const startTestDb = async retry => {
   if (retry >= DB_CONN_MAX_RETRY) {
-    console.error("Givin' it up, failed to connect to db after %s retries", DB_CONN_MAX_RETRY);
+    common_error("Givin' it up, failed to connect to db after %s retries", DB_CONN_MAX_RETRY);
     process.exit(90);
   }
-  console.log('DB Check #%s ', retry);
+  common_debug('DB Connection check #%s ', retry);
   const ret = await testDB();
   if (ret) {
     initDb();
@@ -350,7 +355,7 @@ const startTestDb = async retry => {
 };
 if (cluster_mode === '1') {
   const timeout = parseInt(Math.random() * 1000);
-  console.info('[ %s ] CLUSTER_MODE: waiting %s to start node', new Date().toISOString(), timeout);
+  common_debug('CLUSTER_MODE: waiting %s ms to start node', timeout);
   setTimeout(function() {
     startTestDb(0).finally();
   }, timeout);

@@ -1,5 +1,6 @@
 import EventHelper from './EventHelper';
 import { getRdbmsModule } from '../rdbms/modules';
+import { common_debug, common_error, common_info } from '../utils/logUtils';
 
 let _instance;
 
@@ -40,7 +41,7 @@ class DbHelper {
       await client.open();
       this.manager.setClient(client);
     } catch (e) {
-      console.error('checkDb failed', e.message);
+      common_error('checkDb failed %s', e.message);
       console.error(e);
       process.exit(99);
     }
@@ -48,9 +49,10 @@ class DbHelper {
       const row = await this.manager.getCurrentVersion();
       currentVersion = row.value;
     } catch (e) {
+      common_error('Failed to read current version: ', e.message);
       currentVersion = false;
     }
-    console.log('Check db: currentVersion %s targetVersion %s', currentVersion, this.manager.dbVersion);
+    common_info('Check db: currentVersion %s targetVersion %s', currentVersion, this.manager.dbVersion);
 
     if (currentVersion === false) {
       try {
@@ -73,7 +75,7 @@ class DbHelper {
         if (cluster_mode === '1') {
           // Some other nodes are creating the tables..
           await client.close();
-          return ret;
+          return false;
         }
       }
       if (this.manager.dbVersion === currentVersion) {
@@ -86,7 +88,7 @@ class DbHelper {
         return ret;
       }
     } catch (e) {
-      console.error('checkDb failed', e.message);
+      common_error('checkDb failed %s', e.message);
       console.error(e);
       process.exit(99);
     }

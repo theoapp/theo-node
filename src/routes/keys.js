@@ -3,6 +3,7 @@ import { getAuthorizedKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysH
 import { dnsReverse } from '../lib/utils/dnsUtils';
 import AppHelper from '../lib/helpers/AppHelper';
 import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
+import { common_debug } from '../lib/utils/logUtils';
 
 const checkFingerPrint = async function(user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
@@ -20,7 +21,7 @@ const checkFingerPrint = async function(user, host, fingerprint, keys) {
       return;
     }
   }
-  console.log('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
+  common_debug('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
 };
 
 const checkUserHost = async function(db, accept, user, host, res, fingerprint) {
