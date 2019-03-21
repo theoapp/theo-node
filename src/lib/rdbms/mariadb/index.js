@@ -4,6 +4,7 @@ import MariadbClient from './client';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
+import { common_debug, common_error } from '../../utils/logUtils';
 
 class MariadbManager extends DbManager {
   dbVersion = 12;
@@ -87,14 +88,14 @@ class MariadbManager extends DbManager {
     try {
       await this.client.run(sqlCreateTable);
     } catch (e) {
-      console.error('Unable to create _version table', e.message);
+      common_error('Unable to create _version table: %s', e.message);
       throw e;
     }
     try {
       const sqlInsertVersionZero = 'insert into _version values (-1)';
       await this.client.run(sqlInsertVersionZero);
     } catch (e) {
-      console.error('Unable to insert -1 version in _version table', e.message);
+      common_error('Unable to insert -1 version in _version table: %s', e.message);
       throw e;
     }
     return 0;
@@ -118,11 +119,18 @@ class MariadbManager extends DbManager {
         const sqlCheck = 'select value from _version for update';
         row = await this.client.get(sqlCheck);
         if (row.value === this.dbVersion) {
-          await this.client.run('ROLLBACK; SET AUTOCOMMIT=0');
+          await this.client.run('ROLLBACK');
+          await this.client.run('SET AUTOCOMMIT=1');
         }
-      } catch (err) {
-        await this.client.run('SET AUTOCOMMIT=0');
-        throw err;
+        return row;
+      } catch (e) {
+        common_error('Ooops: %s', e.message);
+        console.error(e);
+        throw e;
+      } finally {
+        try {
+          await this.client.run('SET AUTOCOMMIT=1');
+        } catch (e) {}
       }
     } else {
       return this.client.get(sqlCheck);
@@ -134,7 +142,7 @@ class MariadbManager extends DbManager {
     if (process.env.CLUSTER_MODE === '1') {
       await this.client.run(sql);
       await this.client.run('COMMIT');
-      return this.client.run('set AUTOCOMMIT=0');
+      return this.client.run('set AUTOCOMMIT=1');
     } else {
       return this.client.run(sql);
     }
@@ -202,9 +210,10 @@ class MariadbManager extends DbManager {
       const sqlDrop = 'drop table ' + tables[i];
       try {
         await this.client.run(sqlDrop);
-        console.log('Dropped ', tables[i]);
+        common_debug('Dropped %s', tables[i]);
       } catch (e) {
-        console.error('Failed to drop %s', tables[i], e);
+        common_error('Failed to drop %s', tables[i]);
+        console.error(e);
         // it doesn't exists
       }
     }
