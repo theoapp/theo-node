@@ -9,7 +9,7 @@ info:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 servers:
-  - url: https://test.theo.authkeys.io
+  - url: https://theo.test.authkeys.io
     description: Public UNTRUSTABLE test theo server
 tags:
   - name: "utils"
