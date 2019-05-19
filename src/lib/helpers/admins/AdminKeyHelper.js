@@ -83,13 +83,15 @@ export const adminAddAccountKeys = async (db, account_id, keys, auth_token) => {
   }
 };
 
-export const adminDeleteAccountKey = async (db, account_id, key_id) => {
+export const adminDeleteAccountKey = async (db, account_id, key_id, auth_token) => {
   const am = new AccountManager(db);
+  let account;
   try {
     if (isNaN(account_id)) {
-      account_id = await am.getIdByEmail(account_id);
+      account = await am.getByEmail(account_id);
+      account_id = account.id;
     } else {
-      await am.get(account_id);
+      account = await am.get(account_id);
     }
   } catch (err) {
     err.t_code = 404;
@@ -98,17 +100,23 @@ export const adminDeleteAccountKey = async (db, account_id, key_id) => {
   }
   const km = new KeyManager(db);
   try {
-    const ret = await km.delete(account_id, key_id);
-    if (ret === 0) {
+    const key = await km.get(account_id, key_id);
+    if (!key) {
       const error = new Error('Key not found');
       error.t_code = 404;
       throw error;
     }
+    await km.delete(account_id, key_id);
     EventHelper.emit('theo:change', {
       func: 'account_keys',
       action: 'delete',
       object: account_id,
       receiver: 'admin'
+    });
+    AuditHelper.log(auth_token, 'keys', 'delete', {
+      email: account.email,
+      key: key.public_key,
+      fingerprint: key.fingerprint
     });
     return true;
   } catch (err) {

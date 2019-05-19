@@ -118,7 +118,7 @@ export default function handleAccounts(server) {
 
   server.del('/accounts/:id/keys/:key_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminDeleteAccountKey(req.db, req.params.id, Number(req.params.key_id));
+      const done = await adminDeleteAccountKey(req.db, req.params.id, Number(req.params.key_id), req.auth_token);
       if (done) {
         res.status(201);
         res.json({ status: 201 });
