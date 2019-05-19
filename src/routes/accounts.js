@@ -145,7 +145,7 @@ export default function handleAccounts(server) {
   server.post('/accounts/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
     const { user, host } = req.body;
     try {
-      const ret = await adminAddAccountPermission(req.db, req.params.id, user, host);
+      const ret = await adminAddAccountPermission(req.db, req.params.id, user, host, req.auth_token);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
@@ -155,7 +155,7 @@ export default function handleAccounts(server) {
 
   server.del('/accounts/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminDeleteAccountPermission(req.db, req.params.id, Number(req.params.permission_id));
+      const done = await adminDeleteAccountPermission(req.db, req.params.id, Number(req.params.permission_id), req.auth_token);
       if (done) {
         res.status(201);
         res.json({ status: 201 });
