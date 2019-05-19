@@ -14,10 +14,7 @@ const checkFingerPrint = async function(user, host, fingerprint, keys) {
         email: keys[i].email,
         ts: new Date().getTime()
       };
-      console.info(JSON.stringify(data));
-      if (process.env.LOG_AUTH_KEYS_URL) {
-        RemoteLoggerHelper.log(data).finally();
-      }
+      RemoteLoggerHelper.log(data);
       return;
     }
   }
