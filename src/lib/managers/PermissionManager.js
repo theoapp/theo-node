@@ -108,6 +108,11 @@ class PermissionManager {
     return lastId;
   }
 
+  async get(group_id, id) {
+    const sql = 'select host, user from permissions where id = ? and group_id = ?';
+    return this.db.get(sql, [id, group_id]);
+  }
+
   async delete(group_id, id) {
     const sql = 'delete from permissions where id = ? and group_id = ?';
     const changes = await this.db.delete(sql, [id, group_id]);
