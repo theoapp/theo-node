@@ -19,6 +19,7 @@ export const authMiddleware = (req, res, next) => {
           req.is_authorized = true;
           req.is_admin = auth.is_admin || false;
           req.is_core = auth.is_core || false;
+          req.auth_token = token;
         }
         next();
       });
@@ -29,16 +30,20 @@ export const authMiddleware = (req, res, next) => {
           req.is_authorized = true;
           req.is_admin = true;
           req.is_core = true;
+          req.auth_token = token;
         } else if (token === _settings.admin.token) {
           req.is_authorized = true;
           req.is_admin = true;
+          req.auth_token = token;
         } else if (_settings.admin.tokens && _settings.admin.tokens.includes(token)) {
           req.is_authorized = true;
           req.is_admin = true;
+          req.auth_token = token;
         } else {
           if (_settings.client.tokens) {
             if (_settings.client.tokens.includes(token)) {
               req.is_authorized = true;
+              req.auth_token = token;
             }
           }
         }
