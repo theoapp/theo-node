@@ -90,6 +90,17 @@ class GroupManager extends BaseCacheManager {
     return group;
   }
 
+  async getByName(name) {
+    const sql = 'select id, name, active, created_at from tgroups where name = ? ';
+    const group = await this.db.get(sql, [name]);
+    if (!group) {
+      const error = new Error('Group not found');
+      error.t_code = 404;
+      throw error;
+    }
+    return group;
+  }
+
   async getIdByName(name) {
     const sql = 'select id from tgroups where name = ? ';
     const group = await this.db.get(sql, [name]);
