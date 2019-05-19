@@ -3,7 +3,7 @@ import assert from 'assert';
 import AppHelper from '../lib/helpers/AppHelper';
 
 import {
-  adminAddAccountKey,
+  adminAddAccountKeys,
   adminAddAccountPermission,
   adminAddGroupPermission,
   adminCreateAccount,
@@ -226,7 +226,7 @@ describe('Test account', function() {
     it('should return an account object with 1 key and no permissions', async function() {
       const keys = [publicKeySample];
 
-      const retKeys = await adminAddAccountKey(db, 1, keys);
+      const retKeys = await adminAddAccountKeys(db, 1, keys);
       const resAccount = await adminGetAccount(db, 1);
 
       assert.strictEqual(retKeys.account_id, 1);
