@@ -7,7 +7,7 @@ export const runV7migrationMariaDb = async client => {
     const sqlAccount = 'select email from accounts where id = ?';
     const account_id = accountsToFix[i].account_id;
     const account = await client.get(sqlAccount, [account_id]);
-    const group_id = await adminCreateGroup(client, { name: account.email }, true);
+    const group_id = await adminCreateGroup(client, { name: account.email }, 'internal_db_upgrade', true);
     await adminCreateGroupAccount(db, group_id, account_id);
     const updateSql = 'update permissions set group_id = ? where account_id = ? ';
     await client.run(updateSql, [group_id, account_id]);
@@ -31,7 +31,7 @@ export const runV7migrationSqliteDb = async client => {
     const sqlAccount = 'select email from accounts where id = ?';
     const account = await client.get(sqlAccount, [account_id]);
     console.log('Creating group ', account.email);
-    const group_id = await adminCreateGroup(client, { name: account.email }, true);
+    const group_id = await adminCreateGroup(client, { name: account.email }, 'internal_db_upgrade', true);
     console.log('Associating group %s with account %s', group_id, account_id);
     await adminCreateGroupAccount(client, group_id, account_id);
     console.log('Setting permissions to group %s from account %s', group_id, account_id);

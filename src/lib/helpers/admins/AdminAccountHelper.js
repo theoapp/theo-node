@@ -25,7 +25,7 @@ export const adminCreateAccount = async (db, account, auth_token) => {
       receiver: 'admin'
     });
     AuditHelper.log(auth_token, 'accounts', 'create', { id, email: account.email });
-    const group_id = await adminCreateGroup(db, { name: account.email }, true, auth_token);
+    const group_id = await adminCreateGroup(db, { name: account.email }, auth_token, true);
     await adminCreateGroupAccount(db, group_id, id, auth_token);
     if (account.keys) {
       await adminAddAccountKeys(db, id, account.keys, auth_token);

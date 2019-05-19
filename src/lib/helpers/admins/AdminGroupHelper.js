@@ -1,7 +1,8 @@
 import GroupManager from '../../managers/GroupManager';
 import EventHelper from '../EventHelper';
+import AuditHelper from '../AuditHelper';
 
-export const adminCreateGroup = async (db, group, onlyId = false) => {
+export const adminCreateGroup = async (db, group, auth_token, onlyId = false) => {
   if (!group.name) {
     const error = new Error('Malformed object, name is required');
     error.t_code = 400;
@@ -22,6 +23,7 @@ export const adminCreateGroup = async (db, group, onlyId = false) => {
       object: id,
       receiver: 'admin'
     });
+    AuditHelper.log(auth_token, 'groups', 'create', { name: group.name });
     if (onlyId) return id;
     return gm.getFull(id);
   } catch (err) {
@@ -43,18 +45,26 @@ export const adminGetGroup = async (db, id) => {
   }
 };
 
-export const adminEditGroup = async (db, group_id, active) => {
+export const adminEditGroup = async (db, group_id, active, auth_token) => {
   const gm = new GroupManager(db);
+  let group;
   try {
     if (isNaN(group_id)) {
-      group_id = await gm.getIdByName(group_id);
+      group = await gm.getByName(group_id);
+      group_id = group.id;
+    } else {
+      group = await gm.get(group_id);
     }
-    const ret = await gm.changeStatus(group_id, active);
-    if (ret === 0) {
+    if (!group) {
       const error = new Error('Group not found');
       error.t_code = 404;
       throw error;
     }
+    if (!!group.active === active) {
+      return false;
+    }
+    await gm.changeStatus(group_id, active);
+    AuditHelper.log(auth_token, 'groups', 'edit', { name: group.name, active: { prev: group.active, next: active } });
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -62,19 +72,23 @@ export const adminEditGroup = async (db, group_id, active) => {
   }
 };
 
-export const adminDeleteGroup = async (db, group_id) => {
+export const adminDeleteGroup = async (db, group_id, auth_token) => {
   const gm = new GroupManager(db);
+  let group;
   try {
     if (isNaN(group_id)) {
-      group_id = await gm.getIdByName(group_id);
+      group = await gm.getByName(group_id);
+      group_id = group.id;
+    } else {
+      group = await gm.get(group_id);
     }
-    const ret = await gm.delete(group_id);
-    console.log('Got: ', ret);
-    if (ret === 0) {
+    if (!group) {
       const error = new Error('Group not found');
       error.t_code = 404;
       throw error;
     }
+    await gm.delete(group_id);
+    AuditHelper.log(auth_token, 'groups', 'delete', { name: group.name });
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
