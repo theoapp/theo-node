@@ -14,6 +14,13 @@ class AuditHelper {
 
   static log(token, context, action, data) {
     if (!LOG_AUDIT_URL) return;
+    if (!token) {
+      try {
+        throw new Error('Called AuditHelper.log without token');
+      } catch (e) {
+        console.error(e.message, e);
+      }
+    }
     const obj = {
       ts: new Date().getTime(),
       token,
