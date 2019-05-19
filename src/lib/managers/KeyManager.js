@@ -36,6 +36,11 @@ class KeyManager {
     await this.am.setUpdatedAt(account_id);
     return changes;
   }
+
+  async get(account_id, id) {
+    const sql = 'select id, public_key, fingerprint, public_key_sig from public_keys where id = ? and account_id = ?';
+    return this.db.get(sql, [id, account_id]);
+  }
 }
 
 export default KeyManager;
