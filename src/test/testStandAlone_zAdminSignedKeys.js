@@ -98,8 +98,8 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
         console.error('got error');
         error = e;
       }
-      assert.notEqual(typeof error, 'undefined');
-      assert.equal(typeof resAccount, 'undefined');
+      assert.notStrictEqual(typeof error, 'undefined');
+      assert.strictEqual(typeof resAccount, 'undefined');
     });
     it('should return an account object with 1 key and no permissions', async function() {
       const reqAccount = {
@@ -110,14 +110,14 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
 
       const resAccount = await adminCreateAccount(db, reqAccount);
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 1);
-      assert.equal(resAccount.public_keys[0].public_key, reqAccount.keys[0].key);
-      assert.equal(resAccount.public_keys[0].public_key_sig, reqAccount.keys[0].signature);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 1);
+      assert.strictEqual(resAccount.public_keys[0].public_key_sig, reqAccount.keys[0].signature);
+      assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0].key);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -134,16 +134,16 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
 
       const resAccount = await adminCreateAccount(db, reqAccount);
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 2);
-      assert.equal(resAccount.public_keys[0].public_key, reqAccount.keys[0].key);
-      assert.equal(resAccount.public_keys[0].public_key_sig, reqAccount.keys[0].signature);
-      assert.equal(resAccount.public_keys[1].public_key, reqAccount.keys[1].key);
-      assert.equal(resAccount.public_keys[1].public_key_sig, reqAccount.keys[1].signature);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 2);
+      assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0].key);
+      assert.strictEqual(resAccount.public_keys[0].public_key_sig, reqAccount.keys[0].signature);
+      assert.strictEqual(resAccount.public_keys[1].public_key, reqAccount.keys[1].key);
+      assert.strictEqual(resAccount.public_keys[1].public_key_sig, reqAccount.keys[1].signature);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -157,8 +157,8 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       } catch (e) {
         error = e;
       }
-      assert.notEqual(typeof error, 'undefined');
-      assert.equal(typeof resAccount, 'undefined');
+      assert.notStrictEqual(typeof error, 'undefined');
+      assert.strictEqual(typeof resAccount, 'undefined');
     });
     it('should return an account object with 1 key and no permissions', async function() {
       const keys = [{ key: publicKeySample, signature: 'xxxx' }];
@@ -166,13 +166,13 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       const retKeys = await adminAddAccountKey(db, 1, keys);
       const resAccount = await adminGetAccount(db, 1);
 
-      assert.equal(retKeys.account_id, 1);
-      assert.equal(retKeys.public_keys.length, 1);
-      assert.equal(retKeys.public_keys[0].public_key.key, keys[0].key);
-      assert.equal(retKeys.public_keys[0].public_key.signature, keys[0].signature);
-      assert.equal(resAccount.public_keys.length, 1);
-      assert.equal(resAccount.public_keys[0].public_key, keys[0].key);
-      assert.equal(resAccount.public_keys[0].public_key_sig, keys[0].signature);
+      assert.strictEqual(retKeys.account_id, 1);
+      assert.strictEqual(retKeys.public_keys.length, 1);
+      assert.strictEqual(retKeys.public_keys[0].public_key.key, keys[0].key);
+      assert.strictEqual(retKeys.public_keys[0].public_key.signature, keys[0].signature);
+      assert.strictEqual(resAccount.public_keys.length, 1);
+      assert.strictEqual(resAccount.public_keys[0].public_key, keys[0].key);
+      assert.strictEqual(resAccount.public_keys[0].public_key_sig, keys[0].signature);
     });
   });
 
@@ -181,10 +181,10 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       try {
         await adminDeleteAccountKey(db, 1, 4);
       } catch (err) {
-        assert.equal(true, false);
+        assert.strictEqual(true, false);
       }
       const resAccount = await adminGetAccount(db, 1);
-      assert.equal(resAccount.public_keys.length, 0);
+      assert.strictEqual(resAccount.public_keys.length, 0);
     });
   });
 });
