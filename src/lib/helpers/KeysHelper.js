@@ -55,10 +55,12 @@ export const getAuthorizedKeysAsJson = async (db, user, host) => {
     throw err;
   }
   if (_cm !== false) {
-    _cm
-      .set(cache_key, JSON.stringify(keys))
-      .then()
-      .catch(err => console.error('Failed to save cache for %s', cache_key, err));
+    setImmediate(() => {
+      _cm
+        .set(cache_key, JSON.stringify(keys))
+        .then()
+        .catch(err => console.error('Failed to save cache for %s', cache_key, err));
+    });
   }
   return { keys, cache: false };
 };
