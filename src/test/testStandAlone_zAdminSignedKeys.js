@@ -3,7 +3,7 @@ import assert from 'assert';
 import AppHelper from '../lib/helpers/AppHelper';
 
 import {
-  adminAddAccountKey,
+  adminAddAccountKeys,
   adminCreateAccount,
   adminDeleteAccountKey,
   adminGetAccount
@@ -153,7 +153,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       let resAccount;
       let error;
       try {
-        resAccount = await adminAddAccountKey(db, 1, keys);
+        resAccount = await adminAddAccountKeys(db, 1, keys);
       } catch (e) {
         error = e;
       }
@@ -163,7 +163,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
     it('should return an account object with 1 key and no permissions', async function() {
       const keys = [{ key: publicKeySample, signature: 'xxxx' }];
 
-      const retKeys = await adminAddAccountKey(db, 1, keys);
+      const retKeys = await adminAddAccountKeys(db, 1, keys);
       const resAccount = await adminGetAccount(db, 1);
 
       assert.strictEqual(retKeys.account_id, 1);

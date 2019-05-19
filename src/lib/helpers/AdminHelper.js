@@ -31,7 +31,7 @@ export const adminCreateAccount = async (db, account) => {
     const group_id = await adminCreateGroup(db, { name: account.email }, true);
     await adminCreateGroupAccount(db, group_id, id);
     if (account.keys) {
-      await adminAddAccountKey(db, id, account.keys);
+      await adminAddAccountKeys(db, id, account.keys);
     }
     return am.getFull(id);
   } catch (err) {
@@ -146,7 +146,7 @@ export const adminDeleteAccount = async (db, account_id) => {
   }
 };
 
-export const adminAddAccountKey = async (db, account_id, keys) => {
+export const adminAddAccountKeys = async (db, account_id, keys) => {
   const am = new AccountManager(db);
   try {
     if (isNaN(account_id)) {

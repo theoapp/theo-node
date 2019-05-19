@@ -1,7 +1,7 @@
 import { requireAdminAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
 import AccountManager from '../lib/managers/AccountManager';
 import {
-  adminAddAccountKey,
+  adminAddAccountKeys,
   adminAddAccountKeyFromService,
   adminAddAccountPermission,
   adminCreateAccount,
@@ -108,7 +108,7 @@ export default function handleAccounts(server) {
 
   server.post('/accounts/:id/keys', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const ret = await adminAddAccountKey(req.db, req.params.id, req.body.keys);
+      const ret = await adminAddAccountKeys(req.db, req.params.id, req.body.keys);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
