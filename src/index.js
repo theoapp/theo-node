@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import './appenv';
 import restify from 'restify';
 import AppHelper from './lib/helpers/AppHelper';
 import CacheHelper from './lib/helpers/CacheHelper';
@@ -9,8 +9,6 @@ import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import packageJson from '../package';
 import EventHelper from './lib/helpers/EventHelper';
 import { common_debug, common_error, common_info, common_warn, initLogger } from './lib/utils/logUtils';
-
-dotenv.config();
 
 initLogger();
 
