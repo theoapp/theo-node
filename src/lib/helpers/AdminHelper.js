@@ -6,7 +6,7 @@ import GroupManager from '../managers/GroupManager';
 import GroupAccountManager from '../managers/GroupAccountManager';
 import EventHelper from './EventHelper';
 import AppHelper from './AppHelper';
-import { SSHFingerprint } from "../utils/sshUtils";
+import { SSHFingerprint } from '../utils/sshUtils';
 
 export const adminCreateAccount = async (db, account) => {
   if (!account.email) {
