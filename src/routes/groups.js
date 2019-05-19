@@ -32,7 +32,7 @@ export default function handleGroups(server) {
 
   server.post('/groups', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const ret = await adminCreateGroup(req.db, req.body);
+      const ret = await adminCreateGroup(req.db, req.body, req.auth_token);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
@@ -87,7 +87,7 @@ export default function handleGroups(server) {
   server.put('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     const { active } = req.body;
     try {
-      const done = await adminEditGroup(req.db, req.params.id, active);
+      const done = await adminEditGroup(req.db, req.params.id, active, req.auth_token);
       if (done) {
         res.status(201);
         res.json({ status: 201 });
@@ -103,7 +103,7 @@ export default function handleGroups(server) {
 
   server.del('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminDeleteGroup(req.db, req.params.id);
+      const done = await adminDeleteGroup(req.db, req.params.id, req.auth_token);
       if (done) {
         res.status(201);
         res.json({ status: 201 });
