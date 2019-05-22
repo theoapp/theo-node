@@ -7,10 +7,10 @@ import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { common_debug, common_error } from '../../utils/logUtils';
 
 class MariadbManager extends DbManager {
-  dbVersion = 12;
+  dbVersion = 13;
 
   CREATE_TABLE_AUTH_TOKENS =
-    'create table auth_tokens (token varchar(128) binary PRIMARY KEY, type varchar(5), created_at BIGINT UNSIGNED)';
+    'create table auth_tokens (token varchar(128) binary PRIMARY KEY, assignee varchar(64) NOT NULL, type varchar(5) NOT NULL, created_at BIGINT UNSIGNED)';
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128) not null, name varchar(128) not null, ' +
@@ -199,6 +199,10 @@ class MariadbManager extends DbManager {
     if (fromVersion < 12) {
       await this.client.run('alter table public_keys add fingerprint varchar(1024)');
       await runV12migration(this.client);
+    }
+    if (fromVersion < 13) {
+      await this.client.run("alter table auth_tokens add assignee varchar(64) not null default '' after token");
+      await this.client.run("update auth_tokens set assignee = md5(token) where type = 'admin'");
     }
     await this.updateVersion();
   }

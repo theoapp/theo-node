@@ -9,9 +9,10 @@ import { runV12migration } from '../../../migrations/v12fixFingerprints';
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 12;
+  dbVersion = 13;
 
-  CREATE_TABLE_AUTH_TOKENS = 'create table auth_tokens (token text PRIMARY KEY, type varchar(5), created_at INTEGER)';
+  CREATE_TABLE_AUTH_TOKENS =
+    'create table auth_tokens (token text PRIMARY KEY, assignee text, type varchar(5), created_at INTEGER)';
 
   CREATE_TABLE_ACCOUNTS =
     'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), ' +
@@ -207,6 +208,10 @@ class SqliteManager extends DbManager {
     if (fromVersion < 12) {
       await this.client.run('alter table public_keys add fingerprint varchar(1024)');
       await runV12migration(this.client);
+    }
+    if (fromVersion < 13) {
+      await this.client.run('alter table auth_tokens add assignee text');
+      await this.client.run("update auth_tokens set assignee = md5(token) where type = 'admin'");
     }
     await this.updateVersion();
   }

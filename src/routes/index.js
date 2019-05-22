@@ -61,11 +61,13 @@ export const initRoutes = server => {
       const atm = new AuthTokenManager(req.db);
       await atm.delete();
       if (tokens.admin) {
-        await atm.create(tokens.admin, 'admin');
+        const { token, assignee } = AuthTokenManager.getTokenAssignee(tokens.admin, true);
+        await atm.create(token, 'admin', assignee);
       }
       if (tokens.admins) {
         for (let i = 0; i < tokens.admins.length; i++) {
-          await atm.create(tokens.admins[i], 'admin');
+          const { token, assignee } = AuthTokenManager.getTokenAssignee(tokens.admins[i]);
+          await atm.create(token, 'admin', assignee);
         }
       }
       if (tokens.clients) {
@@ -89,6 +91,7 @@ export const initRoutes = server => {
         });
       } else {
         const ah = AppHelper();
+        const tokens = await atm.getAll();
         ah.reloadAuthToken(tokens);
         res.send(204);
       }
