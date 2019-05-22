@@ -66,11 +66,11 @@ export default function handleGroups(server) {
       }
       let done;
       if (id) {
-        done = await adminCreateGroupAccount(req.db, req.params.id, id);
+        done = await adminCreateGroupAccount(req.db, req.params.id, id, req.auth_token);
         res.status(204);
         res.end();
       } else if (ids) {
-        done = await adminCreateGroupAccounts(req.db, req.params.id, ids);
+        done = await adminCreateGroupAccounts(req.db, req.params.id, ids, req.auth_token);
         res.status(200);
         res.json(done);
       } else {
@@ -143,7 +143,7 @@ export default function handleGroups(server) {
         res.json({ status: 400, reason: 'Invalid payload' });
         return;
       }
-      const done = await adminCreateGroupAccounts(req.db, req.params.id, ids);
+      const done = await adminCreateGroupAccounts(req.db, req.params.id, ids, req.auth_token);
       res.status(200);
       res.json(done);
     } catch (err) {
@@ -155,7 +155,7 @@ export default function handleGroups(server) {
 
   server.del('/groups/:id/:account_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminDeleteGroupAccount(req.db, req.params.id, req.params.account_id);
+      const done = await adminDeleteGroupAccount(req.db, req.params.id, req.params.account_id, req.auth_token);
       if (done > 0) {
         res.status(204);
         res.end();
@@ -172,7 +172,7 @@ export default function handleGroups(server) {
   server.post('/groups/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
     const { user, host } = req.body;
     try {
-      const ret = await adminAddGroupPermission(req.db, req.params.id, user, host);
+      const ret = await adminAddGroupPermission(req.db, req.params.id, user, host, req.auth_token);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
@@ -182,7 +182,7 @@ export default function handleGroups(server) {
 
   server.del('/groups/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
-      const done = await adminDeleteGroupPermission(req.db, req.params.id, Number(req.params.permission_id));
+      const done = await adminDeleteGroupPermission(req.db, req.params.id, Number(req.params.permission_id), req.auth_token);
       if (done) {
         res.status(201);
         res.json({ status: 201 });
