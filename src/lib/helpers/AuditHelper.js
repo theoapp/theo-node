@@ -18,21 +18,21 @@ class AuditHelper {
     return headers;
   }
 
-  static log(token, context, action, entity, data) {
+  static log(author, context, action, entity, data) {
     if (!auditEnable) {
       return;
     }
-    if (!token) {
+    if (!author) {
       try {
         // FIXME remove try/catch when audit functions are fully implemented
-        throw new Error('Called AuditHelper.log without token');
+        throw new Error('Called AuditHelper.log without author');
       } catch (e) {
         console.error(e.message, e);
       }
     }
     const obj = {
       ts: new Date().getTime(),
-      token,
+      author,
       context,
       action,
       entity,
