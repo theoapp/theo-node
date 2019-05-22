@@ -46,7 +46,7 @@ class AuditHelper {
     }
     if (LOG_AUDIT_URL) {
       setImmediate(() => {
-        http_post(LOG_AUDIT_URL, obj, this.getHttpHeaders()).cache(e => {
+        http_post(LOG_AUDIT_URL, obj, this.getHttpHeaders()).catch(e => {
           common_error('Unable to send audit log', JSON.stringify(obj), e.message);
         });
       });
