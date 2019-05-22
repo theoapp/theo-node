@@ -112,11 +112,11 @@ class MariadbManager extends DbManager {
   }
 
   async getCurrentVersion() {
+    const sqlCheck = 'select value from _version for update';
     if (process.env.CLUSTER_MODE === '1') {
       await this.client.run('SET AUTOCOMMIT=0');
       let row;
       try {
-        const sqlCheck = 'select value from _version for update';
         row = await this.client.get(sqlCheck);
         if (row.value === this.dbVersion) {
           await this.client.run('ROLLBACK');
