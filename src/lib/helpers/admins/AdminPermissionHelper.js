@@ -45,8 +45,7 @@ export const adminAddAccountPermission = async (db, account_id, user, host, auth
       object: account_id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'permissions', 'create', {
-      email: account.email,
+    AuditHelper.log(auth_token, 'permissions', 'create', account.email, {
       user,
       host
     });
@@ -88,8 +87,7 @@ export const adminDeleteAccountPermission = async (db, account_id, permission_id
       object: account.id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'permissions', 'delete', {
-      email: account.email,
+    AuditHelper.log(auth_token, 'permissions', 'delete', account.email, {
       user: permission.user,
       host: permission.host
     });
