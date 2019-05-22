@@ -130,9 +130,8 @@ export const adminDeleteAccount = async (db, account_id, auth_token) => {
       account_id = account.id;
     } else {
       account = await am.get(account_id);
-      account_email = account.email;
     }
-
+    account_email = account.email;
     const ret = await am.delete(account_id);
     if (ret === 0) {
       const error = new Error('Account not found');
