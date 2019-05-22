@@ -17,6 +17,8 @@
     "test:api:signed": "mocha build/test/testSigned*",
     "test:core": "mocha build/test/testCore.js",
     "test:core:restart": "mocha build/test/testCoreOnRestart.js",
+    "test:core:noassignee": "mocha build/test/testCoreNoAssignee.js",
+    "test:core:restart:noassignee": "mocha build/test/testCoreOnRestartNoAssignee.js",
     "test:cluster": "mocha build/test/testCluster.js",
     "test:sshutils": "mocha build/test/testSSHUtils.js"
   },

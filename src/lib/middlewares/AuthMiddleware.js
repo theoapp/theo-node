@@ -1,16 +1,22 @@
 import AppHelper from '../helpers/AppHelper';
 import EventHelper from '../helpers/EventHelper';
 
-export const authMiddleware = (req, res, next) => {
+const checkForBearer = function(req, header) {
   const authorization = req.header('Authorization');
   if (authorization) {
     const m = /^[Bb]earer\s+(\S+)$/.exec(authorization);
     if (m === null) {
-      next();
       return;
     }
+    const [, token] = m;
+    return token;
+  }
+};
+
+export const authMiddleware = (req, res, next) => {
+  const token = checkForBearer(req, 'Authorization');
+  if (token) {
     try {
-      const [, token] = m;
       let gotcb = false;
       const done = EventHelper.emit('theo:authorize', token, (err, auth) => {
         if (gotcb) return;
@@ -19,7 +25,18 @@ export const authMiddleware = (req, res, next) => {
           req.is_authorized = true;
           req.is_admin = auth.is_admin || false;
           req.is_core = auth.is_core || false;
-          req.auth_token = token;
+          if (!req.auth_token) {
+            if (req.is_core) {
+              const onBehalfOfToken = req.header('X-On-Behalf-Of');
+              if (onBehalfOfToken) {
+                req.auth_token = onBehalfOfToken;
+              } else {
+                req.auth_token = 'core';
+              }
+            } else if (req.is_admin) {
+              req.auth_token = 'admin';
+            }
+          }
         }
         next();
       });
@@ -30,15 +47,20 @@ export const authMiddleware = (req, res, next) => {
           req.is_authorized = true;
           req.is_admin = true;
           req.is_core = true;
-          req.auth_token = token;
+          const onBehalfOfToken = req.header('X-On-Behalf-Of');
+          if (onBehalfOfToken) {
+            req.auth_token = onBehalfOfToken;
+          } else {
+            req.auth_token = 'core';
+          }
         } else if (token === _settings.admin.token) {
           req.is_authorized = true;
           req.is_admin = true;
-          req.auth_token = token;
-        } else if (_settings.admin.tokens && _settings.admin.tokens.includes(token)) {
+          req.auth_token = 'admin';
+        } else if (_settings.admin.tokens && _settings.admin.tokens[token]) {
           req.is_authorized = true;
           req.is_admin = true;
-          req.auth_token = token;
+          req.auth_token = _settings.admin.tokens[token];
         } else {
           if (_settings.client.tokens) {
             if (_settings.client.tokens.includes(token)) {

@@ -19,9 +19,10 @@ class AppHelper {
 
   reloadAuthToken(tokens) {
     this.settings.admin.token = undefined;
-    this.settings.admin.tokens = tokens.admins || [];
+    this.settings.admin.tokens = tokens.admins || {};
     if (tokens.admin) {
-      this.settings.admin.tokens.push(tokens.admin);
+      const { token, assignee } = AuthTokenManager.getTokenAssignee(tokens.admin, true);
+      this.settings.admin.tokens[token] = assignee;
     }
     this.settings.client.tokens = tokens.clients;
   }

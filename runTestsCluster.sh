@@ -32,6 +32,7 @@ docker run --network theotests_default --rm --link theo \
 RETVAL=$?
 if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test-mariadb-redis-core-cluster FAILED"
+    docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo1
 fi
 docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml down
 exit ${RETVAL}

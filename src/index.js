@@ -9,6 +9,7 @@ import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import packageJson from '../package';
 import EventHelper from './lib/helpers/EventHelper';
 import { common_debug, common_error, common_info, common_warn, initLogger } from './lib/utils/logUtils';
+import { md5 } from './lib/utils/cryptoUtils';
 
 initLogger();
 
@@ -16,7 +17,8 @@ const DB_CONN_MAX_RETRY = 15;
 
 let settings = {
   admin: {
-    token: ''
+    token: undefined,
+    tokens: {}
   },
   client: {
     tokens: []
@@ -102,10 +104,51 @@ const setEnv = () => {
       token: coreToken
     };
   }
-  if (!settings.core || settings.core.token) {
+  if (!settings.core || !settings.core.token) {
     const adminToken = process.env.ADMIN_TOKEN || false;
+    const adminTokens = process.env.ADMIN_TOKENS || false;
+    if (adminToken && adminTokens) {
+      common_error('ADMIN_TOKEN && ADMIN_TOKENS must not be used together');
+      process.exit(2);
+    }
     if (adminToken) {
       settings.admin.token = adminToken;
+    }
+    if (settings.admin.token) {
+      settings.admin.tokens[settings.admin.token] = 'admin';
+      settings.admin.token = undefined;
+    }
+    if (adminTokens) {
+      settings.admin.tokens = {};
+      const _adminTokens = adminTokens.split(',');
+      _adminTokens.forEach(_adminToken => {
+        let [token, assignee] = _adminToken.split(':');
+        if (!assignee) {
+          console.warn('[WARN] ADMIN_TOKENS must be in the form: token:assignee. See documentation');
+          console.warn('[WARN] We will use md5(token) as assignee');
+          assignee = md5(token);
+        }
+        settings.admin.tokens[token] = assignee;
+      });
+    } else {
+      if (typeof settings.admin.tokens.length === 'number') {
+        const adminTokens = {};
+        settings.admin.tokens.forEach(_adminToken => {
+          let assignee;
+          let token;
+          if (typeof _adminToken === 'string') {
+            console.warn('[WARN] settings.admin.tokens must be an object: { token, assignee }. See documentation');
+            console.warn('[WARN] We will use md5(token) as assignee');
+            assignee = md5(_adminToken);
+            token = _adminToken;
+          } else {
+            assignee = _adminToken.assignee;
+            token = _adminToken.token;
+          }
+          adminTokens[token] = assignee;
+        });
+        settings.admin.tokens = adminTokens;
+      }
     }
     const clientTokens = process.env.CLIENT_TOKENS || false;
     if (clientTokens) {
@@ -168,7 +211,7 @@ if (process.env.MODE !== 'test') {
 }
 const ah = AppHelper(settings);
 if (process.env.LOAD_PLUGINS) {
-  loadPlugins(process.env.LOAD_PLUGINS);
+  loadPlugins(process.env.LOAD_PLUGINS).catch(e => console.error('Failed to load plugins!', e.message));
 }
 let dh;
 let dm;

@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import assert from 'assert';
 import fetch from 'node-fetch';
 
-import { tokensOne, tokensTwo, tokensThree } from './testCoreTokens';
+import { tokensOne, tokensTwo, tokensThree } from './testCoreTokensNoAssignee';
 
 dotenv.config();
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
@@ -27,7 +27,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/tokens', {
         method: 'POST',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
+          Authorization: 'Bearer ' + tokensOne.tokens.admin,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(tokensOne)
@@ -39,7 +39,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/accounts', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
       assert.strictEqual(res.status, 200);
@@ -59,7 +59,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
       assert.strictEqual(res.status, 200);
@@ -104,7 +104,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/tokens', {
         method: 'POST',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
+          Authorization: 'Bearer ' + tokensOne.tokens.admin,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(tokensOne)
@@ -116,7 +116,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/accounts', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
       assert.strictEqual(res.status, 401);
@@ -136,7 +136,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
       assert.strictEqual(res.status, 401);
@@ -146,7 +146,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensTwo.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensTwo.tokens.admin
         }
       });
       assert.strictEqual(res.status, 200);
@@ -192,7 +192,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/tokens', {
         method: 'POST',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
+          Authorization: 'Bearer ' + tokensOne.tokens.admin,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(tokensOne)
@@ -204,7 +204,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/accounts', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
       assert.strictEqual(res.status, 401);
@@ -224,7 +224,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensOne.tokens.admin
         }
       });
       assert.strictEqual(res.status, 401);
@@ -234,7 +234,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensTwo.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensTwo.tokens.admin
         }
       });
       assert.strictEqual(res.status, 401);
@@ -264,7 +264,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensThree.tokens.admins[0].token
+          Authorization: 'Bearer ' + tokensThree.tokens.admins[0]
         }
       });
       assert.strictEqual(res.status, 200);
@@ -274,7 +274,7 @@ describe('Core', function() {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
-          Authorization: 'Bearer ' + tokensThree.tokens.admins[1].token
+          Authorization: 'Bearer ' + tokensThree.tokens.admins[1]
         }
       });
       assert.strictEqual(res.status, 200);

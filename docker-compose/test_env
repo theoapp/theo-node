@@ -9,3 +9,6 @@ export MYSQL_PASSWORD=theopwd
 export CORE_TOKEN=SuperSecretT0ken
 export ADMIN_TOKEN=ch4ng3Me
 export CLIENT_TOKENS=njknsjd2412fnjkasnj,knkjnknfjfnjenkln
+
+export ADMIN_TOKEN_AUDIT=jjkfsdbb23
+export ADMIN_TOKENS_AUDIT=4getm3N0t:admin1,n0t4ever:admin2,jjkfsdbb23:admin3
