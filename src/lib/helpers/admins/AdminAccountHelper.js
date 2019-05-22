@@ -24,7 +24,7 @@ export const adminCreateAccount = async (db, account, auth_token) => {
       object: id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'accounts', 'create', { id, email: account.email });
+    AuditHelper.log(auth_token, 'accounts', 'create', account.email);
     const group_id = await adminCreateGroup(db, { name: account.email }, auth_token, true);
     await adminCreateGroupAccount(db, group_id, id, auth_token);
     if (account.keys) {
@@ -78,9 +78,7 @@ export const adminEditAccount = async (db, account_id, active, expire_at, auth_t
       object: account_id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'accounts', 'edit', {
-      id: account.id,
-      email: account.email,
+    AuditHelper.log(auth_token, 'accounts', 'edit', account.email, {
       active: {
         prev: account.active,
         next: newActive
@@ -154,7 +152,7 @@ export const adminDeleteAccount = async (db, account_id, auth_token) => {
       object: account_id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'accounts', 'delete', { id: account_id, email: account_email });
+    AuditHelper.log(auth_token, 'accounts', 'delete', account_email);
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;

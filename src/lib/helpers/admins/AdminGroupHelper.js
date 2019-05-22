@@ -23,7 +23,7 @@ export const adminCreateGroup = async (db, group, auth_token, onlyId = false) =>
       object: id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'groups', 'create', { name: group.name });
+    AuditHelper.log(auth_token, 'groups', 'create', group.name);
     if (onlyId) return id;
     return gm.getFull(id);
   } catch (err) {
@@ -64,7 +64,7 @@ export const adminEditGroup = async (db, group_id, active, auth_token) => {
       return false;
     }
     await gm.changeStatus(group_id, active);
-    AuditHelper.log(auth_token, 'groups', 'edit', { name: group.name, active: { prev: group.active, next: active } });
+    AuditHelper.log(auth_token, 'groups', 'edit', group.name, { active: { prev: group.active, next: active } });
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -88,7 +88,7 @@ export const adminDeleteGroup = async (db, group_id, auth_token) => {
       throw error;
     }
     await gm.delete(group_id);
-    AuditHelper.log(auth_token, 'groups', 'delete', { name: group.name });
+    AuditHelper.log(auth_token, 'groups', 'delete', group.name);
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;

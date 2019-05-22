@@ -28,7 +28,7 @@ const adminAddAccountKey = async (km, signRequired, key, account, auth_token) =>
   try {
     const fingerprint = SSHFingerprint(_key);
     const id = await km.create(account.id, _key, fingerprint, _signature);
-    AuditHelper.log(auth_token, 'keys', 'create', { email: account.email, key: _key, fingerprint });
+    AuditHelper.log(auth_token, 'keys', 'create', account.email, { key: _key, fingerprint });
     return {
       id,
       public_key: key
@@ -113,8 +113,7 @@ export const adminDeleteAccountKey = async (db, account_id, key_id, auth_token) 
       object: account_id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'keys', 'delete', {
-      email: account.email,
+    AuditHelper.log(auth_token, 'keys', 'delete', account.email, {
       key: key.public_key,
       fingerprint: key.fingerprint
     });
