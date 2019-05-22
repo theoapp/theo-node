@@ -125,7 +125,7 @@ export default function handleGroups(server) {
         res.json({ status: 400, reason: 'Invalid payload' });
         return;
       }
-      await adminCreateGroupAccount(req.db, req.params.id, id);
+      await adminCreateGroupAccount(req.db, req.params.id, id, req.auth_token);
       res.status(204);
       res.end();
     } catch (err) {
