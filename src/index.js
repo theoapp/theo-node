@@ -10,6 +10,7 @@ import packageJson from '../package';
 import EventHelper from './lib/helpers/EventHelper';
 import { common_debug, common_error, common_info, common_warn, initLogger } from './lib/utils/logUtils';
 import { md5 } from './lib/utils/cryptoUtils';
+import { auditMiddleware } from './lib/middlewares/AuditMiddleware';
 
 initLogger();
 
@@ -318,6 +319,7 @@ const startServer = () => {
   server.use(restify.plugins.bodyParser());
   server.use(requestLogger);
   server.use(authMiddleware);
+  server.use(auditMiddleware);
   server.use(async (req, res, next) => {
     const client = dm.getClient();
     try {

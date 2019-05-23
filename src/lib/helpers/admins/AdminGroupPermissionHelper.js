@@ -1,8 +1,7 @@
 import GroupManager from '../../managers/GroupManager';
 import PermissionManager from '../../managers/PermissionManager';
-import AuditHelper from '../AuditHelper';
 
-export const adminAddGroupPermission = async (db, group_id, user, host, auth_token) => {
+export const adminAddGroupPermission = async (db, group_id, user, host, req) => {
   if (!user) {
     const error = new Error('Malformed object, user is required');
     error.code = 400;
@@ -30,7 +29,9 @@ export const adminAddGroupPermission = async (db, group_id, user, host, auth_tok
   const pm = new PermissionManager(db);
   try {
     const permission_id = await pm.create(group_id, user, host);
-    AuditHelper.log(auth_token, 'group', 'add_permission', group.name, { host, user });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('group', 'add_permission', group.name, { host, user });
+    }
     return { group_id, permission_id };
   } catch (err) {
     err.t_code = 500;
@@ -38,7 +39,7 @@ export const adminAddGroupPermission = async (db, group_id, user, host, auth_tok
   }
 };
 
-export const adminDeleteGroupPermission = async (db, group_id, permission_id, auth_token) => {
+export const adminDeleteGroupPermission = async (db, group_id, permission_id, req) => {
   const gm = new GroupManager(db);
   let group;
   try {
@@ -68,7 +69,9 @@ export const adminDeleteGroupPermission = async (db, group_id, permission_id, au
       throw error;
     }
     const { host, user } = permission;
-    AuditHelper.log(auth_token, 'group', 'remove_permission', group.name, { host, user });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('group', 'remove_permission', group.name, { host, user });
+    }
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;

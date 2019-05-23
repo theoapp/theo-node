@@ -4,7 +4,7 @@ import PermissionManager from '../../managers/PermissionManager';
 import EventHelper from '../EventHelper';
 import AuditHelper from '../AuditHelper';
 
-export const adminAddAccountPermission = async (db, account_id, user, host, auth_token) => {
+export const adminAddAccountPermission = async (db, account_id, user, host, req) => {
   if (!user) {
     const error = new Error('Malformed object, user is required');
     error.code = 400;
@@ -45,10 +45,12 @@ export const adminAddAccountPermission = async (db, account_id, user, host, auth
       object: account_id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'permissions', 'create', account.email, {
-      user,
-      host
-    });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('permissions', 'add', account.email, {
+        user,
+        host
+      });
+    }
     return { account_id, permission_id };
   } catch (err) {
     err.t_code = 500;
@@ -56,7 +58,7 @@ export const adminAddAccountPermission = async (db, account_id, user, host, auth
   }
 };
 
-export const adminDeleteAccountPermission = async (db, account_id, permission_id, auth_token) => {
+export const adminDeleteAccountPermission = async (db, account_id, permission_id, req) => {
   const am = new AccountManager(db);
   let account;
   try {
@@ -87,10 +89,12 @@ export const adminDeleteAccountPermission = async (db, account_id, permission_id
       object: account.id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'permissions', 'delete', account.email, {
-      user: permission.user,
-      host: permission.host
-    });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('permissions', 'delete', account.email, {
+        user: permission.user,
+        host: permission.host
+      });
+    }
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
