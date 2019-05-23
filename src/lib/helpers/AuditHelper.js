@@ -6,32 +6,36 @@ const { LOG_AUDIT_CONSOLE, LOG_AUDIT_URL, LOG_AUDIT_TOKEN } = process.env;
 
 const auditEnable = (LOG_AUDIT_CONSOLE && LOG_AUDIT_CONSOLE === 'true') || LOG_AUDIT_URL;
 
+const getHTTPHeaders = function() {
+  if (!LOG_AUDIT_URL) return;
+  const headers = {
+    'User-Agent': packageJson.name + '/' + packageJson.version,
+    'Content-type': 'application/json'
+  };
+  if (LOG_AUDIT_TOKEN) {
+    headers.Authorization = 'Bearer ' + LOG_AUDIT_TOKEN;
+  }
+  return headers;
+};
+
+const auditHTTPHeaders = getHTTPHeaders();
+
 class AuditHelper {
-  static getHttpHeaders() {
-    const headers = {
-      'User-Agent': packageJson.name + '/' + packageJson.version,
-      'Content-type': 'application/json'
-    };
-    if (LOG_AUDIT_TOKEN) {
-      headers.Authorization = 'Bearer ' + LOG_AUDIT_TOKEN;
-    }
-    return headers;
+  constructor(req) {
+    this.req = req;
   }
 
-  static log(author, context, action, entity, data) {
+  log(context, action, entity, data) {
     if (!auditEnable) {
       return;
     }
-    if (!author) {
-      try {
-        // FIXME remove try/catch when audit functions are fully implemented
-        throw new Error('Called AuditHelper.log without author');
-      } catch (e) {
-        console.error(e.message, e);
-      }
-    }
+    const source_ip = this.req.headers['x-forwarded-for'] || this.req.connection.remoteAddress;
+    const user_agent = this.req.userAgent();
+    const { auth_token: author } = this.req;
     const obj = {
       ts: new Date().getTime(),
+      source_ip,
+      user_agent,
       author,
       context,
       action,
@@ -46,7 +50,7 @@ class AuditHelper {
     }
     if (LOG_AUDIT_URL) {
       setImmediate(() => {
-        http_post(LOG_AUDIT_URL, obj, this.getHttpHeaders()).catch(e => {
+        http_post(LOG_AUDIT_URL, obj, auditHTTPHeaders).catch(e => {
           common_error('Unable to send audit log', JSON.stringify(obj), e.message);
         });
       });

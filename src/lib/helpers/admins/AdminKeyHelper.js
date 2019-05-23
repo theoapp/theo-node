@@ -4,9 +4,8 @@ import AppHelper from '../AppHelper';
 import { SSHFingerprint } from '../../utils/sshUtils';
 import EventHelper from '../EventHelper';
 import { getKeysImporterModule, getKeysImporterModulesList } from '../../keys_importer/modules';
-import AuditHelper from '../AuditHelper';
 
-const adminAddAccountKey = async (km, signRequired, key, account, auth_token) => {
+const adminAddAccountKey = async (km, signRequired, key, account, req) => {
   let _key;
   let _signature;
   if (typeof key === 'string') {
@@ -28,7 +27,9 @@ const adminAddAccountKey = async (km, signRequired, key, account, auth_token) =>
   try {
     const fingerprint = SSHFingerprint(_key);
     const id = await km.create(account.id, _key, fingerprint, _signature);
-    AuditHelper.log(auth_token, 'keys', 'create', account.email, { key: _key, fingerprint });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('keys', 'create', account.email, { key: _key, fingerprint });
+    }
     return {
       id,
       public_key: key
@@ -38,7 +39,7 @@ const adminAddAccountKey = async (km, signRequired, key, account, auth_token) =>
   }
 };
 
-export const adminAddAccountKeys = async (db, account_id, keys, auth_token) => {
+export const adminAddAccountKeys = async (db, account_id, keys, req) => {
   const am = new AccountManager(db);
   let account;
   try {
@@ -63,7 +64,7 @@ export const adminAddAccountKeys = async (db, account_id, keys, auth_token) => {
   const signRequired = settingsKeys && settingsKeys.sign === true;
   try {
     for (let i = 0; i < keys.length; i++) {
-      const key = await adminAddAccountKey(km, signRequired, keys[i], account, auth_token);
+      const key = await adminAddAccountKey(km, signRequired, keys[i], account, req);
       if (key) {
         ret.public_keys.push(key);
       }
@@ -83,7 +84,7 @@ export const adminAddAccountKeys = async (db, account_id, keys, auth_token) => {
   }
 };
 
-export const adminDeleteAccountKey = async (db, account_id, key_id, auth_token) => {
+export const adminDeleteAccountKey = async (db, account_id, key_id, req) => {
   const am = new AccountManager(db);
   let account;
   try {
@@ -113,10 +114,12 @@ export const adminDeleteAccountKey = async (db, account_id, key_id, auth_token) 
       object: account_id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'keys', 'delete', account.email, {
-      key: key.public_key,
-      fingerprint: key.fingerprint
-    });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('keys', 'delete', account.email, {
+        key: key.public_key,
+        fingerprint: key.fingerprint
+      });
+    }
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;

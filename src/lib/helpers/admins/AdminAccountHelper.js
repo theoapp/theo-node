@@ -1,10 +1,9 @@
 import AccountManager from '../../managers/AccountManager';
 import EventHelper from '../EventHelper';
-import AuditHelper from '../AuditHelper';
 import GroupManager from '../../managers/GroupManager';
 import { adminAddAccountKeys, adminCreateGroup, adminCreateGroupAccount } from '../AdminHelper';
 
-export const adminCreateAccount = async (db, account, auth_token) => {
+export const adminCreateAccount = async (db, account, req) => {
   if (!account.email) {
     const error = new Error('Malformed object, email is required');
     error.t_code = 400;
@@ -24,11 +23,13 @@ export const adminCreateAccount = async (db, account, auth_token) => {
       object: id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'accounts', 'create', account.email);
-    const group_id = await adminCreateGroup(db, { name: account.email }, auth_token, true);
-    await adminCreateGroupAccount(db, group_id, id, auth_token);
+    if (req && req.auditHelper) {
+      req.auditHelper.log('accounts', 'create', account.email);
+    }
+    const group_id = await adminCreateGroup(db, { name: account.email }, req, true);
+    await adminCreateGroupAccount(db, group_id, id, req);
     if (account.keys) {
-      await adminAddAccountKeys(db, id, account.keys, auth_token);
+      await adminAddAccountKeys(db, id, account.keys, req);
     }
     return am.getFull(id);
   } catch (err) {
@@ -37,7 +38,7 @@ export const adminCreateAccount = async (db, account, auth_token) => {
   }
 };
 
-export const adminEditAccount = async (db, account_id, active, expire_at, auth_token) => {
+export const adminEditAccount = async (db, account_id, active, expire_at, req) => {
   if (typeof active === 'undefined' && typeof expire_at === 'undefined') {
     return;
   }
@@ -78,16 +79,18 @@ export const adminEditAccount = async (db, account_id, active, expire_at, auth_t
       object: account_id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'accounts', 'edit', account.email, {
-      active: {
-        prev: account.active,
-        next: newActive
-      },
-      expire_at: {
-        prev: account.expire_at,
-        next: newExpireAt
-      }
-    });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('accounts', 'edit', account.email, {
+        active: {
+          prev: account.active,
+          next: newActive
+        },
+        expire_at: {
+          prev: account.expire_at,
+          next: newExpireAt
+        }
+      });
+    }
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
@@ -120,7 +123,7 @@ export const adminGetAccount = async (db, account_id) => {
   return account;
 };
 
-export const adminDeleteAccount = async (db, account_id, auth_token) => {
+export const adminDeleteAccount = async (db, account_id, req) => {
   const am = new AccountManager(db);
   let account;
   let account_email;
@@ -151,7 +154,9 @@ export const adminDeleteAccount = async (db, account_id, auth_token) => {
       object: account_id,
       receiver: 'admin'
     });
-    AuditHelper.log(auth_token, 'accounts', 'delete', account_email);
+    if (req && req.auditHelper) {
+      req.auditHelper.log('accounts', 'delete', account_email);
+    }
     return true;
   } catch (err) {
     if (!err.t_code) err.t_code = 500;

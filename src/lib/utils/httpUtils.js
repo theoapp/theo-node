@@ -8,7 +8,12 @@ const execute = (method, path, data, headers = {}) => {
   const dataType = typeof data;
   if (dataType !== 'undefined') {
     if (dataType !== 'string') {
-      data = JSON.stringify(data);
+      try {
+        data = JSON.stringify(data);
+      } catch (e) {
+        console.error('Failed to stringify', data);
+        throw e;
+      }
     }
     fetchOpts.body = data;
   }

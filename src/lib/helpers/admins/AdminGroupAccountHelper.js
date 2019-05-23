@@ -1,9 +1,8 @@
 import GroupAccountManager from '../../managers/GroupAccountManager';
 import GroupManager from '../../managers/GroupManager';
 import AccountManager from '../../managers/AccountManager';
-import AuditHelper from '../AuditHelper';
 
-export const adminCreateGroupAccount = async (db, group_id, account_id, auth_token) => {
+export const adminCreateGroupAccount = async (db, group_id, account_id, req) => {
   if (!account_id) {
     const error = new Error('Malformed object, id is required');
     error.t_code = 400;
@@ -48,12 +47,14 @@ export const adminCreateGroupAccount = async (db, group_id, account_id, auth_tok
     throw err;
   }
   const ret = await gam.create(group_id, account_id);
-  AuditHelper.log(auth_token, 'account', 'add_to_group', account.email, group.name);
-  AuditHelper.log(auth_token, 'group', 'add_account', group.name, account.email);
+  if (req && req.auditHelper) {
+    req.auditHelper.log('account', 'add_to_group', account.email, group.name);
+    req.auditHelper.log('group', 'add_account', group.name, account.email);
+  }
   return ret;
 };
 
-export const adminCreateGroupAccounts = async (db, group_id, accounts_id, auth_token) => {
+export const adminCreateGroupAccounts = async (db, group_id, accounts_id, req) => {
   if (!accounts_id) {
     const error = new Error('Malformed object, ids is required');
     error.t_code = 400;
@@ -100,8 +101,10 @@ export const adminCreateGroupAccounts = async (db, group_id, accounts_id, auth_t
     try {
       await gam.create(group_id, account_id, true);
       ret.push({ account: accounts_id[i], status: 200 });
-      AuditHelper.log(auth_token, 'account', 'add_to_group', account.email, group.name);
-      AuditHelper.log(auth_token, 'group', 'add_account', group.name, account.email);
+      if (req && req.auditHelper) {
+        req.auditHelper.log('account', 'add_to_group', account.email, group.name);
+        req.auditHelper.log('group', 'add_account', group.name, account.email);
+      }
       invalidateCache = true;
     } catch (err) {
       if (!err.t_code) err.t_code = 500;
@@ -118,7 +121,7 @@ export const adminCreateGroupAccounts = async (db, group_id, accounts_id, auth_t
   return ret;
 };
 
-export const adminDeleteGroupAccount = async (db, group_id, account_id, auth_token) => {
+export const adminDeleteGroupAccount = async (db, group_id, account_id, req) => {
   if (!group_id) {
     const error = new Error('Malformed url, group_id is required');
     error.t_code = 400;
@@ -157,7 +160,9 @@ export const adminDeleteGroupAccount = async (db, group_id, account_id, auth_tok
     throw err;
   }
   const ret = await gam.delete(group_id, account_id);
-  AuditHelper.log(auth_token, 'account', 'remove_from_group', account.email, group.name);
-  AuditHelper.log(auth_token, 'group', 'remove_account', group.name, account.email);
+  if (req && req.auditHelper) {
+    req.auditHelper.log('account', 'remove_from_group', account.email, group.name);
+    req.auditHelper.log('group', 'remove_account', group.name, account.email);
+  }
   return ret;
 };
