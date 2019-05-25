@@ -46,7 +46,7 @@ export const adminAddAccountPermission = async (db, account_id, user, host, req)
       receiver: 'admin'
     });
     if (req && req.auditHelper) {
-      req.auditHelper.log('permissions', 'add', account.email, {
+      req.auditHelper.log('accounts', 'add_permission', account.email, {
         user,
         host
       });
@@ -90,7 +90,7 @@ export const adminDeleteAccountPermission = async (db, account_id, permission_id
       receiver: 'admin'
     });
     if (req && req.auditHelper) {
-      req.auditHelper.log('permissions', 'delete', account.email, {
+      req.auditHelper.log('accounts', 'remove_permission', account.email, {
         user: permission.user,
         host: permission.host
       });

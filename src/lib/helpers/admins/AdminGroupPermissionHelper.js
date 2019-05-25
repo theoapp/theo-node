@@ -30,7 +30,7 @@ export const adminAddGroupPermission = async (db, group_id, user, host, req) => 
   try {
     const permission_id = await pm.create(group_id, user, host);
     if (req && req.auditHelper) {
-      req.auditHelper.log('group', 'add_permission', group.name, { host, user });
+      req.auditHelper.log('groups', 'add_permission', group.name, { host, user });
     }
     return { group_id, permission_id };
   } catch (err) {
@@ -70,7 +70,7 @@ export const adminDeleteGroupPermission = async (db, group_id, permission_id, re
     }
     const { host, user } = permission;
     if (req && req.auditHelper) {
-      req.auditHelper.log('group', 'remove_permission', group.name, { host, user });
+      req.auditHelper.log('groups', 'remove_permission', group.name, { host, user });
     }
     return true;
   } catch (err) {

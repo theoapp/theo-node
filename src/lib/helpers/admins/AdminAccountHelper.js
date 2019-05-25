@@ -82,8 +82,8 @@ export const adminEditAccount = async (db, account_id, active, expire_at, req) =
     if (req && req.auditHelper) {
       req.auditHelper.log('accounts', 'edit', account.email, {
         active: {
-          prev: account.active,
-          next: newActive
+          prev: account.active ? 'true' : 'false',
+          next: newActive ? 'true' : 'false'
         },
         expire_at: {
           prev: account.expire_at,
