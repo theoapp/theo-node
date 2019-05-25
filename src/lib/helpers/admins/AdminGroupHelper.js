@@ -23,7 +23,9 @@ export const adminCreateGroup = async (db, group, req, onlyId = false) => {
       receiver: 'admin'
     });
     if (req && req.auditHelper) {
-      req.auditHelper.log('groups', 'create', group.name);
+      if (group.name.indexOf('@') < 0) {
+        req.auditHelper.log('groups', 'create', group.name);
+      }
     }
     if (onlyId) return id;
     return gm.getFull(id);
@@ -66,7 +68,9 @@ export const adminEditGroup = async (db, group_id, active, req) => {
     }
     await gm.changeStatus(group_id, active);
     if (req && req.auditHelper) {
-      req.auditHelper.log('groups', 'edit', group.name, { active: { prev: group.active, next: active } });
+      req.auditHelper.log('groups', 'edit', group.name, {
+        active: { prev: group.active ? 'true' : 'false', next: active ? 'true' : 'false' }
+      });
     }
     return true;
   } catch (err) {

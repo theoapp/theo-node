@@ -48,8 +48,10 @@ export const adminCreateGroupAccount = async (db, group_id, account_id, req) => 
   }
   const ret = await gam.create(group_id, account_id);
   if (req && req.auditHelper) {
-    req.auditHelper.log('account', 'add_to_group', account.email, group.name);
-    req.auditHelper.log('group', 'add_account', group.name, account.email);
+    if (account.email !== group.name) {
+      req.auditHelper.log('accounts', 'add_to_group', account.email, group.name);
+      req.auditHelper.log('groups', 'add_account', group.name, account.email);
+    }
   }
   return ret;
 };
@@ -102,8 +104,10 @@ export const adminCreateGroupAccounts = async (db, group_id, accounts_id, req) =
       await gam.create(group_id, account_id, true);
       ret.push({ account: accounts_id[i], status: 200 });
       if (req && req.auditHelper) {
-        req.auditHelper.log('account', 'add_to_group', account.email, group.name);
-        req.auditHelper.log('group', 'add_account', group.name, account.email);
+        if (account.email !== group.name) {
+          req.auditHelper.log('accounts', 'add_to_group', account.email, group.name);
+          req.auditHelper.log('groups', 'add_account', group.name, account.email);
+        }
       }
       invalidateCache = true;
     } catch (err) {
@@ -161,8 +165,10 @@ export const adminDeleteGroupAccount = async (db, group_id, account_id, req) => 
   }
   const ret = await gam.delete(group_id, account_id);
   if (req && req.auditHelper) {
-    req.auditHelper.log('account', 'remove_from_group', account.email, group.name);
-    req.auditHelper.log('group', 'remove_account', group.name, account.email);
+    if (account.email !== group.name) {
+      req.auditHelper.log('accounts', 'remove_from_group', account.email, group.name);
+      req.auditHelper.log('groups', 'remove_account', group.name, account.email);
+    }
   }
   return ret;
 };
