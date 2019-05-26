@@ -29,7 +29,9 @@ class AuditHelper {
     if (!auditEnable) {
       return;
     }
-    const source_ip = this.req.headers['x-forwarded-for'] || this.req.connection.remoteAddress;
+    const source_ip = this.req.headers['x-forwarded-for']
+      ? this.req.headers['x-forwarded-for'].split(',')[0].trim()
+      : this.req.connection.remoteAddress;
     const user_agent = this.req.userAgent();
     const { auth_token: author } = this.req;
     const obj = {
