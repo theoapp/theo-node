@@ -25,13 +25,13 @@
   "author": "Michele <michele@azzolari.it> (macno)",
   "license": "Apache-2.0",
   "dependencies": {
-    "dotenv": "^6.0.0",
+    "dotenv": "^6.2.0",
     "memcached": "^2.2.2",
-    "mysql2": "^1.6.3",
-    "node-fetch": "^2.2.0",
+    "mysql2": "^1.6.5",
+    "node-fetch": "^2.6.0",
     "redis": "^2.8.0",
-    "restify": "^7.2.1",
-    "sqlite3": "^4.0.2",
+    "restify": "^7.7.0",
+    "sqlite3": "^4.0.8",
     "sshpk": "^1.16.1"
   },
   "devDependencies": {
@@ -52,6 +52,7 @@
     "eslint-plugin-prettier": "^2.1.2",
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^3.0.1",
+    "js-yaml": ">=3.13.1",
     "nodemon": "^1.11.0",
     "prettier": "^1.5.3"
   }
