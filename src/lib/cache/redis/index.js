@@ -126,8 +126,10 @@ class RedisManager extends CachedManager {
   }
   close(conn) {
     try {
-      conn.close();
-    } catch (e) {}
+      conn.quit();
+    } catch (e) {
+      console.error(e.message);
+    }
   }
   open() {
     return new Promise((resolve, reject) => {
