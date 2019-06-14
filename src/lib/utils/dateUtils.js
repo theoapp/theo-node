@@ -20,6 +20,5 @@ export const getTimestampFromISO8601 = string => {
   } else {
     ret = string;
   }
-  console.log('Date: ', string)
   return ret;
 };
