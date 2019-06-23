@@ -1,8 +1,9 @@
 import { requireAdminAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
 import { getAuthorizedKeysAsFullJson } from '../lib/helpers/KeysHelper';
 
-export default function handlePermissions(server) {
-  server.get('/permissions/:host/:user', requireAdminAuthMiddleware, async (req, res, next) => {
+export default function handlePermissions(express) {
+  const router = express.Router();
+  router.get('/:host/:user', requireAdminAuthMiddleware, async (req, res, next) => {
     const { host, user } = req.params;
     try {
       const keys = await getAuthorizedKeysAsFullJson(req.db, user, host);
@@ -15,4 +16,5 @@ export default function handlePermissions(server) {
       res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
+  return router;
 }

@@ -12,8 +12,9 @@ import {
   adminGetGroup
 } from '../lib/helpers/AdminHelper';
 
-export default function handleGroups(server) {
-  server.get('/groups', requireAdminAuthMiddleware, async (req, res, next) => {
+export default function handleGroups(express) {
+  const router = express.Router();
+  router.get('/', requireAdminAuthMiddleware, async (req, res, next) => {
     const gm = new GroupManager(req.db);
     try {
       const { limit, offset, order_by, sort, name } = req.query;
@@ -30,7 +31,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.post('/groups', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const ret = await adminCreateGroup(req.db, req.body, req);
       res.json(ret);
@@ -40,7 +41,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.get('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.get('/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const ret = await adminGetGroup(req.db, req.params.id);
       res.json(ret);
@@ -50,7 +51,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.post('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     res.set('X-Sunset', '1.0.0');
     try {
       const { id, ids } = req.body;
@@ -84,7 +85,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.put('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.put('/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     const { active } = req.body;
     try {
       const done = await adminEditGroup(req.db, req.params.id, active, req);
@@ -101,7 +102,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.del('/groups/:id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.delete('/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteGroup(req.db, req.params.id, req);
       if (done) {
@@ -117,7 +118,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.post('/groups/:id/account', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/:id/account', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const { id } = req.body;
       if (!id) {
@@ -135,7 +136,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.post('/groups/:id/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/:id/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const { ids } = req.body;
       if (!ids) {
@@ -153,7 +154,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.del('/groups/:id/:account_id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.delete('/:id/:account_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteGroupAccount(req.db, req.params.id, req.params.account_id, req);
       if (done > 0) {
@@ -169,7 +170,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.post('/groups/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
     const { user, host } = req.body;
     try {
       const ret = await adminAddGroupPermission(req.db, req.params.id, user, host, req);
@@ -180,7 +181,7 @@ export default function handleGroups(server) {
     }
   });
 
-  server.del('/groups/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.delete('/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteGroupPermission(req.db, req.params.id, Number(req.params.permission_id), req);
       if (done) {
@@ -195,4 +196,6 @@ export default function handleGroups(server) {
       res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
+
+  return router;
 }

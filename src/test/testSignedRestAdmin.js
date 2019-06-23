@@ -52,7 +52,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
@@ -76,13 +76,13 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
 
       assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json');
+      assert.equal(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
       assert.equal(typeof resAccount.id, 'number');
@@ -106,7 +106,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ keys })
       });
@@ -120,7 +120,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ keys })
       });

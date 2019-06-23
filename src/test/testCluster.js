@@ -38,7 +38,7 @@ describe('Core', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.CORE_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(tokensOne)
       });
@@ -53,7 +53,7 @@ describe('Core', function() {
           method: 'POST',
           headers: {
             Authorization: 'Bearer ' + tokensOne.tokens.admin,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json; charset=utf-8'
           },
           body: JSON.stringify(tokensOne)
         });
@@ -118,7 +118,7 @@ describe('Core', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.CORE_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(tokensTwo)
       });
@@ -133,7 +133,7 @@ describe('Core', function() {
           method: 'POST',
           headers: {
             Authorization: 'Bearer ' + tokensOne.tokens.admin,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json; charset=utf-8'
           },
           body: JSON.stringify(tokensOne)
         });

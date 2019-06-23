@@ -15,7 +15,7 @@ describe('Core', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(tokensOne)
       });

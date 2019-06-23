@@ -1,185 +1,31 @@
 import './appenv';
-import restify from 'restify';
 import AppHelper from './lib/helpers/AppHelper';
-import CacheHelper from './lib/helpers/CacheHelper';
+
 import DbHelper from './lib/helpers/DbHelper';
 import { loadPlugins } from './lib/helpers/PluginHelper';
-import { initRoutes } from './routes';
-import { authMiddleware } from './lib/middlewares/AuthMiddleware';
-import packageJson from '../package';
-import EventHelper from './lib/helpers/EventHelper';
 import { common_debug, common_error, common_info, common_warn, initLogger } from './lib/utils/logUtils';
-import { md5 } from './lib/utils/cryptoUtils';
-import { auditMiddleware } from './lib/middlewares/AuditMiddleware';
+
+import TheoServer from './theoserver';
+import initCache from './cacheInitiator';
+import initSettings from './settingsInitiator';
 
 initLogger();
 
 const DB_CONN_MAX_RETRY = 15;
 
-let settings = {
-  admin: {
-    token: undefined,
-    tokens: {}
-  },
-  client: {
-    tokens: []
-  },
-  server: {
-    http_port: 9100
-  },
-  db: {
-    engine: 'sqlite',
-    storage: './data/theo.db'
-  },
-  keys: {
-    sign: false
+process.on('SIGINT', async () => {
+  console.log('Caught interrupt signal');
+  if (theoServer) {
+    try {
+      await theoServer.stop();
+    } catch (e) {
+      console.error('Failed to stop server', e.message);
+    }
   }
-};
+  process.exit();
+});
 
-const settingsJson = process.env.SETTINGS_FILE;
-if (settingsJson) {
-  const _settings = require(settingsJson);
-  settings = Object.assign({}, settings, _settings);
-}
-
-const cluster_mode = process.env.CLUSTER_MODE || '0';
-
-const setDbEnv = () => {
-  if (process.env.DB_ENGINE) {
-    settings.db.engine = process.env.DB_ENGINE;
-  }
-  if (settings.db.engine === 'sqlite') {
-    if (cluster_mode === '1') {
-      common_error('DB ERROR! Engine mariadb/mysql is required for CLUSTER_MODE');
-      process.exit(1);
-    }
-    if (process.env.DB_STORAGE) {
-      settings.db.storage = process.env.DB_STORAGE;
-    } else {
-      const sqlite_path = process.env.DATA_PATH || false;
-      if (sqlite_path) {
-        console.warn('DB WARNING! DATA_PATH has been deprecated, please use DB_STORAGE');
-        settings.db.storage = sqlite_path;
-      }
-    }
-  } else {
-    const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT } = process.env;
-    if (!DB_USER && !settings.db.user) {
-      console.error('DB ERROR! Engine %s required DB_USER', settings.db.engine);
-      process.exit(1);
-    }
-    if (!DB_PASSWORD && !settings.db.password) {
-      console.error('DB ERROR! Engine %s required DB_PASSWORD', settings.db.engine);
-      process.exit(1);
-    }
-    if (!DB_HOST && !settings.db.host) {
-      console.error('DB ERROR! Engine %s required DB_HOST', settings.db.engine);
-      process.exit(1);
-    }
-    if (!DB_NAME && !settings.db.name) {
-      console.error('DB ERROR! Engine %s required DB_NAME', settings.db.engine);
-      process.exit(1);
-    }
-    if (DB_USER) {
-      settings.db.username = DB_USER;
-    }
-    if (DB_PASSWORD) {
-      settings.db.password = DB_PASSWORD;
-    }
-    if (DB_NAME) {
-      settings.db.database = DB_NAME;
-    }
-    if (DB_HOST) {
-      settings.db.host = DB_HOST;
-    }
-    if (DB_PORT) {
-      settings.db.port = Number(DB_PORT);
-    }
-  }
-};
-
-const setEnv = () => {
-  const coreToken = process.env.CORE_TOKEN || false;
-  if (coreToken) {
-    settings.core = {
-      token: coreToken
-    };
-  }
-  if (!settings.core || !settings.core.token) {
-    const adminToken = process.env.ADMIN_TOKEN || false;
-    const adminTokens = process.env.ADMIN_TOKENS || false;
-    if (adminToken && adminTokens) {
-      common_error('ADMIN_TOKEN && ADMIN_TOKENS must not be used together');
-      process.exit(2);
-    }
-    if (adminToken) {
-      settings.admin.token = adminToken;
-    }
-    if (settings.admin.token) {
-      settings.admin.tokens[settings.admin.token] = 'admin';
-      settings.admin.token = undefined;
-    }
-    if (adminTokens) {
-      settings.admin.tokens = {};
-      const _adminTokens = adminTokens.split(',');
-      _adminTokens.forEach(_adminToken => {
-        let [token, assignee] = _adminToken.split(':');
-        if (!assignee) {
-          console.warn('[WARN] ADMIN_TOKENS must be in the form: token:assignee. See documentation');
-          console.warn('[WARN] We will use md5(token) as assignee');
-          assignee = md5(token);
-        }
-        settings.admin.tokens[token] = assignee;
-      });
-    } else {
-      if (typeof settings.admin.tokens.length === 'number') {
-        const adminTokens = {};
-        settings.admin.tokens.forEach(_adminToken => {
-          let assignee;
-          let token;
-          if (typeof _adminToken === 'string') {
-            console.warn('[WARN] settings.admin.tokens must be an object: { token, assignee }. See documentation');
-            console.warn('[WARN] We will use md5(token) as assignee');
-            assignee = md5(_adminToken);
-            token = _adminToken;
-          } else {
-            assignee = _adminToken.assignee;
-            token = _adminToken.token;
-          }
-          adminTokens[token] = assignee;
-        });
-        settings.admin.tokens = adminTokens;
-      }
-    }
-    const clientTokens = process.env.CLIENT_TOKENS || false;
-    if (clientTokens) {
-      settings.client.tokens = clientTokens.split(',');
-    }
-  }
-
-  const httpPort = process.env.HTTP_PORT || false;
-  if (httpPort) {
-    settings.server.http_port = Number(httpPort);
-  }
-  const cache = process.env.CACHE_ENABLED || false;
-
-  if (cache) {
-    settings.cache = {
-      type: cache,
-      settings: {
-        uri: process.env.CACHE_URI || false,
-        options: process.env.CACHE_OPTIONS || false
-      }
-    };
-  }
-  const keySign = process.env.REQUIRE_SIGNED_KEY || '0';
-  if (keySign === '1') {
-    settings.keys.sign = true;
-  }
-  setDbEnv();
-};
-
-setEnv();
+const settings = initSettings();
 
 let subscribe_core_token = false;
 
@@ -188,7 +34,7 @@ if (settings.core) {
   common_info(' Using core mode ');
   common_info(' !!! INFO !!! \n');
   if (settings.cache && settings.cache.type === 'redis') {
-    if (cluster_mode === '1') {
+    if (settings.cluster_mode === '1') {
       subscribe_core_token = true;
     }
   }
@@ -228,36 +74,30 @@ try {
   console.error(e);
   process.exit(99);
 }
-const initDb = () => {
+const initDb = async () => {
   try {
-    dh.init()
-      .then(async () => {
-        common_info('Db %s initiated', dm.getEngine());
-        if (settings.core && settings.core.token) {
-          // Load tokens..
-          try {
-            const client = dm.getClient();
-            await client.open();
-            await ah.loadAuthTokens(client);
-          } catch (e) {
-            common_error('Unable to load auth tokens... bye bye %s', e.message);
-            console.error(e);
-            process.exit(4);
-          }
-        }
-        startServer();
-      })
-      .catch(e => {
-        common_error('Failed to initialize db %s', e.message);
+    await dh.init();
+    common_info('Db %s initiated', dm.getEngine());
+    if (settings.core && settings.core.token) {
+      // Load tokens..
+      try {
+        const client = dm.getClient();
+        await client.open();
+        await ah.loadAuthTokens(client);
+      } catch (e) {
+        common_error('Unable to load auth tokens... bye bye %s', e.message);
         console.error(e);
-        process.exit(99);
-      });
+        process.exit(4);
+      }
+    }
+    startServer();
   } catch (e) {
     common_error('Failed to load DB Manager!!! %s', e.message);
     console.error(e);
     process.exit(99);
   }
 };
+
 const testDB = async () => {
   try {
     const client = dm.getClient();
@@ -273,114 +113,22 @@ const testDB = async () => {
     return false;
   }
 };
-const redisSubscribe = () => {
-  return new Promise(async (resolve, reject) => {
-    const client = await cm.open();
-    client.on('message', async (channel, message) => {
-      if (message === 'flush_tokens') {
-        console.log('Flushing tokens!');
-        const client = dm.getClient();
-        await client.open();
-        await ah.loadAuthTokens(client);
-      }
-    });
-    client.subscribe('core_tokens');
-  });
-};
-let ch;
-let cm;
-try {
-  ch = CacheHelper(ah.getSettings('cache'));
-} catch (err) {
-  common_error('Unable to create CacheHelper %s', err.message);
-}
-if (ch) {
-  cm = ch.getManager();
-  if (cm) {
-    if (!subscribe_core_token) {
-      common_info('Flushing CacheManager');
-      cm.flush().catch(er => {
-        common_error('Failed to initialize CacheManager: %s', er.message);
-      });
-    } else {
-      redisSubscribe().finally();
-    }
-  }
-}
+
+initCache(subscribe_core_token, dm, ah);
+
+let theoServer;
+
 const startServer = () => {
-  // HTTP server
-  const server = restify.createServer({
-    name: packageJson.name + '/' + packageJson.version
-  });
-  server.use(restify.plugins.acceptParser(server.acceptable));
-  server.use(restify.plugins.dateParser());
-  server.use(restify.plugins.queryParser());
-  server.use(restify.plugins.gzipResponse());
-  server.use(restify.plugins.bodyParser());
-  server.use(requestLogger);
-  server.use(authMiddleware);
-  server.use(auditMiddleware);
-  server.use(async (req, res, next) => {
-    const client = dm.getClient();
-    try {
-      await client.open();
-    } catch (err) {
-      // Ops..
-      res.status(500);
-      res.json({ status: 500, reason: 'A problem occured, please retry' });
-      return;
-    }
-    req.db = client;
-    res.on('finish', () => {
-      client.close();
-    });
-    next();
-  });
-  initRoutes(server);
-  server.listen(settings.server.http_port, function() {
-    common_info('%s listening at %s', server.name, server.url);
-  });
+  // Theo server
+  theoServer = new TheoServer(process.env, dm);
+  theoServer
+    .start()
+    .then(() => {
+      common_info('Theo Server started, listening on :%s', settings.server.http_port);
+    })
+    .catch(err => console.error('Uops...', err.message));
 };
-const requestLogger = function(req, res, next) {
-  const startAt = new Date();
-  const weblog = {
-    data: startAt,
-    userAgent: req.header('User-Agent'),
-    url: req.url,
-    method: req.method,
-    component: 'web'
-  };
-  const { connection } = req;
-  const { end } = res;
-  req.log = weblog;
-  req.dontLog = false;
-  res.end = function(chunk, encoding) {
-    const endAt = new Date();
-    res.end = end;
-    res.end(chunk, encoding);
-    if (!req.dontLog) {
-      weblog.client = connection.remoteAddress;
-      weblog.responseStatus = res.statusCode;
-      weblog.executionTime = endAt.getTime() - startAt.getTime();
-      const done = EventHelper.emit('theo:http-request', weblog, req, res);
-      if (!done) {
-        return console.info(JSON.stringify(weblog));
-      }
-      return done;
-    }
-  };
-  setImmediate(next);
-};
-process.on('SIGINT', async () => {
-  common_debug('Caught interrupt signal');
-  try {
-    await dh.close();
-    if (cm) {
-      cm.close();
-    }
-  } catch (e) {}
-  process.exit();
-});
+
 const startTestDb = async retry => {
   if (retry >= DB_CONN_MAX_RETRY) {
     common_error("Givin' it up, failed to connect to db after %s retries", DB_CONN_MAX_RETRY);
@@ -396,7 +144,8 @@ const startTestDb = async retry => {
     }, retry * 1000);
   }
 };
-if (cluster_mode === '1') {
+
+if (settings.cluster_mode === '1') {
   const timeout = parseInt(Math.random() * 1000);
   common_debug('CLUSTER_MODE: waiting %s ms to start node', timeout);
   setTimeout(function() {

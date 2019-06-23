@@ -12,8 +12,9 @@ import {
   adminGetAccount
 } from '../lib/helpers/AdminHelper';
 
-export default function handleAccounts(server) {
-  server.get('/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
+export default function handleAccounts(express) {
+  const router = express.Router();
+  router.get('/', requireAdminAuthMiddleware, async (req, res, next) => {
     const am = new AccountManager(req.db);
     try {
       const { search, limit, offset, order_by, sort } = req.query;
@@ -31,7 +32,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.post('/accounts', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const ret = await adminCreateAccount(req.db, req.body, req);
       res.json(ret);
@@ -41,7 +42,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.get('/accounts/search', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.get('/search', requireAdminAuthMiddleware, async (req, res, next) => {
     const am = new AccountManager(req.db);
     try {
       const { search, limit, offset } = req.query;
@@ -62,7 +63,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.get('/accounts/:id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.get('/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const account = await adminGetAccount(req.db, req.params.id);
       res.json(account);
@@ -72,7 +73,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.put('/accounts/:id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.put('/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     const { active, expire_at } = req.body;
     try {
       const done = await adminEditAccount(req.db, req.params.id, active, expire_at, req);
@@ -90,7 +91,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.del('/accounts/:id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.delete('/:id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteAccount(req.db, req.params.id, req);
       if (done) {
@@ -106,7 +107,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.post('/accounts/:id/keys', requireAdminAuthMiddleware, async (req, res) => {
+  router.post('/:id/keys', requireAdminAuthMiddleware, async (req, res) => {
     try {
       const ret = await adminAddAccountKeys(req.db, req.params.id, req.body.keys, req);
       res.json(ret);
@@ -116,7 +117,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.del('/accounts/:id/keys/:key_id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.delete('/:id/keys/:key_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteAccountKey(req.db, req.params.id, Number(req.params.key_id), req);
       if (done) {
@@ -132,7 +133,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.post('/accounts/:id/keys/import/:service', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/:id/keys/import/:service', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const ret = await adminAddAccountKeyFromService(req.db, req.params.id, req.params.service, req.body.username);
       res.json(ret);
@@ -142,7 +143,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.post('/accounts/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
     const { user, host } = req.body;
     try {
       const ret = await adminAddAccountPermission(req.db, req.params.id, user, host, req);
@@ -153,7 +154,7 @@ export default function handleAccounts(server) {
     }
   });
 
-  server.del('/accounts/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.delete('/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       const done = await adminDeleteAccountPermission(req.db, req.params.id, Number(req.params.permission_id), req);
       if (done) {
@@ -168,4 +169,5 @@ export default function handleAccounts(server) {
       res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
+  return router;
 }

@@ -9,27 +9,28 @@ import handleImpExp from './impexp';
 import AuthTokenManager from '../lib/managers/AuthTokenManager';
 import { loadCacheManager } from '../lib/helpers/CacheHelper';
 
-export const initRoutes = server => {
-  server.get('/', (req, res, next) => {
+export const initRoutes = express => {
+  const router = express.Router();
+  router.get('/', (req, res, next) => {
     res.json({ status: 200 });
   });
 
   // /authorized_keys
-  handleKeys(server);
+  router.use('/authorized_keys', handleKeys(express));
 
   // Groups
-  handleGroups(server);
+  router.use('/groups', handleGroups(express));
 
   // /accounts
-  handleAccounts(server);
+  router.use('/accounts', handleAccounts(express));
 
   // /permissions
-  handlePermissions(server);
+  router.use('/permissions', handlePermissions(express));
 
   // import/export
-  handleImpExp(server);
+  router.use('/permissions', handleImpExp(express));
 
-  server.post('/flushdb', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.post('/flushdb', requireAdminAuthMiddleware, async (req, res, next) => {
     if (!process.env.MODE || process.env.MODE !== 'test') {
       res.status(403);
       res.json({ status: 403, reason: 'Operation is forbidden' });
@@ -50,7 +51,7 @@ export const initRoutes = server => {
   });
 
   // Reload tokens, called using CORE token
-  server.post('/tokens', requireCoreAuthMiddleware, async (req, res, next) => {
+  router.post('/tokens', requireCoreAuthMiddleware, async (req, res, next) => {
     try {
       const { tokens } = req.body;
       if (!tokens.admin && !tokens.admins && !tokens.clients) {
@@ -101,4 +102,5 @@ export const initRoutes = server => {
       res.json({ code: 500, reason: 'Fail to update tokens' });
     }
   });
+  return router;
 };

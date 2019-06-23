@@ -25,13 +25,13 @@
   "author": "Michele <michele@azzolari.it> (macno)",
   "license": "Apache-2.0",
   "dependencies": {
+    "@authkeys-io/microservice": "^2.0.0",
     "dotenv": "^6.2.0",
     "memcached": "^2.2.2",
     "mysql2": "^1.6.5",
     "node-fetch": "^2.6.0",
     "redis": "^2.8.0",
-    "restify": "^7.7.0",
-    "sqlite3": "^4.0.8",
+    "sqlite3": "^4.0.9",
     "sshpk": "^1.16.1"
   },
   "devDependencies": {

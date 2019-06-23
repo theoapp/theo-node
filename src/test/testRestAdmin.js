@@ -46,7 +46,7 @@ describe('REST Test account', function() {
         method: 'GET'
       });
       assert.strictEqual(res.status, 401);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const data = await res.json();
       assert.strictEqual(data.status, 401);
     });
@@ -63,13 +63,13 @@ describe('REST Test account', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
       assert.strictEqual(typeof resAccount.id, 'number');
@@ -91,7 +91,7 @@ describe('REST Test account', function() {
         }
       });
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
       assert.strictEqual(typeof resAccount.id, 'number');
@@ -112,7 +112,7 @@ describe('REST Test account', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
@@ -131,7 +131,7 @@ describe('REST Test account', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
@@ -152,13 +152,13 @@ describe('REST Test account', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
       assert.strictEqual(typeof resAccount.id, 'number');
@@ -183,13 +183,13 @@ describe('REST Test account', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
       assert.strictEqual(typeof resAccount.id, 'number');
@@ -209,7 +209,7 @@ describe('REST Test account', function() {
         method: 'PUT',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ active: 0 })
       });
@@ -223,7 +223,7 @@ describe('REST Test account', function() {
         }
       });
       assert.strictEqual(res2.status, 200);
-      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resAccount = await res2.json();
       assert.strictEqual(resAccount.active, 0);
@@ -236,7 +236,7 @@ describe('REST Test account', function() {
         method: 'PUT',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ active: 1 })
       });
@@ -250,7 +250,7 @@ describe('REST Test account', function() {
         }
       });
       assert.strictEqual(res2.status, 200);
-      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resAccount = await res2.json();
       assert.strictEqual(resAccount.active, 1);
@@ -285,13 +285,13 @@ describe('REST Test account', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ keys })
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const retKeys = await res.json();
 
       const res2 = await fetch(base_url + '/accounts/1', {
@@ -301,7 +301,7 @@ describe('REST Test account', function() {
         }
       });
       assert.strictEqual(res2.status, 200);
-      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res2.json();
 
       assert.strictEqual(retKeys.account_id, 1);
@@ -329,7 +329,7 @@ describe('REST Test account', function() {
         }
       });
       assert.strictEqual(res2.status, 200);
-      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res2.json();
 
       assert.strictEqual(resAccount.public_keys.length, 0);
@@ -347,14 +347,14 @@ describe('REST Test account', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(permission)
       });
 
       assert.strictEqual(res.status, 200);
 
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const retPermission = await res.json();
 
       const res2 = await fetch(base_url + '/accounts/1', {
@@ -364,7 +364,7 @@ describe('REST Test account', function() {
         }
       });
       assert.strictEqual(res2.status, 200);
-      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res2.json();
 
       assert.strictEqual(retPermission.account_id, 1);
@@ -392,7 +392,7 @@ describe('REST Test account', function() {
         }
       });
       assert.strictEqual(res2.status, 200);
-      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res2.json();
 
       assert.strictEqual(resAccount.permissions.length, 0);
@@ -440,13 +440,13 @@ describe('REST Test group', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqGroup)
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resGroup = await res.json();
 
@@ -470,7 +470,7 @@ describe('REST Test group', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqGroup)
       });
@@ -485,7 +485,7 @@ describe('REST Test group', function() {
         method: 'PUT',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ active: 0 })
       });
@@ -499,7 +499,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res2.status, 200);
-      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resGroup = await res2.json();
       assert.strictEqual(resGroup.active, 0);
@@ -512,7 +512,7 @@ describe('REST Test group', function() {
         method: 'PUT',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ active: 1 })
       });
@@ -526,7 +526,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res2.status, 200);
-      assert.strictEqual(res2.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res2.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resGroup = await res2.json();
       assert.strictEqual(resGroup.active, 1);
@@ -545,13 +545,13 @@ describe('REST Test group', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
       account_id = resAccount.id;
@@ -560,7 +560,7 @@ describe('REST Test group', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ id: account_id })
       });
@@ -574,7 +574,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res3.status, 200);
-      assert.strictEqual(res3.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res3.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resGroup = await res3.json();
 
@@ -590,7 +590,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res4.status, 200);
-      assert.strictEqual(res4.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res4.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccountWithGroup = await res4.json();
 
       assert.strictEqual(resAccountWithGroup.groups.length, 2);
@@ -611,13 +611,13 @@ describe('REST Test group', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify(reqAccount)
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
       account_id = resAccount.id;
@@ -626,7 +626,7 @@ describe('REST Test group', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ id: account_id })
       });
@@ -640,7 +640,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res3.status, 200);
-      assert.strictEqual(res3.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res3.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resGroup = await res3.json();
 
@@ -655,7 +655,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res4.status, 200);
-      assert.strictEqual(res4.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res4.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccountWithGroup = await res4.json();
 
       assert.strictEqual(resAccountWithGroup.groups.length, 2);
@@ -690,13 +690,13 @@ describe('REST Test group', function() {
           method: 'POST',
           headers: {
             Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json; charset=utf-8'
           },
           body: JSON.stringify(reqAccounts[i])
         });
 
         assert.strictEqual(res.status, 200);
-        assert.strictEqual(res.headers.get('content-type'), 'application/json');
+        assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
         ids.push(reqAccounts[i].email);
       }
 
@@ -704,7 +704,7 @@ describe('REST Test group', function() {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ ids })
       });
@@ -723,7 +723,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res3.status, 200);
-      assert.strictEqual(res3.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res3.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resGroup = await res3.json();
 
@@ -738,7 +738,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res4.status, 200);
-      assert.strictEqual(res4.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res4.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccountWithGroup = await res4.json();
 
       assert.strictEqual(resAccountWithGroup.groups.length, 2);
@@ -757,7 +757,7 @@ describe('REST Test group', function() {
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
       const res2 = await fetch(base_url + '/groups/' + group_id + '/' + resAccount.id, {
@@ -776,7 +776,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res3.status, 200);
-      assert.strictEqual(res3.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res3.headers.get('content-type'), 'application/json; charset=utf-8');
 
       const resGroup = await res3.json();
 
@@ -792,7 +792,7 @@ describe('REST Test group', function() {
         }
       });
       assert.strictEqual(res4.status, 200);
-      assert.strictEqual(res4.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res4.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccountWithGroup = await res4.json();
 
       assert.strictEqual(resAccountWithGroup.groups.length, 1);

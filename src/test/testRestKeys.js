@@ -22,7 +22,7 @@ const addPermission = async (account_id, user, host) => {
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json; charset=utf-8'
     },
     body: JSON.stringify({ user, host })
   });
@@ -33,7 +33,7 @@ const createAccount = async account => {
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json; charset=utf-8'
     },
     body: JSON.stringify(account)
   });
@@ -49,7 +49,7 @@ const addGroupPermission = async (group_id, user, host) => {
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json; charset=utf-8'
     },
     body: JSON.stringify({ user, host })
   });
@@ -59,7 +59,7 @@ const addGroupAccount = async (group_id, account_id) => {
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json; charset=utf-8'
     },
     body: JSON.stringify({ id: account_id })
   });
@@ -79,7 +79,7 @@ const createGroup = async group => {
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json; charset=utf-8'
     },
     body: JSON.stringify({ name: group.name })
   });
@@ -148,7 +148,7 @@ describe('REST Check keys', function() {
         method: 'GET'
       });
       assert.strictEqual(res.status, 401);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const data = await res.json();
       assert.strictEqual(data.status, 401);
     });
@@ -163,7 +163,7 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 401);
-      assert.strictEqual(res.headers.get('content-type'), 'application/json');
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const data = await res.json();
       assert.strictEqual(data.status, 401);
     });
@@ -178,7 +178,7 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 14);
     });
@@ -193,7 +193,7 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 13);
     });
@@ -208,7 +208,7 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 1);
     });
@@ -223,7 +223,7 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 10);
     });
@@ -253,7 +253,7 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 12);
     });
@@ -290,7 +290,7 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 16);
     });
@@ -303,7 +303,7 @@ describe('REST Check keys', function() {
         method: 'PUT',
         headers: {
           Authorization: 'Bearer ' + process.env.ADMIN_TOKEN,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         },
         body: JSON.stringify({ active: 0 })
       });
@@ -315,7 +315,7 @@ describe('REST Check keys', function() {
         }
       });
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 14);
     });
@@ -342,7 +342,7 @@ describe('REST Check keys', function() {
       assert.strictEqual(res.status, 200);
       const fromCache = res.headers.get('X-From-Cache');
       assert.strictEqual(fromCache, 'false');
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 12);
     });
@@ -368,7 +368,7 @@ describe('REST Check keys', function() {
       assert.strictEqual(res.status, 200);
       const fromCache = res.headers.get('X-From-Cache');
       assert.strictEqual(fromCache, 'false');
-      assert.strictEqual(res.headers.get('content-type'), 'text/plain');
+      assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 10);
     });

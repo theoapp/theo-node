@@ -44,8 +44,9 @@ const checkUserHost = async function(db, accept, user, host, res, fingerprint) {
   }
 };
 
-export default function handleKeys(server) {
-  server.get('/authorized_keys/:host/:user', requireAuthMiddleware, async (req, res, next) => {
+export default function handleKeys(express) {
+  const router = express.Router();
+  router.get('/:host/:user', requireAuthMiddleware, async (req, res, next) => {
     const accept = req.header('Accept');
     const { host, user } = req.params;
     const { f } = req.query;
@@ -60,7 +61,7 @@ export default function handleKeys(server) {
     }
   });
 
-  server.get('/authorized_keys/:user', requireAuthMiddleware, async (req, res, next) => {
+  router.get('/:user', requireAuthMiddleware, async (req, res, next) => {
     const accept = req.header('Accept');
     const { user } = req.params;
     const { f } = req.query;
@@ -89,4 +90,5 @@ export default function handleKeys(server) {
       res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });
     }
   });
+  return router;
 }
