@@ -192,7 +192,7 @@ class MariadbManager extends DbManager {
       await this.client.run(this.CREATE_TABLE_GROUPS);
       await runV10migrationMariaDb(this.client);
     }
-    if (fromVersion < 11) {
+    if (fromVersion === 10) {
       await this.client.run('alter table tgroups add is_internal tinyint(1) not null default 0');
       await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
     }

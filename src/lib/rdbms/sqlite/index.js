@@ -5,6 +5,7 @@ import { runV7migrationSqliteDb } from '../../../migrations/v7fixGroups';
 import fs from 'fs';
 import { dirname } from 'path';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
+import { md5 } from '../../utils/cryptoUtils';
 
 const IN_MEMORY_DB = ':memory:';
 
@@ -201,17 +202,29 @@ class SqliteManager extends DbManager {
 
       await this.client.run('drop table groups');
     }
-    if (fromVersion < 11) {
-      await this.client.run('alter table tgroups add is_internal INTEGER not null default 0');
-      await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
+
+    if (fromVersion === 10) {
+      try {
+        await this.client.run('alter table tgroups add is_internal INTEGER not null default 0');
+        await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
+      } catch (e) {
+        //
+      }
     }
+
     if (fromVersion < 12) {
       await this.client.run('alter table public_keys add fingerprint varchar(1024)');
       await runV12migration(this.client);
     }
     if (fromVersion < 13) {
       await this.client.run('alter table auth_tokens add assignee text');
-      await this.client.run("update auth_tokens set assignee = md5(token) where type = 'admin'");
+      const rows = await this.client.all("select token from auth_tokens where type = 'admin'");
+      for (let i = 0; i < rows.length; i++) {
+        await this.client.run('update auth_tokens set assignee = ? where token = ?', [
+          md5(rows[i].token),
+          rows[i].token
+        ]);
+      }
     }
     await this.updateVersion();
   }
