@@ -40,13 +40,13 @@ export const initRoutes = express => {
       const dh = DbHelper();
       const done = await dh._flush();
       if (done) {
-        res.send(204);
+        res.sendStatus(204);
       } else {
-        res.send(404);
+        res.sendStatus(404);
       }
     } catch (err) {
       console.error('Error while flushing db', err);
-      res.send(500);
+      res.sendStatus(500);
     }
   });
 
@@ -83,7 +83,7 @@ export const initRoutes = express => {
             const client = await cm.open();
             client.publish('core_tokens', 'flush_tokens');
             cm.close(client);
-            res.send(204);
+            res.sendStatus(204);
           } catch (e) {
             console.error('Error while flushing cache tokens', e);
             res.status(500);
@@ -94,7 +94,7 @@ export const initRoutes = express => {
         const ah = AppHelper();
         const tokens = await atm.getAll();
         ah.reloadAuthToken(tokens);
-        res.send(204);
+        res.sendStatus(204);
       }
     } catch (err) {
       console.error('Error while pushing tokens', err);
