@@ -1,5 +1,6 @@
 import redis from 'redis';
 import CachedManager from '../../managers/CacheManager';
+import { common_error, common_info } from '../../utils/logUtils';
 
 class RedisManager extends CachedManager {
   constructor(settings) {
@@ -15,25 +16,7 @@ class RedisManager extends CachedManager {
     }
     this.options = {
       url: settings.uri,
-      password: _options.password,
-      retry_strategy: function(options) {
-        if (options.error && options.error.code === 'ECONNREFUSED') {
-          // End reconnecting on a specific error and flush all commands with
-          // a individual error
-          return new Error('The server refused the connection');
-        }
-        if (options.total_retry_time > 1000 * 60 * 60) {
-          // End reconnecting after a specific timeout and flush all commands
-          // with a individual error
-          return new Error('Retry time exhausted');
-        }
-        if (options.attempt > 10) {
-          // End reconnecting with built in error
-          return undefined;
-        }
-        // reconnect after
-        return Math.min(options.attempt * 100, 3000);
-      }
+      password: _options.password
     };
     this.testConn()
       .then()
@@ -42,10 +25,10 @@ class RedisManager extends CachedManager {
   async testConn() {
     try {
       const conn = await this.open();
-      console.log('Redis server: ', conn.server_info.redis_version);
+      common_info('Redis server: ', conn.server_info.redis_version);
       this.close(conn);
     } catch (e) {
-      console.error('Failed to test redis connection', e);
+      common_error('Failed to test redis connection', e);
     }
   }
   set(key, value) {
@@ -120,7 +103,7 @@ class RedisManager extends CachedManager {
           resolve(true);
         });
       } catch (err) {
-        console.error('this.redis.flushdb failed', err);
+        common_error('this.redis.flushdb failed', err);
       }
     });
   }
@@ -141,6 +124,9 @@ class RedisManager extends CachedManager {
         resolve(conn);
       });
     });
+  }
+  getClient() {
+    return redis.createClient(this.options);
   }
 }
 
