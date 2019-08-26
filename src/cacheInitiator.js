@@ -1,17 +1,37 @@
 import CacheHelper from './lib/helpers/CacheHelper';
 import { common_error, common_info } from './lib/utils/logUtils';
+import RedisManager from './lib/cache/redis';
 
-const redisSubscribe = async (cm, dm, ah) => {
-  const client = await cm.open();
-  client.on('message', async (channel, message) => {
-    if (message === 'flush_tokens') {
+const MAX_RETRY_TIMEOUT = 5000;
+let retriesCount = 0;
+
+const redisSubscribe = (cm, dm, ah) => {
+  const conn = cm.getClient();
+  conn.on('error', e => {
+    retriesCount++;
+    const nextRetry = Math.min(retriesCount * retriesCount * 50, MAX_RETRY_TIMEOUT);
+    common_error('%s. Retrying in %d ms', e.message, nextRetry);
+    // Close connection and try again...
+    cm.close(conn);
+    setTimeout(function() {
+      redisSubscribe(cm, dm, ah);
+    }, nextRetry);
+  });
+
+  conn.on('ready', () => {
+    common_info('Connected to redis attempt #', retriesCount);
+    conn.subscribe('core_tokens');
+    retriesCount = 0;
+  });
+
+  conn.on('message', async (channel, message) => {
+    if (channel === 'core_tokens' && message === 'flush_tokens') {
       common_info('Flushing tokens!');
       const dbClient = dm.getClient();
       await dbClient.open();
       await ah.loadAuthTokens(dbClient);
     }
   });
-  client.subscribe('core_tokens');
 };
 
 const initCache = function(subscribe_core_token, dm, ah) {
@@ -31,7 +51,9 @@ const initCache = function(subscribe_core_token, dm, ah) {
           common_error('Failed to initialize CacheManager: %s', er.message);
         });
       } else {
-        redisSubscribe(cm, dm, ah).finally();
+        if (cm instanceof RedisManager) {
+          redisSubscribe(cm, dm, ah);
+        }
       }
     }
   }
