@@ -1,3 +1,5 @@
+import os from 'os';
+import packageJson from '../../package';
 import handleAccounts from './accounts';
 import handleKeys from './keys';
 import handleGroups from './groups';
@@ -8,11 +10,28 @@ import handlePermissions from './permissions';
 import handleImpExp from './impexp';
 import AuthTokenManager from '../lib/managers/AuthTokenManager';
 import { loadCacheManager } from '../lib/helpers/CacheHelper';
+import { millisecondsToStr } from '../lib/utils/dateUtils';
 
+const uptime_start = Date.now();
 export const initRoutes = express => {
   const router = express.Router();
   router.get('/', (req, res, next) => {
     res.json({ status: 200 });
+  });
+
+  router.get('/uptime', requireAdminAuthMiddleware, (req, res) => {
+    const { name, version } = packageJson;
+    const uptime = Date.now() - uptime_start;
+    const ret = {
+      name,
+      version,
+      node_version: process.version,
+      hostname: os.hostname(),
+      uptime: Math.floor(uptime / 1000),
+      uptime_hr: millisecondsToStr(uptime),
+      memory_usage: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'M'
+    };
+    res.json(ret);
   });
 
   // /authorized_keys
