@@ -3,7 +3,7 @@ import { getAuthorizedKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysH
 import { dnsReverse } from '../lib/utils/dnsUtils';
 import AppHelper from '../lib/helpers/AppHelper';
 import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
-import { common_debug } from '../lib/utils/logUtils';
+import { common_debug, common_error } from '../lib/utils/logUtils';
 
 const checkFingerPrint = async function(user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
@@ -12,7 +12,7 @@ const checkFingerPrint = async function(user, host, fingerprint, keys) {
         user,
         host,
         email: keys[i].email,
-        ts: new Date().getTime()
+        ts: Date.now()
       };
       RemoteLoggerHelper.log(data);
       return;
@@ -54,7 +54,7 @@ export default function handleKeys(express) {
       await checkUserHost(req.db, accept, user, host, res, f);
     } catch (err) {
       if (process.env.MODE === 'test') {
-        console.error('Failed authorized_keys', err);
+        common_error('Failed authorized_keys', err.message);
       }
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
@@ -73,7 +73,7 @@ export default function handleKeys(express) {
           await checkUserHost(req.db, accept, user, host[0], res, f);
         } catch (err) {
           if (process.env.MODE === 'test') {
-            console.error('Failed authorized_keys', err);
+            common_error('Failed authorized_keys', err.message);
           }
           res.status(err.t_code || 500);
           res.json({ status: err.t_code || 500, reason: err.message });
@@ -84,7 +84,7 @@ export default function handleKeys(express) {
       }
     } catch (err) {
       if (process.env.MODE === 'test') {
-        console.error('Failed reverse %s', ip, err);
+        common_error('Failed reverse %s', ip, err.message);
       }
       res.status(400);
       res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });

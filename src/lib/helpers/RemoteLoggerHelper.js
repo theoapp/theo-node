@@ -1,5 +1,6 @@
 import packageJson from '../../../package';
 import { http_post } from '../utils/httpUtils';
+import { common_error } from '../utils/logUtils';
 
 const { LOG_AUTH_KEYS_URL, LOG_AUTH_KEYS_TOKEN } = process.env;
 
@@ -16,7 +17,7 @@ class RemoteLoggerHelper {
     if (!LOG_AUTH_KEYS_URL) return;
     setImmediate(() => {
       http_post(LOG_AUTH_KEYS_URL, data, this.getHttpHeaders()).catch(e => {
-        console.error('Failed to POST log: %s', e.message, data);
+        common_error('Failed to POST log: %s', e.message, data);
       });
     });
   }
