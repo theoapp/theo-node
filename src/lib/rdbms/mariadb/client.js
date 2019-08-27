@@ -6,7 +6,7 @@ class MariadbClient extends BaseClient {
     this.db = db;
   }
 
-  async open() {
+  open() {
     return new Promise((resolve, reject) => {
       this.db.getConnection((err, conn) => {
         if (err) {
