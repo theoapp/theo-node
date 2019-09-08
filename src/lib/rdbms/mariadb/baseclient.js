@@ -1,27 +1,31 @@
 import BaseClient from '../baseclient';
+import { common_error } from '../../utils/logUtils';
 
-class MariadbClient extends BaseClient {
-  constructor(db) {
+class MariadbBaseClient extends BaseClient {
+  db;
+  conn;
+  pool;
+
+  /**
+   *
+   * @param db MariadbManager
+   */
+  constructor(db, pool = false) {
     super();
     this.db = db;
+    this.pool = pool;
   }
 
   open() {
-    return new Promise((resolve, reject) => {
-      this.db.getConnection((err, conn) => {
-        if (err) {
-          console.error('Unable to get connection!', err.message);
-          reject(err);
-          return;
-        }
-        this.conn = conn;
-        resolve(true);
-      });
-    });
+    throw new Error('Subclass must implement open()');
   }
 
   close() {
-    this.db.releaseConnection(this.conn);
+    if (this.conn) {
+      this.conn.release();
+    } else {
+      common_error('Called MariadbClient.close() but conn is undefined');
+    }
   }
 
   all(sql, params) {
@@ -99,4 +103,4 @@ class MariadbClient extends BaseClient {
   }
 }
 
-export default MariadbClient;
+export default MariadbBaseClient;

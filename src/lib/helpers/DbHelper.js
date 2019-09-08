@@ -1,6 +1,6 @@
 import EventHelper from './EventHelper';
 import { getRdbmsModule } from '../rdbms/modules';
-import { common_debug, common_error, common_info } from '../utils/logUtils';
+import { common_error, common_info } from '../utils/logUtils';
 
 let _instance;
 
