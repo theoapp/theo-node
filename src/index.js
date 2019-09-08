@@ -109,8 +109,7 @@ const testDB = async () => {
       common_error('This mysql client does not support server version.');
       process.exit(91);
     }
-    console.error('testDB err', e);
-    return false;
+    throw e;
   }
 };
 
@@ -135,13 +134,20 @@ const startTestDb = async retry => {
     process.exit(90);
   }
   common_debug('DB Connection check #%s ', retry);
-  const ret = await testDB();
-  if (ret) {
-    initDb();
-  } else {
+  try {
+    await testDB();
+    initDb().catch(e => {
+      common_error(util.format('Failed to execute initDB', e.message));
+      process.exit(80);
+    });
+  } catch (e) {
+    const nextRetry = retry + 1;
+    const to = Math.min(nextRetry * nextRetry * 50, 5000);
+    common_error('DB ERROR: %s. Retrying in %d ms', e.message, to);
+
     setTimeout(() => {
-      startTestDb(retry + 1).finally();
-    }, retry * 1000);
+      startTestDb(nextRetry + 1).finally();
+    }, to);
   }
 };
 
