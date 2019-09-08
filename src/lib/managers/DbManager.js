@@ -20,7 +20,7 @@ class DbManager {
   flushDb() {
     throw new Error('Not implemented');
   }
-  getClient() {
+  getClient(pool = false) {
     throw new Error('Not implemented');
   }
   setClient(client) {

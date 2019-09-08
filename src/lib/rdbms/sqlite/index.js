@@ -84,7 +84,7 @@ class SqliteManager extends DbManager {
     return 'sqlite';
   }
 
-  getClient() {
+  getClient(pool = false) {
     return new SqliteClient(this.db);
   }
 

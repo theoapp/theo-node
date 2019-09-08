@@ -1,13 +1,16 @@
 import DbManager from '../../managers/DbManager';
-import mysql from 'mysql2';
-import MariadbClient from './client';
+import mysql from 'mysql2'; // use "git+https://git@github.com/nwoltman/node-mysql.git#caching-sha2-password" for mysql8
+import fs from 'fs';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
-import { common_debug, common_error } from '../../utils/logUtils';
+import { common_debug, common_error, common_warn } from '../../utils/logUtils';
+import MariadbPoolClusterClient from './poolclusterclient';
+import MariadbPoolClient from './poolclient';
 
 class MariadbManager extends DbManager {
   dbVersion = 13;
+  DbClientClass;
 
   CREATE_TABLE_AUTH_TOKENS =
     'create table auth_tokens (token varchar(128) binary PRIMARY KEY, assignee varchar(64) NOT NULL, type varchar(5) NOT NULL, created_at BIGINT UNSIGNED)';
@@ -50,7 +53,8 @@ class MariadbManager extends DbManager {
 
   constructor(settings) {
     super(settings);
-    const { host, port, username, password, database } = settings;
+    common_debug('new MariadbManager', settings);
+    const { host, port, username, password, database, cluster, ssl_ca } = settings;
     const defaultOptions = {
       host: host,
       user: username,
@@ -58,25 +62,59 @@ class MariadbManager extends DbManager {
       database,
       port: port || 3306,
       waitForConnections: true,
-      connectionLimit: 10,
+      connectionLimit: process.env.NODE_ENV === 'production' ? 20 : 10,
       queueLimit: 0
     };
+    if (ssl_ca) {
+      defaultOptions.ssl = {
+        // key: fs.readFileSync('./certs/client-key.pem'),
+        // cert: fs.readFileSync('./certs/client-cert.pem')
+        ca: fs.readFileSync(ssl_ca)
+      };
+    }
     let options;
     if (settings.options) {
       options = Object.assign(defaultOptions, settings.options);
     } else {
       options = defaultOptions;
     }
-    this.db = mysql.createPool(options);
-    this.client = this.getClient();
+    if(process.env.DB_NOPOOL && process.env.DB_NOPOOL === '1') {
+
+    } else {
+      if (cluster) {
+        common_warn('MysqlManager cluster pool mode', cluster);
+        this.db = mysql.createPoolCluster({
+          restoreNodeTimeout: 5000
+        });
+        cluster.rw.forEach((node, i) => {
+          const config = Object.assign({}, defaultOptions, { host: node.host, port: node.port });
+          this.db.add('rw' + i, config);
+        });
+        cluster.ro.forEach((node, i) => {
+          const config = Object.assign({}, defaultOptions, {
+            host: node.host,
+            port: node.port,
+            connectionLimit: process.env.NODE_ENV === 'production' ? 40 : 20
+          });
+          this.db.add('ro' + i, config);
+        });
+        this.db.on('enqueue', function() {
+          common_warn('Waiting for available connection slot. Make sure your connection is released.');
+        });
+        this.DbClientClass = MariadbPoolClusterClient;
+      } else {
+        this.db = mysql.createPool(options);
+        this.DbClientClass = MariadbPoolClient;
+      }
+    }
   }
 
   getEngine() {
     return 'mariadb';
   }
 
-  getClient() {
-    return new MariadbClient(this.db);
+  getClient(pool = false) {
+    return new this.DbClientClass(this.db, pool);
   }
 
   setClient(client) {
