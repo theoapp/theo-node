@@ -33,9 +33,9 @@ const settings = {
 
 let ah;
 let dh;
+let dm;
 const loadDb = function() {
   return new Promise((resolve, reject) => {
-    let dm;
     try {
       dh = DbHelper(ah.getSettings('db'));
       dm = dh.getManager();
@@ -105,36 +105,36 @@ describe('Check keys', function() {
     });
     it('should return an account object with right number of keys and permissions', async function() {
       const resAccount = await adminGetAccount(db, 1);
-      assert.equal(resAccount.permissions.length, 5);
-      assert.equal(resAccount.public_keys.length, 5);
+      assert.strictEqual(resAccount.permissions.length, 5);
+      assert.strictEqual(resAccount.public_keys.length, 5);
     });
   });
 
   describe('check authorized_keys for user=mil and host=mil', function() {
     it('should return 14 rows', async function() {
-      const { keys: res } = await getAuthorizedKeys(db, 'mil', 'mil');
-      assert.equal(res.split('\n').length, 14);
+      const { keys: res } = await getAuthorizedKeys(dm, 'mil', 'mil');
+      assert.strictEqual(res.split('\n').length, 14);
     });
   });
 
   describe('check authorized_keys for user=biz and host=com', function() {
     it('should return 13 rows', async function() {
-      const { keys: res } = await getAuthorizedKeys(db, 'biz', 'com');
-      assert.equal(res.split('\n').length, 13);
+      const { keys: res } = await getAuthorizedKeys(dm, 'biz', 'com');
+      assert.strictEqual(res.split('\n').length, 13);
     });
   });
 
   describe('check authorized_keys for user=unkown and host=unkown', function() {
     it('should return 1 rows (only Jolly user 3)', async function() {
-      const { keys: res } = await getAuthorizedKeys(db, 'unkown', 'unkown');
-      assert.equal(res.split('\n').length, 1);
+      const { keys: res } = await getAuthorizedKeys(dm, 'unkown', 'unkown');
+      assert.strictEqual(res.split('\n').length, 1);
     });
   });
 
   describe('check authorized_keys for user=name and host=edu', function() {
     it('should return 10 rows per 4 users (5 + 2 + 2 + 1)', async function() {
-      const { keys: res } = await getAuthorizedKeys(db, 'name', 'edu');
-      assert.equal(res.split('\n').length, 10);
+      const { keys: res } = await getAuthorizedKeys(dm, 'name', 'edu');
+      assert.strictEqual(res.split('\n').length, 10);
     });
   });
 
@@ -142,8 +142,8 @@ describe('Check keys', function() {
     it('should return 10 rows per 4 users (5 + 2 + 1)', async function() {
       const now = new Date().getTime();
       await adminEditAccount(db, 'scallar1b@1und1.de', undefined, now - 60000);
-      const { keys: res } = await getAuthorizedKeys(db, 'name', 'edu');
-      assert.equal(res.split('\n').length, 8);
+      const { keys: res } = await getAuthorizedKeys(dm, 'name', 'edu');
+      assert.strictEqual(res.split('\n').length, 8);
     });
   });
 });

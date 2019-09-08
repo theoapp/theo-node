@@ -21,9 +21,9 @@ const checkFingerPrint = async function(user, host, fingerprint, keys) {
   common_debug('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
 };
 
-const checkUserHost = async function(db, accept, user, host, res, fingerprint) {
+const checkUserHost = async function(dm, accept, user, host, res, fingerprint) {
   if (accept && accept.indexOf('application/json') >= 0) {
-    const { keys, cache } = await getAuthorizedKeysAsJson(db, user, host);
+    const { keys, cache } = await getAuthorizedKeysAsJson(dm, user, host);
     res.header('X-From-Cache', cache);
     res.json(keys);
     if (fingerprint) {
@@ -37,7 +37,7 @@ const checkUserHost = async function(db, accept, user, host, res, fingerprint) {
       err.t_code = 406;
       throw err;
     }
-    const { keys, cache } = await getAuthorizedKeys(db, user, host);
+    const { keys, cache } = await getAuthorizedKeys(dm, user, host);
     res.header('X-From-Cache', cache);
     res.header('Content-Type', 'text/plain');
     res.send(keys);
@@ -51,7 +51,7 @@ export default function handleKeys(express) {
     const { host, user } = req.params;
     const { f } = req.query;
     try {
-      await checkUserHost(req.db, accept, user, host, res, f);
+      await checkUserHost(req.dm, accept, user, host, res, f);
     } catch (err) {
       if (process.env.MODE === 'test') {
         common_error('Failed authorized_keys', err.message);
@@ -70,7 +70,7 @@ export default function handleKeys(express) {
       const host = await dnsReverse(ip);
       if (host && host.length > 0) {
         try {
-          await checkUserHost(req.db, accept, user, host[0], res, f);
+          await checkUserHost(req.dm, accept, user, host[0], res, f);
         } catch (err) {
           if (process.env.MODE === 'test') {
             common_error('Failed authorized_keys', err.message);

@@ -20,11 +20,11 @@ const checkCache = async key => {
   return false;
 };
 
-export const getAuthorizedKeys = async (db, user, host) => {
+export const getAuthorizedKeys = async (dm, user, host) => {
   const cache_key = `${user}_${host}`;
   const _cache = await checkCache(cache_key);
   if (_cache) return { keys: _cache, cache: true };
-  const { keys, cache } = await getAuthorizedKeysAsJson(db, user, host);
+  const { keys, cache } = await getAuthorizedKeysAsJson(dm, user, host);
   const skeys = keys
     .filter(key => {
       return key !== undefined;
@@ -40,12 +40,14 @@ export const getAuthorizedKeys = async (db, user, host) => {
   return { keys: skeys, cache };
 };
 
-export const getAuthorizedKeysAsJson = async (db, user, host) => {
+export const getAuthorizedKeysAsJson = async (dm, user, host) => {
   const cache_key = `json:${user}_${host}`;
   const cache = await checkCache(cache_key);
   if (cache) {
     return { keys: JSON.parse(cache), cache: true };
   }
+  const db = dm.getClient('ro');
+  await db.open();
   const pm = new PermissionManager(db);
   let keys;
   try {
@@ -53,6 +55,8 @@ export const getAuthorizedKeysAsJson = async (db, user, host) => {
   } catch (err) {
     err.t_code = 500;
     throw err;
+  } finally {
+    db.close();
   }
   if (_cm !== false) {
     setImmediate(() => {
