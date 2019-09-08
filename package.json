@@ -28,7 +28,7 @@
     "@authkeys-io/microservice": "^2.1.0",
     "dotenv": "^6.2.0",
     "memcached": "^2.2.2",
-    "mysql2": "^1.6.5",
+    "mysql2": "^1.7.0",
     "node-fetch": "^2.6.0",
     "redis": "^2.8.0",
     "sqlite3": "^4.0.9",
