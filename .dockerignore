@@ -11,3 +11,4 @@ data
 env.sample
 docker-compose
 DockerfileTest
+*.sh
