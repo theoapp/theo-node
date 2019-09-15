@@ -1,6 +1,6 @@
 import MariadbBaseClient from './baseclient';
 
-class MariadbPoolClient extends MariadbBaseClient {
+class MariadbClient extends MariadbBaseClient {
   open() {
     return new Promise((resolve, reject) => {
       this.db.getConnection((err, conn) => {
@@ -19,11 +19,11 @@ class MariadbPoolClient extends MariadbBaseClient {
 
   close() {
     if (this.conn) {
-      this.db.releaseConnection(this.conn);
+      this.conn.destroy();
     } else {
       common_error('Called MariadbPoolClient.close() but conn is undefined');
     }
   }
 }
 
-export default MariadbPoolClient;
+export default MariadbClient;

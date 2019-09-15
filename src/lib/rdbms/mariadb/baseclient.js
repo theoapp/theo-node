@@ -6,10 +6,6 @@ class MariadbBaseClient extends BaseClient {
   conn;
   pool;
 
-  /**
-   *
-   * @param db MariadbManager
-   */
   constructor(db, pool = false) {
     super();
     this.db = db;

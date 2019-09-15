@@ -16,6 +16,14 @@ class MariadbPoolClusterClient extends MariadbBaseClient {
       });
     });
   }
+
+  close() {
+    if (this.conn) {
+      this.db.releaseConnection(this.conn);
+    } else {
+      common_error('Called MariadbPoolClusterClient.close() but conn is undefined');
+    }
+  }
 }
 
 export default MariadbPoolClusterClient;

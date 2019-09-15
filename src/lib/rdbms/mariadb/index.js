@@ -7,6 +7,13 @@ import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { common_debug, common_error, common_warn } from '../../utils/logUtils';
 import MariadbPoolClusterClient from './poolclusterclient';
 import MariadbPoolClient from './poolclient';
+import MariadbClient from './client';
+
+const noPoolDb =
+  process.env.DB_NOPOOL &&
+  (process.env.DB_NOPOOL === '1' || process.env.DB_NOPOOL === 'true' || process.env.DB_NOPOOL === 'on');
+
+const connectionLimit = noPoolDb ? 1 : process.env.NODE_ENV === 'production' ? 3 : 1;
 
 class MariadbManager extends DbManager {
   dbVersion = 13;
@@ -62,8 +69,8 @@ class MariadbManager extends DbManager {
       database,
       port: port || 3306,
       waitForConnections: true,
-      connectionLimit: process.env.NODE_ENV === 'production' ? 20 : 10,
-      queueLimit: 0
+      connectionLimit,
+      queueLimit: 1
     };
     if (ssl_ca) {
       defaultOptions.ssl = {
@@ -78,34 +85,32 @@ class MariadbManager extends DbManager {
     } else {
       options = defaultOptions;
     }
-    if(process.env.DB_NOPOOL && process.env.DB_NOPOOL === '1') {
 
+    if (cluster) {
+      common_warn('MysqlManager cluster pool mode', cluster);
+      this.db = mysql.createPoolCluster({
+        restoreNodeTimeout: 5000
+      });
+      cluster.rw.forEach((node, i) => {
+        const config = Object.assign({}, defaultOptions, { host: node.host, port: node.port });
+        this.db.add('rw' + i, config);
+      });
+      cluster.ro.forEach((node, i) => {
+        const config = Object.assign({}, defaultOptions, {
+          host: node.host,
+          port: node.port,
+          connectionLimit,
+          queueLimit: 1
+        });
+        this.db.add('ro' + i, config);
+      });
+      this.db.on('enqueue', function() {
+        common_warn('Waiting for available connection slot. Make sure your connection is released.');
+      });
+      this.DbClientClass = noPoolDb ? MariadbClusterClient : MariadbPoolClusterClient;
     } else {
-      if (cluster) {
-        common_warn('MysqlManager cluster pool mode', cluster);
-        this.db = mysql.createPoolCluster({
-          restoreNodeTimeout: 5000
-        });
-        cluster.rw.forEach((node, i) => {
-          const config = Object.assign({}, defaultOptions, { host: node.host, port: node.port });
-          this.db.add('rw' + i, config);
-        });
-        cluster.ro.forEach((node, i) => {
-          const config = Object.assign({}, defaultOptions, {
-            host: node.host,
-            port: node.port,
-            connectionLimit: process.env.NODE_ENV === 'production' ? 40 : 20
-          });
-          this.db.add('ro' + i, config);
-        });
-        this.db.on('enqueue', function() {
-          common_warn('Waiting for available connection slot. Make sure your connection is released.');
-        });
-        this.DbClientClass = MariadbPoolClusterClient;
-      } else {
-        this.db = mysql.createPool(options);
-        this.DbClientClass = MariadbPoolClient;
-      }
+      this.db = mysql.createPool(options);
+      this.DbClientClass = noPoolDb ? MariadbClient : MariadbPoolClient;
     }
   }
 
