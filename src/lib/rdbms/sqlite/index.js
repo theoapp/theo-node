@@ -1,11 +1,18 @@
 import DbManager from '../../managers/DbManager';
-import sqlite3 from 'sqlite3';
+
 import SqliteClient from './client';
 import { runV7migrationSqliteDb } from '../../../migrations/v7fixGroups';
 import fs from 'fs';
 import { dirname } from 'path';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { md5 } from '../../utils/cryptoUtils';
+
+let sqlite3;
+try {
+  sqlite3 = require('sqlite3');
+} catch (e) {
+  // Module not installed
+}
 
 const IN_MEMORY_DB = ':memory:';
 

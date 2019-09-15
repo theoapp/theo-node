@@ -1,6 +1,12 @@
-import redis from 'redis';
 import CachedManager from '../../managers/CacheManager';
 import { common_error, common_info } from '../../utils/logUtils';
+
+let redis;
+try {
+  redis = require('redis');
+} catch (e) {
+  // not loaded
+}
 
 class RedisManager extends CachedManager {
   constructor(settings) {

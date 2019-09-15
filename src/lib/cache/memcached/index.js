@@ -1,4 +1,3 @@
-import Memcached from 'memcached';
 import CachedManager from '../../managers/CacheManager';
 
 const MAX_EXPIRATION = 2592000;
@@ -12,8 +11,13 @@ class MemcachedManager extends CachedManager {
       retries: 1,
       retry: 1000
     };
-    this.memcached = new Memcached(settings.uri, options);
-    console.log('MemcachedManager started');
+    try {
+      const Memcached = require('memcached');
+      this.memcached = new Memcached(settings.uri, options);
+      console.log('MemcachedManager started');
+    } catch (e) {
+      // Module not loaded
+    }
   }
   set(key, value) {
     return new Promise((resolve, reject) => {

@@ -1,5 +1,4 @@
 import DbManager from '../../managers/DbManager';
-import mysql from 'mysql2'; // use "git+https://git@github.com/nwoltman/node-mysql.git#caching-sha2-password" for mysql8
 import fs from 'fs';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
@@ -8,6 +7,14 @@ import { common_debug, common_error, common_warn } from '../../utils/logUtils';
 import MariadbPoolClusterClient from './poolclusterclient';
 import MariadbPoolClient from './poolclient';
 import MariadbClient from './client';
+
+let mysql;
+try {
+  // import mysql from 'mysql2'; // use "git+https://git@github.com/nwoltman/node-mysql.git#caching-sha2-password" for mysql8
+  mysql = require(process.env.MYSQL_LIB || 'mysql2');
+} catch (e) {
+  // package not installed
+}
 
 const noPoolDb =
   process.env.DB_NOPOOL &&
