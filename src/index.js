@@ -1,4 +1,5 @@
 import './appenv';
+import packageJson from '../package';
 import AppHelper from './lib/helpers/AppHelper';
 
 import DbHelper from './lib/helpers/DbHelper';
@@ -39,19 +40,20 @@ if (settings.core) {
     }
   }
 } else if (!settings.admin.token && settings.client.tokens.length === 0) {
-  common_warn('\n !!! WARNING !!! ');
+  common_warn(' !!! WARNING !!!');
   common_warn(' No admin token nor client tokens found ');
-  common_warn(' !!! WARNING !!! \n');
+  common_warn(' !!! WARNING !!!');
 }
 
 if (process.env.MODE !== 'test') {
   console.log(`
+
           _   _   ___   _____
          | | | | |  _| |  _  |
-    _____| |_| |_| |___| | | |
-   0_   _   _   _   ___  | | |
+   ______| |_| |_| |___| | | |
+ (_)_   _   _   _   ___  | | |
      | | | | | | | |_  | |_| |
-     |_| |_| |_| |___| |_____|
+     |_| |_| |_| |___| |_____|v${packageJson.version}
 
 `);
   common_info('Theo starts');
