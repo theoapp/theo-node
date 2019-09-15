@@ -35,7 +35,7 @@ class TheoServer extends Microservice {
       if (method !== 'HEAD') {
         const needDb = doURLneedDb(path);
         if (needDb) {
-          const client = this.dm.getClient(method === 'GET');
+          const client = this.dm.getClient(method === 'GET' ? 'ro' : 'rw');
           try {
             await client.open();
           } catch (err) {
