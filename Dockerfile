@@ -28,3 +28,11 @@ COPY --from=builder /usr/src/app/build ./build/
 EXPOSE 9100
 
 CMD [ "node", "build/index.js" ]
+
+# Metadata
+LABEL org.opencontainers.image.vendor="Authkeys" \
+	org.opencontainers.image.url="https://theo.authkeys.io" \
+	org.opencontainers.image.title="Theo" \
+	org.opencontainers.image.description="The authorized keys manager" \
+	org.opencontainers.image.version="v2.0.0-rc4" \
+	org.opencontainers.image.documentation="https://theoapp.readthedocs.io"
