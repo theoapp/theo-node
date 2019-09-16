@@ -20,7 +20,8 @@
     "test:core:noassignee": "mocha build/test/testCoreNoAssignee.js",
     "test:core:restart:noassignee": "mocha build/test/testCoreOnRestartNoAssignee.js",
     "test:cluster": "mocha build/test/testCluster.js",
-    "test:sshutils": "mocha build/test/testSSHUtils.js"
+    "test:sshutils": "mocha build/test/testSSHUtils.js",
+    "version": "./updateVersion.sh"
   },
   "author": "Michele <michele@azzolari.it> (macno)",
   "license": "Apache-2.0",
