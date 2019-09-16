@@ -93,8 +93,6 @@ class MariadbManager extends DbManager {
     } else {
       options = defaultOptions;
     }
-
-    console.log('DB options', options);
     if (cluster) {
       common_debug('MysqlManager cluster pool mode', cluster);
       this.db = mysql.createPoolCluster({
