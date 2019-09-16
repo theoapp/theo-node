@@ -16,14 +16,14 @@ for (const name in process.env) {
 
 const tokensOne = {
   tokens: {
-    admin: 'xYxYxY',
+    admins: [{ token: 'xYxYxY', assignee: 'admin' }],
     clients: ['ababababab', 'cdcdcdcdcdcd']
   }
 };
 
 const tokensTwo = {
   tokens: {
-    admin: 'wZwZwZwZwZ',
+    admins: [{ token: 'wZwZwZwZwZ', assignee: 'admin' }],
     clients: ['efefefefef', 'ghghghghghgh']
   }
 };
@@ -33,7 +33,7 @@ describe('Core', function() {
     assert.strictEqual(baseURLs.length >= 2, true);
   });
   describe('Send tokens', function() {
-    it('should return 204', async function() {
+    it('should return 204 from ' + baseURLs[0], async function() {
       const res = await fetch(baseURLs[0] + '/tokens', {
         method: 'POST',
         headers: {
@@ -48,11 +48,11 @@ describe('Core', function() {
   describe('Check tokens', function() {
     for (let i = 0; i < baseURLs.length; i++) {
       const base_url = baseURLs[i];
-      it('should return 401', async function() {
+      it('should return 401 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/tokens', {
           method: 'POST',
           headers: {
-            Authorization: 'Bearer ' + tokensOne.tokens.admin,
+            Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
             'Content-Type': 'application/json; charset=utf-8'
           },
           body: JSON.stringify(tokensOne)
@@ -60,17 +60,24 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 200', async function() {
-        const res = await fetch(base_url + '/accounts', {
-          method: 'GET',
-          headers: {
-            Authorization: 'Bearer ' + tokensOne.tokens.admin
+      it('should return 200 for server ' + base_url, function(done) {
+        setTimeout(async () => {
+          const res = await fetch(base_url + '/accounts', {
+            method: 'GET',
+            headers: {
+              Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
+            }
+          });
+          try {
+            assert.strictEqual(res.status, 200);
+            done();
+          } catch (e) {
+            done(e);
           }
-        });
-        assert.strictEqual(res.status, 200);
+        }, 200);
       });
 
-      it('should return 401', async function() {
+      it('should return 401 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/accounts', {
           method: 'GET',
           headers: {
@@ -80,17 +87,17 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 200', async function() {
+      it('should return 200 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
-            Authorization: 'Bearer ' + tokensOne.tokens.admin
+            Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
           }
         });
         assert.strictEqual(res.status, 200);
       });
 
-      it('should return 200', async function() {
+      it('should return 200 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -100,7 +107,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 200);
       });
 
-      it('should return 200', async function() {
+      it('should return 200 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -128,11 +135,11 @@ describe('Core', function() {
   describe('Recheck tokens', function() {
     for (let i = 0; i < baseURLs.length; i++) {
       const base_url = baseURLs[i];
-      it('should return 401', async function() {
+      it('should return 401 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/tokens', {
           method: 'POST',
           headers: {
-            Authorization: 'Bearer ' + tokensOne.tokens.admin,
+            Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
             'Content-Type': 'application/json; charset=utf-8'
           },
           body: JSON.stringify(tokensOne)
@@ -140,17 +147,24 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 401', async function() {
-        const res = await fetch(base_url + '/accounts', {
-          method: 'GET',
-          headers: {
-            Authorization: 'Bearer ' + tokensOne.tokens.admin
+      it('should return 401 for server ' + base_url,  function(done) {
+        setTimeout(async () => {
+          const res = await fetch(base_url + '/accounts', {
+            method: 'GET',
+            headers: {
+              Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
+            }
+          });
+          try {
+            assert.strictEqual(res.status, 401);
+            done();
+          } catch (e) {
+            done(e);
           }
-        });
-        assert.strictEqual(res.status, 401);
+        }, 200);
       });
 
-      it('should return 401', async function() {
+      it('should return 401 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/accounts', {
           method: 'GET',
           headers: {
@@ -160,27 +174,27 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 401', async function() {
+      it('should return 401 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
-            Authorization: 'Bearer ' + tokensOne.tokens.admin
+            Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
           }
         });
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 200', async function() {
+      it('should return 200 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
-            Authorization: 'Bearer ' + tokensTwo.tokens.admin
+            Authorization: 'Bearer ' + tokensTwo.tokens.admins[0].token
           }
         });
         assert.strictEqual(res.status, 200);
       });
 
-      it('should return 200', async function() {
+      it('should return 200 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -190,7 +204,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 200);
       });
 
-      it('should return 200', async function() {
+      it('should return 200 for server ' + base_url, async function() {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
