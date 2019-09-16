@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+WAIT_FOR_DB_SEC=10
+if [ "$TRAVIS" = "true" ]; then
+  WAIT_FOR_DB_SEC=30
+fi
+
 print_test_header () {
     echo
     echo "  #####  "
@@ -124,7 +129,7 @@ test_mariadb () {
     print_test_header mariadb
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb.yml up -d
     echo Waiting for db to start..
-    sleep 10
+    sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
@@ -146,7 +151,7 @@ test_mariadb_redis () {
     print_test_header "mariadb + redis"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis.yml up -d
     echo Waiting for db to start..
-    sleep 10
+    sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
@@ -173,7 +178,7 @@ test_mysql () {
     docker exec -it mysql-server mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
         -e "create database ${MYSQL_DATABASE}; create user ${MYSQL_USER}@'%' identified by '${MYSQL_PASSWORD}'; grant all on ${MYSQL_DATABASE}.* to  ${MYSQL_USER}@'%';"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mysql.yml restart theo
-    sleep 5
+    sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
@@ -195,7 +200,7 @@ test_mariadb_redis_core_noassignee () {
     print_test_header "mariadb + redis CORE no assignee"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml up -d
     echo Waiting for db to start..
-    sleep 10
+    sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "CORE_TOKEN=${CORE_TOKEN}" \
         -e "THEO_URL=http://theo:9100" \
@@ -226,7 +231,7 @@ test_mariadb_redis_core () {
     print_test_header "mariadb + redis CORE"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml up -d
     echo Waiting for db to start..
-    sleep 10
+    sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "CORE_TOKEN=${CORE_TOKEN}" \
         -e "THEO_URL=http://theo:9100" \

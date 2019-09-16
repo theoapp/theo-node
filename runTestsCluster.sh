@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+WAIT_FOR_DB_SEC=10
+if [ "$TRAVIS" = "true" ]; then
+  WAIT_FOR_DB_SEC=20
+fi
+
 if ! [[ "$1" = "skip_build" ]]; then
     # Build theo test image
     docker build --target builder -t theo-tester .
@@ -22,7 +27,7 @@ source ./docker-compose/test_env
 
 docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml up -d
 echo Waiting for db to start..
-sleep 10
+sleep $WAIT_FOR_DB_SEC
 docker run --network theotests_default --rm --link theo \
     -e "CORE_TOKEN=${CORE_TOKEN}" \
     -e "THEO_URL_1=http://theo1:9100" \
