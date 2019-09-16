@@ -1,5 +1,5 @@
 import BaseClient from '../baseclient';
-import { common_error } from '../../utils/logUtils';
+import { common_error, common_info } from '../../utils/logUtils';
 
 class MariadbBaseClient extends BaseClient {
   db;
@@ -22,6 +22,25 @@ class MariadbBaseClient extends BaseClient {
     } else {
       common_error('Called MariadbClient.close() but conn is undefined');
     }
+  }
+
+  async getServerVersion() {
+    const data = await this.all("show variables like 'version%'");
+    let comment;
+    let version;
+    data.forEach(row => {
+      if (row.Variable_name === 'version') {
+        version = row.Value;
+      } else {
+        if (row.Variable_name === 'version_comment') {
+          comment = row.Value;
+        }
+      }
+    });
+    if (!comment) {
+      comment = 'Mysql';
+    }
+    common_info('DB Server: %s, %s', comment, version);
   }
 
   all(sql, params) {

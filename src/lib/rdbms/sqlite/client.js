@@ -1,9 +1,14 @@
 import BaseClient from '../baseclient';
+import { common_info } from '../../utils/logUtils';
 
 class SqliteClient extends BaseClient {
   constructor(db) {
     super();
     this.db = db;
+  }
+
+  getServerVersion() {
+    common_info('DB sqlite');
   }
 
   all(sql, params) {

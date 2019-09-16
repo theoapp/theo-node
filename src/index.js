@@ -39,7 +39,7 @@ if (settings.core) {
       subscribe_core_token = true;
     }
   }
-} else if (!settings.admin.token && settings.client.tokens.length === 0) {
+} else if (!settings.admin.token && settings.admin.tokens.length === 0 && settings.client.tokens.length === 0) {
   common_warn(' !!! WARNING !!!');
   common_warn(' No admin token nor client tokens found ');
   common_warn(' !!! WARNING !!!');
@@ -82,14 +82,19 @@ const initDb = async () => {
     common_info('Db %s initiated', dm.getEngine());
     if (settings.core && settings.core.token) {
       // Load tokens..
+      let client;
       try {
-        const client = dm.getClient();
+        client = dm.getClient();
         await client.open();
         await ah.loadAuthTokens(client);
       } catch (e) {
         common_error('Unable to load auth tokens... bye bye %s', e.message);
         console.error(e);
         process.exit(4);
+      } finally {
+        if (client) {
+          client.close();
+        }
       }
     }
     startServer();

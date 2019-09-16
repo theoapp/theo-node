@@ -11,6 +11,9 @@ try {
 class RedisManager extends CachedManager {
   constructor(settings) {
     super(settings.options);
+    if (!redis) {
+      throw new Error('module redis not installed!');
+    }
     // parse options..
     const _options = {};
     if (settings.options) {

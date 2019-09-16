@@ -1,5 +1,5 @@
 import CacheHelper from './lib/helpers/CacheHelper';
-import { common_error, common_info } from './lib/utils/logUtils';
+import { common_error, common_info, common_warn } from './lib/utils/logUtils';
 import RedisManager from './lib/cache/redis';
 
 const MAX_RETRY_TIMEOUT = 5000;
@@ -26,10 +26,19 @@ const redisSubscribe = (cm, dm, ah) => {
 
   conn.on('message', async (channel, message) => {
     if (channel === 'core_tokens' && message === 'flush_tokens') {
-      common_info('Flushing tokens!');
-      const dbClient = dm.getClient();
-      await dbClient.open();
-      await ah.loadAuthTokens(dbClient);
+      common_warn('Flushing tokens!');
+      let dbClient;
+      try {
+        dbClient = dm.getClient();
+        await dbClient.open();
+        await ah.loadAuthTokens(dbClient);
+      } catch (e) {
+        common_error('Failed to reload tokens!!!', e.message);
+      } finally {
+        if (dbClient) {
+          dbClient.close();
+        }
+      }
     }
   });
 };

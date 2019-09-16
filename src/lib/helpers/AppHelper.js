@@ -15,6 +15,7 @@ class AppHelper {
     const atm = new AuthTokenManager(db);
     const tokens = await atm.getAll();
     this.reloadAuthToken(tokens);
+    return true;
   }
 
   reloadAuthToken(tokens) {

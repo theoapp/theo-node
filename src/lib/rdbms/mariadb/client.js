@@ -1,4 +1,5 @@
 import MariadbBaseClient from './baseclient';
+import { common_error } from '../../utils/logUtils';
 
 class MariadbClient extends MariadbBaseClient {
   open() {

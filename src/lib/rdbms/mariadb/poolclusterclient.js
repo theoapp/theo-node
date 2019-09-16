@@ -1,4 +1,5 @@
 import MariadbBaseClient from './baseclient';
+import { common_error } from '../../utils/logUtils';
 
 class MariadbPoolClusterClient extends MariadbBaseClient {
   open() {
@@ -19,7 +20,7 @@ class MariadbPoolClusterClient extends MariadbBaseClient {
 
   close() {
     if (this.conn) {
-      this.db.releaseConnection(this.conn);
+      this.conn.release();
     } else {
       common_error('Called MariadbPoolClusterClient.close() but conn is undefined');
     }

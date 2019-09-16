@@ -7,6 +7,7 @@ import { common_debug, common_error, common_warn } from '../../utils/logUtils';
 import MariadbPoolClusterClient from './poolclusterclient';
 import MariadbPoolClient from './poolclient';
 import MariadbClient from './client';
+import MariadbClusterClient from './clusterclient';
 
 let mysql;
 try {
@@ -20,7 +21,7 @@ const noPoolDb =
   process.env.DB_NOPOOL &&
   (process.env.DB_NOPOOL === '1' || process.env.DB_NOPOOL === 'true' || process.env.DB_NOPOOL === 'on');
 
-const connectionLimit = noPoolDb ? 1 : process.env.NODE_ENV === 'production' ? 3 : 1;
+const connectionLimit = noPoolDb ? 1 : process.env.NODE_ENV === 'production' ? 10 : 3;
 
 class MariadbManager extends DbManager {
   dbVersion = 13;
@@ -77,7 +78,7 @@ class MariadbManager extends DbManager {
       port: port || 3306,
       waitForConnections: true,
       connectionLimit,
-      queueLimit: 1
+      queueLimit: 2
     };
     if (ssl_ca) {
       defaultOptions.ssl = {
@@ -93,8 +94,9 @@ class MariadbManager extends DbManager {
       options = defaultOptions;
     }
 
+    console.log('DB options', options);
     if (cluster) {
-      common_warn('MysqlManager cluster pool mode', cluster);
+      common_debug('MysqlManager cluster pool mode', cluster);
       this.db = mysql.createPoolCluster({
         restoreNodeTimeout: 5000
       });

@@ -2,6 +2,7 @@ import Microservice from '@authkeys-io/microservice';
 import { initRoutes } from './routes';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
+import { common_debug, common_error } from './lib/utils/logUtils';
 
 const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
 
@@ -39,9 +40,10 @@ class TheoServer extends Microservice {
           try {
             await client.open();
           } catch (err) {
+            console.error(err);
             // Ops..
             res.status(500);
-            res.json({ status: 500, reason: 'A problem occured, please retry' });
+            res.json({ status: 500, reason: 'A problem occurred, please retry' });
             return;
           }
           req.db = client;
@@ -49,7 +51,9 @@ class TheoServer extends Microservice {
           res.on('finish', () => {
             try {
               client.close();
-            } catch (e) {}
+            } catch (e) {
+              common_error('db close', e.message);
+            }
           });
         }
       }

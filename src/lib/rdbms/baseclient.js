@@ -1,4 +1,7 @@
 class BaseClient {
+  getServerVersion() {
+    throw new Error('Not implemented');
+  }
   all(sql, params) {
     throw new Error('Not implemented');
   }

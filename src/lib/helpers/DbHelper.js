@@ -1,6 +1,6 @@
 import EventHelper from './EventHelper';
 import { getRdbmsModule } from '../rdbms/modules';
-import { common_error, common_info } from '../utils/logUtils';
+import { common_debug, common_error, common_info } from '../utils/logUtils';
 
 let _instance;
 
@@ -27,18 +27,28 @@ class DbHelper {
   }
 
   async init() {
+    let client;
     try {
-      await this.checkDb();
+      client = this.manager.getClient();
+      await client.open();
+      await this.checkDb(client);
     } catch (e) {
       throw e;
+    } finally {
+      try {
+        if (client) {
+          client.close();
+        }
+      } catch (e) {
+        //
+      }
     }
   }
 
-  async checkDb() {
+  async checkDb(client) {
     let currentVersion;
-    const client = this.manager.getClient();
     try {
-      await client.open();
+      await client.getServerVersion();
       this.manager.setClient(client);
     } catch (e) {
       common_error('checkDb failed %s', e.message);
@@ -52,49 +62,43 @@ class DbHelper {
       common_error('Failed to read current version: ', e.message);
       currentVersion = false;
     }
+
     common_info('Check db: currentVersion %s targetVersion %s', currentVersion, this.manager.dbVersion);
 
     if (currentVersion === false) {
       try {
         currentVersion = await this.manager.createVersionTable();
       } catch (err) {
-        // Concurrent creation..
-        await client.close();
         return true;
       }
     }
 
     try {
       if (currentVersion === 0) {
-        const ret = await this.manager.initDb();
-        await client.close();
-        return ret;
+        return this.manager.initDb();
       }
       if (currentVersion < 0) {
         const cluster_mode = process.env.CLUSTER_MODE || '0';
         if (cluster_mode === '1') {
           // Some other nodes are creating the tables..
-          await client.close();
           return false;
         }
       }
       if (this.manager.dbVersion === currentVersion) {
-        await client.close();
         return true;
       }
       if (this.manager.dbVersion > currentVersion) {
-        const ret = await this.manager.upgradeDb(currentVersion);
-        await client.close();
-        return ret;
+        return this.manager.upgradeDb(currentVersion);
       }
     } catch (e) {
       common_error('checkDb failed %s', e.message);
       console.error(e);
       process.exit(99);
     }
+    return true;
   }
 
-  async _flush() {
+  async _flush(client) {
     let done;
     try {
       done = await this.manager.flushDb();
@@ -104,10 +108,11 @@ class DbHelper {
     }
     if (done) {
       try {
-        await this.checkDb();
+        await this.checkDb(client);
+        common_debug('check db done');
         return true;
       } catch (e) {
-        console.error('Failed to check db', e);
+        common_error('Failed to check db', e);
         throw e;
       }
     } else {

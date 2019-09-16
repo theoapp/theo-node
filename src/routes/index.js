@@ -12,7 +12,21 @@ import AuthTokenManager from '../lib/managers/AuthTokenManager';
 import { loadCacheManager } from '../lib/helpers/CacheHelper';
 import { millisecondsToStr } from '../lib/utils/dateUtils';
 
+const notifyReloadTokens = function() {
+  setImmediate(async () => {
+    const cm = loadCacheManager();
+    try {
+      const client = await cm.open();
+      client.publish('core_tokens', 'flush_tokens');
+      cm.close(client);
+    } catch (e) {
+      console.error('Error while flushing cache tokens', e);
+    }
+  });
+};
+
 const uptime_start = Date.now();
+
 export const initRoutes = express => {
   const router = express.Router();
   router.get('/', (req, res, next) => {
@@ -57,8 +71,11 @@ export const initRoutes = express => {
     }
     try {
       const dh = DbHelper();
-      const done = await dh._flush();
+      const done = await dh._flush(req.db);
       if (done) {
+        if (process.env.CLUSTER_MODE && process.env.CLUSTER_MODE === '1') {
+          notifyReloadTokens();
+        }
         res.sendStatus(204);
       } else {
         res.sendStatus(404);
@@ -96,19 +113,8 @@ export const initRoutes = express => {
         }
       }
       if (process.env.CLUSTER_MODE && process.env.CLUSTER_MODE === '1') {
-        setImmediate(async () => {
-          const cm = loadCacheManager();
-          try {
-            const client = await cm.open();
-            client.publish('core_tokens', 'flush_tokens');
-            cm.close(client);
-            res.sendStatus(204);
-          } catch (e) {
-            console.error('Error while flushing cache tokens', e);
-            res.status(500);
-            res.json({ code: 500, reason: e.message });
-          }
-        });
+        notifyReloadTokens();
+        res.sendStatus(204);
       } else {
         const ah = AppHelper();
         const tokens = await atm.getAll();
