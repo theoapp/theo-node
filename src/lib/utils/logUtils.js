@@ -16,7 +16,7 @@ let LOG_LEVEL;
 
 export const initLogger = function() {
   const LOG_LEVEL_D = process.env.LOG_LEVEL || 'INFO';
-  switch (LOG_LEVEL_D) {
+  switch (LOG_LEVEL_D.toUpperCase()) {
     case DEBUG:
       LOG_LEVEL = LEVELS.DEBUG + LEVELS.INFO + LEVELS.WARN + LEVELS.ERROR;
       break;
