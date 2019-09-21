@@ -12,7 +12,9 @@ import initSettings from './settingsInitiator';
 
 initLogger();
 
-const DB_CONN_MAX_RETRY = 15;
+const { DB_CONN_MAX_RETRY: _DB_CONN_MAX_RETRY } = process.env;
+const DB_CONN_MAX_RETRY =
+  typeof _DB_CONN_MAX_RETRY !== 'undefined' && !isNaN(_DB_CONN_MAX_RETRY) ? Number(_DB_CONN_MAX_RETRY) : 10;
 
 process.on('SIGINT', async () => {
   console.log('Caught interrupt signal');
@@ -149,17 +151,17 @@ const startTestDb = async retry => {
     });
   } catch (e) {
     const nextRetry = retry + 1;
-    const to = Math.min(nextRetry * nextRetry * 50, 5000);
+    const to = Math.min(nextRetry * nextRetry * 50, 15000);
     common_error('DB ERROR: %s. Retrying in %d ms', e.message, to);
 
     setTimeout(() => {
-      startTestDb(nextRetry + 1).finally();
+      startTestDb(nextRetry).finally();
     }, to);
   }
 };
 
 if (settings.cluster_mode === '1') {
-  const timeout = parseInt(Math.random() * 1000);
+  const timeout = Math.round(Math.random() * 1000);
   common_debug('CLUSTER_MODE: waiting %s ms to start node', timeout);
   setTimeout(function() {
     startTestDb(0).finally();
