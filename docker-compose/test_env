@@ -1,6 +1,6 @@
 
 ## mariadb/mysql
-export MYSQL_ROOT_PASSWORD=example
+export MYSQL_ROOT_PASSWORD=ex4mple
 export MYSQL_DATABASE=theo
 export MYSQL_USER=theouser
 export MYSQL_PASSWORD=theopwd
