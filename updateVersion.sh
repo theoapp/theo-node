@@ -6,6 +6,6 @@ PACKAGE_VERSION=$(cat package.json \
   | sed 's/[",]//g' \
   | tr -d '[[:space:]]')
 
-sed -i '' 's/org.opencontainers.image.version=.*/org.opencontainers.image.version="'"${PACKAGE_VERSION}"' \\/' Dockerfile
+sed -i '' 's/org.opencontainers.image.version=.*/org.opencontainers.image.version="'"${PACKAGE_VERSION}"'" \\/' Dockerfile
 
 git add Dockerfile
