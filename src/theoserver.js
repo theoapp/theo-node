@@ -2,7 +2,7 @@ import Microservice from '@authkeys-io/microservice';
 import { initRoutes } from './routes';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
-import { common_debug, common_error } from './lib/utils/logUtils';
+import { common_error } from './lib/utils/logUtils';
 
 const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
 
@@ -32,6 +32,7 @@ class TheoServer extends Microservice {
     app.use(authMiddleware);
     app.use(async (req, res, next) => {
       const { path, method } = req;
+      res.set('Connection', 'close');
       req.dm = this.dm;
       if (method !== 'HEAD') {
         const needDb = doURLneedDb(path);
