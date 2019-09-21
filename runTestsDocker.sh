@@ -2,7 +2,7 @@
 
 WAIT_FOR_DB_SEC=10
 if [ "$TRAVIS" = "true" ]; then
-  WAIT_FOR_DB_SEC=30
+  WAIT_FOR_DB_SEC=40
 fi
 
 print_test_header () {
@@ -128,7 +128,7 @@ test_mariadb () {
     # mariadb
     print_test_header mariadb
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb.yml up -d
-    echo Waiting for db to start..
+    echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
     sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
@@ -150,7 +150,7 @@ test_mariadb_redis () {
     # mariadb + redis
     print_test_header "mariadb + redis"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis.yml up -d
-    echo Waiting for db to start..
+    echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
     sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
@@ -172,7 +172,7 @@ test_mysql () {
     # mysql
     print_test_header "mysql"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mysql.yml up -d
-    echo Waiting for db to start..
+    echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
     # On travis it takes a lot to start...
     sleep 60
     docker exec -it mysql-server mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
@@ -199,7 +199,7 @@ test_mariadb_redis_core_noassignee () {
     # mariadb + redis CORE
     print_test_header "mariadb + redis CORE no assignee"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml up -d
-    echo Waiting for db to start..
+    echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
     sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "CORE_TOKEN=${CORE_TOKEN}" \
@@ -230,7 +230,7 @@ test_mariadb_redis_core () {
     # mariadb + redis CORE
     print_test_header "mariadb + redis CORE"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml up -d
-    echo Waiting for db to start..
+    echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
     sleep $WAIT_FOR_DB_SEC
     docker run --network theotests_default --rm --link theo \
         -e "CORE_TOKEN=${CORE_TOKEN}" \

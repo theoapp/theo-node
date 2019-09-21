@@ -20,5 +20,6 @@ services:
       DB_NAME: ${MYSQL_DATABASE}
       ADMIN_TOKEN: ${ADMIN_TOKEN}
       CLIENT_TOKENS: ${CLIENT_TOKENS}
+      DB_CONN_MAX_RETRY: 30
     depends_on:
       - db

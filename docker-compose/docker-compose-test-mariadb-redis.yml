@@ -24,6 +24,7 @@ services:
       CLIENT_TOKENS: ${CLIENT_TOKENS}
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379
+      DB_CONN_MAX_RETRY: 30
     depends_on:
       - cache
       - db

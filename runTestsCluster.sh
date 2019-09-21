@@ -3,7 +3,7 @@
 WAIT_FOR_DB_SEC=10
 WAIT_FOR_DBCLUSTER_SEC=60
 if [ "$TRAVIS" = "true" ]; then
-  WAIT_FOR_DB_SEC=30
+  WAIT_FOR_DB_SEC=40
   WAIT_FOR_DBCLUSTER_SEC=120
 fi
 
@@ -29,7 +29,7 @@ source ./docker-compose/test_env
 
 test_mariadb_redis_core_cluster() {
   docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml up -d
-  echo Waiting for db to start..
+  echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
   sleep $WAIT_FOR_DB_SEC
   docker run --network theotests_default --rm --link theo \
     -e "CORE_TOKEN=${CORE_TOKEN}" \
@@ -50,7 +50,7 @@ test_mariadb_redis_core_cluster() {
 
 test_mysql_innodbcluster_redis_core_cluster() {
   docker-compose -p theotests -f docker-compose/docker-compose-test-mysql-innodbcluster-redis-core-cluster.yml up -d
-  echo Waiting $WAIT_FOR_DBCLUSTER_SEC s for db to start..
+  echo Waiting ${WAIT_FOR_DBCLUSTER_SEC}s for db to start..
   sleep $WAIT_FOR_DBCLUSTER_SEC
   docker run --network theotests_default --rm --link theo \
     -e "THEO_HOST=theo1" \

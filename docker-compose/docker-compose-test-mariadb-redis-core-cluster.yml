@@ -24,6 +24,7 @@ services:
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379
       CLUSTER_MODE: 1
+      DB_CONN_MAX_RETRY: 30
     depends_on:
       - cache
       - db
@@ -41,6 +42,7 @@ services:
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379
       CLUSTER_MODE: 1
+      DB_CONN_MAX_RETRY: 30
     depends_on:
       - cache
       - db
@@ -58,6 +60,7 @@ services:
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379
       CLUSTER_MODE: 1
+      DB_CONN_MAX_RETRY: 30
     depends_on:
       - cache
       - db
