@@ -4,8 +4,7 @@ services:
   db:
     image: mysql/mysql-server:8.0
     container_name: mysql-server
-    volumes:
-      - ./my-8.0.cnf:/etc/my.cnf
+    command: ["mysqld","--skip-host-cache","--skip-name-resolve", "--default_authentication_plugin=mysql_native_password"]
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
   theo:
@@ -20,5 +19,6 @@ services:
       DB_NAME: ${MYSQL_DATABASE}
       ADMIN_TOKEN: ${ADMIN_TOKEN}
       CLIENT_TOKENS: ${CLIENT_TOKENS}
+      DB_CONN_MAX_RETRY: 30
     depends_on:
       - db

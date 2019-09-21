@@ -1,9 +1,0 @@
-[mysqld]
-default-authentication-plugin=mysql_native_password
-skip-host-cache
-skip-name-resolve
-datadir=/var/lib/mysql
-socket=/var/lib/mysql/mysql.sock
-secure-file-priv=/var/lib/mysql-files
-user=mysql
-pid-file=/var/run/mysqld/mysqld.pid
