@@ -66,58 +66,148 @@ class MariadbManager extends DbManager {
     this.client = client;
   }
 
+  async getCurrentVersion() {
+    const sqlCheck = 'select value from _version';
+    if (process.env.CLUSTER_MODE === '1') {
+      await this.client.run('SET AUTOCOMMIT=0');
+      let row;
+      try {
+        row = await this.client.get(`${sqlCheck} for update`);
+        if (row.value === this.dbVersion) {
+          common_debug('Version is equal: %s vs %s, set AUTOCOMMIT=1', row.value, this.dbVersion);
+          await this.client.run('ROLLBACK');
+          await this.client.run('SET AUTOCOMMIT=1');
+        }
+        return row;
+      } catch (e) {
+        await this.client.run('ROLLBACK');
+        if (e.code === 'ER_NO_SUCH_TABLE') {
+          return false;
+        }
+        common_error('Ooops: %s', e.message, e.code);
+        throw e;
+      }
+    } else {
+      try {
+        return await this.client.get(sqlCheck);
+      } catch (e) {
+        if (e.code === 'ER_NO_SUCH_TABLE') {
+          return false;
+        }
+        common_error('Ooops: %s', e.message, e.code);
+        throw e;
+      }
+    }
+  }
+
   async createVersionTable() {
     const sqlCreateTable = 'create table _version (value INTEGER PRIMARY KEY)';
     try {
       await this.client.run(sqlCreateTable);
     } catch (e) {
-      common_error('Unable to create _version table: %s', e.message);
+      await this.client.run('ROLLBACK');
       throw e;
     }
     try {
       const sqlInsertVersionZero = 'insert into _version values (-1)';
       await this.client.run(sqlInsertVersionZero);
+      if (process.env.CLUSTER_MODE === '1') {
+        await this.client.run('select value from _version for update');
+      }
     } catch (e) {
-      common_error('Unable to insert -1 version in _version table: %s', e.message);
+      common_error('Unable to insert -1 version in _version table: [%s] %s', e.code, e.message);
       throw e;
     }
     return 0;
   }
 
   async initDb() {
-    await this.client.run(this.CREATE_TABLE_AUTH_TOKENS);
-    await this.client.run(this.CREATE_TABLE_ACCOUNTS);
-    await this.client.run(this.CREATE_TABLE_PUBLIC_KEYS);
-    await this.client.run(this.CREATE_TABLE_GROUPS);
-    await this.client.run(this.CREATE_TABLE_PERMISSIONS);
-    await this.client.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
+    let dbConn;
+    if (process.env.CLUSTER_MODE === '1') {
+      dbConn = this.getClient();
+      await dbConn.open();
+    } else {
+      dbConn = this.client;
+    }
+    await dbConn.run(this.CREATE_TABLE_AUTH_TOKENS);
+    await dbConn.run(this.CREATE_TABLE_ACCOUNTS);
+    await dbConn.run(this.CREATE_TABLE_PUBLIC_KEYS);
+    await dbConn.run(this.CREATE_TABLE_GROUPS);
+    await dbConn.run(this.CREATE_TABLE_PERMISSIONS);
+    await dbConn.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
     await this.updateVersion();
+    if (process.env.CLUSTER_MODE === '1') {
+      dbConn.close();
+    }
   }
 
-  async getCurrentVersion() {
-    const sqlCheck = 'select value from _version for update';
+  async upgradeDb(fromVersion) {
+    let dbConn;
     if (process.env.CLUSTER_MODE === '1') {
-      await this.client.run('SET AUTOCOMMIT=0');
-      let row;
-      try {
-        row = await this.client.get(sqlCheck);
-        if (row.value === this.dbVersion) {
-          await this.client.run('ROLLBACK');
-          await this.client.run('SET AUTOCOMMIT=1');
-        }
-        return row;
-      } catch (e) {
-        common_error('Ooops: %s', e.message);
-        console.error(e);
-        throw e;
-      } finally {
-        try {
-          await this.client.run('SET AUTOCOMMIT=1');
-        } catch (e) {}
-      }
+      dbConn = this.getClient();
+      await dbConn.open();
     } else {
-      return this.client.get(sqlCheck);
+      dbConn = this.client;
     }
+    if (fromVersion < 2) {
+      await dbConn.run(this.CREATE_TABLE_PUBLIC_KEYS);
+      const updatePublicKeys =
+        'insert into public_keys (id, account_id, public_key, created_at) select id, account_id, public_key, created_at from keys';
+      await dbConn.run(updatePublicKeys);
+      await dbConn.run('drop table keys');
+    }
+    if (fromVersion < 3) {
+      await dbConn.run(this.CREATE_TABLE_GROUPS);
+      await dbConn.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
+    }
+    if (fromVersion < 4) {
+      await dbConn.run('create table permissions_tmp as select * from permissions');
+      await dbConn.run('drop table permissions');
+      await dbConn.run(this.CREATE_TABLE_PERMISSIONS);
+      await dbConn.run(
+        'insert into permissions (id, account_id, user, host, created_at) select id, account_id, user, host, created_at from permissions_tmp'
+      );
+      await dbConn.run('drop table permissions_tmp');
+    }
+    if (fromVersion < 5) {
+      try {
+        await dbConn.run('alter table groups add updated_at BIGINT UNSIGNED');
+      } catch (err) {}
+    }
+    if (fromVersion < 6) {
+      try {
+        await dbConn.run('alter table public_keys add public_key_sig varchar(1024)');
+      } catch (err) {}
+    }
+    if (fromVersion < 7) {
+      await runV7migrationMariaDb(dbConn);
+    }
+    if (fromVersion < 8) {
+      await dbConn.run('alter table accounts add expire_at BIGINT UNSIGNED not null default 0');
+    }
+    if (fromVersion < 9) {
+      await dbConn.run(this.CREATE_TABLE_AUTH_TOKENS);
+    }
+    if (fromVersion < 10) {
+      await dbConn.run(this.CREATE_TABLE_GROUPS);
+      await runV10migrationMariaDb(dbConn);
+    }
+    if (fromVersion === 10) {
+      await dbConn.run('alter table tgroups add is_internal tinyint(1) not null default 0');
+      await dbConn.run("update tgroups set is_internal = 1 where name like '%@%'");
+    }
+    if (fromVersion < 12) {
+      await dbConn.run('alter table public_keys add fingerprint varchar(1024)');
+      await runV12migration(dbConn);
+    }
+    if (fromVersion < 13) {
+      await dbConn.run("alter table auth_tokens add assignee varchar(64) not null default '' after token");
+      await dbConn.run("update auth_tokens set assignee = md5(token) where type = 'admin'");
+    }
+    if (process.env.CLUSTER_MODE === '1') {
+      dbConn.close();
+    }
+    await this.updateVersion();
   }
 
   async updateVersion() {
@@ -129,65 +219,6 @@ class MariadbManager extends DbManager {
     } else {
       return this.client.run(sql);
     }
-  }
-
-  async upgradeDb(fromVersion) {
-    if (fromVersion < 2) {
-      await this.client.run(this.CREATE_TABLE_PUBLIC_KEYS);
-      const updatePublicKeys =
-        'insert into public_keys (id, account_id, public_key, created_at) select id, account_id, public_key, created_at from keys';
-      await this.client.run(updatePublicKeys);
-      await this.client.run('drop table keys');
-    }
-    if (fromVersion < 3) {
-      await this.client.run(this.CREATE_TABLE_GROUPS);
-      await this.client.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
-    }
-    if (fromVersion < 4) {
-      await this.client.run('create table permissions_tmp as select * from permissions');
-      await this.client.run('drop table permissions');
-      await this.client.run(this.CREATE_TABLE_PERMISSIONS);
-      await this.client.run(
-        'insert into permissions (id, account_id, user, host, created_at) select id, account_id, user, host, created_at from permissions_tmp'
-      );
-      await this.client.run('drop table permissions_tmp');
-    }
-    if (fromVersion < 5) {
-      try {
-        await this.client.run('alter table groups add updated_at BIGINT UNSIGNED');
-      } catch (err) {}
-    }
-    if (fromVersion < 6) {
-      try {
-        await this.client.run('alter table public_keys add public_key_sig varchar(1024)');
-      } catch (err) {}
-    }
-    if (fromVersion < 7) {
-      await runV7migrationMariaDb(this.client);
-    }
-    if (fromVersion < 8) {
-      await this.client.run('alter table accounts add expire_at BIGINT UNSIGNED not null default 0');
-    }
-    if (fromVersion < 9) {
-      await this.client.run(this.CREATE_TABLE_AUTH_TOKENS);
-    }
-    if (fromVersion < 10) {
-      await this.client.run(this.CREATE_TABLE_GROUPS);
-      await runV10migrationMariaDb(this.client);
-    }
-    if (fromVersion === 10) {
-      await this.client.run('alter table tgroups add is_internal tinyint(1) not null default 0');
-      await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
-    }
-    if (fromVersion < 12) {
-      await this.client.run('alter table public_keys add fingerprint varchar(1024)');
-      await runV12migration(this.client);
-    }
-    if (fromVersion < 13) {
-      await this.client.run("alter table auth_tokens add assignee varchar(64) not null default '' after token");
-      await this.client.run("update auth_tokens set assignee = md5(token) where type = 'admin'");
-    }
-    await this.updateVersion();
   }
 
   async flushDb() {

@@ -238,7 +238,14 @@ class SqliteManager extends DbManager {
 
   async getCurrentVersion() {
     const sqlCheck = 'select value from _version';
-    return this.client.get(sqlCheck);
+    try {
+      return await this.client.get(sqlCheck);
+    } catch (e) {
+      if (e.errno === 1) {
+        return false;
+      }
+      throw e;
+    }
   }
 
   async flushDb() {

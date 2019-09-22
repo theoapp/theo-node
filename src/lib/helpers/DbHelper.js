@@ -1,6 +1,7 @@
 import EventHelper from './EventHelper';
 import { getRdbmsModule } from '../rdbms/modules';
 import { common_debug, common_error, common_info } from '../utils/logUtils';
+import { setTimeoutPromise } from '../utils/processUtils';
 
 let _instance;
 
@@ -51,48 +52,66 @@ class DbHelper {
       this.manager.setClient(client);
     } catch (e) {
       common_error('checkDb failed %s', e.message);
-      console.error(e);
       process.exit(99);
     }
     try {
       const row = await this.manager.getCurrentVersion();
-      currentVersion = row.value;
+      if (row === false) {
+        currentVersion = -999;
+      } else if (row) {
+        currentVersion = row.value;
+      }
     } catch (e) {
-      common_error('Failed to read current version: ', e.message);
-      currentVersion = false;
+      common_error('Failed to read current version, exiting. ', e.message);
+      process.exit(92);
     }
 
     common_info('Check db: currentVersion %s targetVersion %s', currentVersion, this.manager.dbVersion);
 
-    if (currentVersion === false) {
+    if (currentVersion === -999) {
       try {
         currentVersion = await this.manager.createVersionTable();
       } catch (err) {
-        return true;
+        if (e.code === 'ER_TABLE_EXISTS_ERROR') {
+          await setTimeoutPromise(2000);
+          this.checkDb(client);
+        } else {
+          common_error('Unable to create _version table: [%s] %s', e.code, e.message);
+          process.exit(90);
+        }
+        return;
       }
+    } else if (currentVersion < 0) {
+      common_error('Db in initialization, exiting ');
+      process.exit(91);
     }
 
     try {
       if (currentVersion === 0) {
-        return this.manager.initDb();
-      }
-      if (currentVersion < 0) {
-        const cluster_mode = process.env.CLUSTER_MODE || '0';
-        if (cluster_mode === '1') {
-          // Some other nodes are creating the tables..
-          return false;
-        }
+        await this.manager.initDb();
+        common_info('Db created');
+        return true;
       }
       if (this.manager.dbVersion === currentVersion) {
         return true;
       }
       if (this.manager.dbVersion > currentVersion) {
-        return this.manager.upgradeDb(currentVersion);
+        await this.manager.upgradeDb(currentVersion);
+        common_info('Db updated to ', this.manager.dbVersion);
+        return true;
       }
     } catch (e) {
+      common_error('\n');
+      common_error('\n');
+      common_error(' !!!!!!!! FATAL ERROR !!!!!!!!');
+      common_error('\n');
       common_error('checkDb failed %s', e.message);
+      common_error('\n');
+      common_error(' !!!!!!!! FATAL ERROR !!!!!!!!');
+      common_error('\n');
+      common_error('\n');
       console.error(e);
-      process.exit(99);
+      process.exit(96);
     }
     return true;
   }

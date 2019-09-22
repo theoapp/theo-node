@@ -161,7 +161,7 @@ const startTestDb = async retry => {
 };
 
 if (settings.cluster_mode === '1') {
-  const timeout = Math.round(Math.random() * 1000);
+  const timeout = Math.round(Math.random() * 2000);
   common_debug('CLUSTER_MODE: waiting %s ms to start node', timeout);
   setTimeout(function() {
     startTestDb(0).finally();
