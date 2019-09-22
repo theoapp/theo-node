@@ -8,6 +8,8 @@
     "build": "babel -D src -d build",
     "build:dev": "babel -D --watch src --out-dir build",
     "clean": "rm -rf build",
+    "lint": "eslint src",
+    "lint:fix": "eslint --fix src",
     "run:dev": "nodemon  --watch build ./build/index.js",
     "start:dev": "concurrently --kill-others \"npm run build:dev\" \"sleep 5 && npm run run:dev\"",
     "start": "node ./build/index.js",
