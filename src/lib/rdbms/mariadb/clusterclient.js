@@ -1,28 +1,12 @@
-import MariadbBaseClient from './baseclient';
 import { common_error } from '../../utils/logUtils';
+import MariadbPoolClusterClient from './poolclusterclient';
 
-class MariadbClusterClient extends MariadbBaseClient {
-  open() {
-    return new Promise((resolve, reject) => {
-      this.db.getConnection((this.pool || 'rw') + '*', (err, conn) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        this.conn = conn;
-        if (!this.conn.execute) {
-          this.conn.execute = this.conn.query;
-        }
-        resolve(true);
-      });
-    });
-  }
-
+class MariadbClusterClient extends MariadbPoolClusterClient {
   close() {
     if (this.conn) {
       this.conn.destroy();
     } else {
-      common_error('Called MariadbPoolClusterClient.close() but conn is undefined');
+      common_error('Called MariadbClient.close() but conn is undefined');
     }
   }
 }

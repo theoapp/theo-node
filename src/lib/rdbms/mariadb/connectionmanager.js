@@ -7,7 +7,17 @@ import MariadbPoolClient from './poolclient';
 
 let mysql;
 try {
-  // import mysql from 'mysql2'; // use "git+https://git@github.com/nwoltman/node-mysql.git#caching-sha2-password" for mysql8
+  /*
+  As for 2019/09/22 mysql2 and mysql packages do not support caching-sha2-password auth plugin (default in Mysql Server >= 8.04)
+  If you need it, you can add a dependency in package.json pointing to "git+https://git@github.com/nwoltman/node-mysql.git#caching-sha2-password"
+  and set MYSQL_LIB to it.
+  Ex:
+  "dependencies": {
+    ...,
+    "mysql-cache-sha2": ""git+https://git@github.com/nwoltman/node-mysql.git#caching-sha2-password"",
+  },
+  MYSQL_LIB=mysql-cache-sha2 npm start
+   */
   mysql = require(process.env.MYSQL_LIB || 'mysql2');
 } catch (e) {
   // package not installed
@@ -17,8 +27,8 @@ const noPoolDb =
   process.env.DB_NOPOOL &&
   (process.env.DB_NOPOOL === '1' || process.env.DB_NOPOOL === 'true' || process.env.DB_NOPOOL === 'on');
 
-const connectionLimit = noPoolDb ? 1 : process.env.NODE_ENV === 'production' ? 10 : 4;
-const connectionQueueLimit = noPoolDb ? 1 : process.env.NODE_ENV === 'production' ? 10 : 4;
+const connectionLimit = process.env.NODE_ENV === 'production' ? 10 : 4;
+const connectionQueueLimit = process.env.NODE_ENV === 'production' ? 10 : 4;
 
 class ConnectionManager {
   DbClientClass;
