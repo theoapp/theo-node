@@ -1,13 +1,11 @@
 {
-  "presets": [
-    [
-      "env",
-      {
-        "targets": {
-          "node": "current"
-        }
+  "presets": [[
+    "@babel/preset-env",
+    {
+      "targets": {
+        "node": "current"
       }
-    ]
-  ],
-  "plugins": ["transform-class-properties"]
+    }
+  ]],
+  "plugins": ["@babel/plugin-proposal-class-properties"]
 }

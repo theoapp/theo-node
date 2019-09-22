@@ -36,25 +36,25 @@
     "sshpk": "^1.16.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-eslint": "^7.2.3",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-preset-env": "^1.5.1",
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.6.0",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
     "event-stream": "3.3.4",
-    "mocha": "^5.2.0"
+    "mocha": "^6.0.2"
   },
   "optionalDependencies": {
+    "babel-eslint": "^10.0.2",
     "concurrently": "^3.5.1",
-    "eslint": "^3.19.0",
-    "eslint-config-prettier": "^2.3.0",
-    "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-import": "^2.2.0",
-    "eslint-plugin-node": "^4.2.2",
-    "eslint-plugin-prettier": "^2.1.2",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^3.0.1",
-    "js-yaml": ">=3.13.1",
-    "nodemon": "^1.11.0",
+    "eslint": "^6.0.1",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-config-standard": "^13.0.1",
+    "eslint-plugin-import": "^2.18.1",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "nodemon": "^1.19.0",
     "prettier": "^1.5.3"
   }
 }
