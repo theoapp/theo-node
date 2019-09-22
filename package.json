@@ -28,7 +28,7 @@
   "author": "Michele <michele@azzolari.it> (macno)",
   "license": "Apache-2.0",
   "dependencies": {
-    "@authkeys-io/microservice": "^2.1.0",
+    "@authkeys-io/microservice": "^2.1.1",
     "dotenv": "^6.2.0",
     "memcached": "^2.2.2",
     "mysql2": "^1.7.0",
