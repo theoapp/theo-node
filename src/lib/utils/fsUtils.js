@@ -19,14 +19,3 @@ export const getDirFiles = (dir, onlyDir) => {
   }
   return files;
 };
-
-export const readdir = path => {
-  return new Promise((resolve, reject) => {
-    fs.readdir('plugins', (err, files) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(files);
-    });
-  });
-};

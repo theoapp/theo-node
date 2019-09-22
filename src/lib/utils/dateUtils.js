@@ -12,11 +12,11 @@ export const getTimestampFromISO8601 = string => {
     }
     ret = ts;
   } else if (type === 'object') {
-    const ts = string.getTime();
-    if (isNaN(ts)) {
-      throw new Error('Invalid date');
+    if (string instanceof Date) {
+      ret = string.getTime();
+    } else {
+      throw new Error('Invalid object');
     }
-    ret = ts;
   } else {
     ret = string;
   }

@@ -8,11 +8,9 @@ const execute = (method, path, data, headers = {}) => {
   const dataType = typeof data;
   if (dataType !== 'undefined') {
     if (dataType !== 'string') {
-      try {
-        data = JSON.stringify(data);
-      } catch (e) {
-        console.error('Failed to stringify', data);
-        throw e;
+      data = JSON.stringify(data);
+      if (!fetchOpts.headers['Content-Type']) {
+        fetchOpts.headers['Content-Type'] = 'application/json';
       }
     }
     fetchOpts.body = data;
@@ -20,6 +18,7 @@ const execute = (method, path, data, headers = {}) => {
   return fetch(path, fetchOpts).then(res => {
     if (res.status >= 400) {
       const error = new Error(res.statusText);
+      error.code = res.status;
       error.http_response = res;
       throw error;
     }
@@ -29,14 +28,6 @@ const execute = (method, path, data, headers = {}) => {
 
 export const http_get = (path, headers) => {
   return execute('GET', path, undefined, headers);
-};
-
-export const http_del = (path, data, headers) => {
-  return execute('DELETE', path, data, headers);
-};
-
-export const http_put = (path, data, contentType) => {
-  return execute('PUT', path, data, headers);
 };
 
 export const http_post = (path, data, headers) => {

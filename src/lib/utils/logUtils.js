@@ -14,48 +14,46 @@ const LEVELS = {
 
 let LOG_LEVEL;
 
-export const initLogger = function() {
-  const LOG_LEVEL_D = process.env.LOG_LEVEL || 'INFO';
+let logger;
+
+const defaultLogger = function(...args) {
+  console.log(args);
+};
+
+export const initLogger = function(level = false, logfn = undefined) {
+  if (typeof level === 'function') {
+    logfn = level;
+    level = false;
+  }
+  if (!logfn) {
+    logger = defaultLogger;
+  } else {
+    logger = logfn;
+  }
+  const LOG_LEVEL_D = level || process.env.LOG_LEVEL || 'INFO';
   switch (LOG_LEVEL_D.toUpperCase()) {
     case DEBUG:
       LOG_LEVEL = LEVELS.DEBUG + LEVELS.INFO + LEVELS.WARN + LEVELS.ERROR;
       break;
     case INFO:
-      LOG_LEVEL = 7;
+      LOG_LEVEL = LEVELS.INFO + LEVELS.WARN + LEVELS.ERROR;
       break;
     case WARN:
-      LOG_LEVEL = 3;
+      LOG_LEVEL = LEVELS.WARN + LEVELS.ERROR;
       break;
     case ERROR:
-      LOG_LEVEL = 1;
-      break;
-    default:
-      LOG_LEVEL = 1;
+      LOG_LEVEL = LEVELS.ERROR;
       break;
   }
 };
 
 export const common_log = function(type, message, args) {
-  if (!(LEVELS[type] & LOG_LEVEL)) {
+  if (LEVELS[type] > LOG_LEVEL) {
     return;
   }
   const msg = util.format.apply(null, [message, ...args]);
-  let logger;
-  switch (type) {
-    case DEBUG:
-      logger = console.log;
-      break;
-    case INFO:
-      logger = console.log;
-      break;
-    case WARN:
-      logger = console.error;
-      break;
-    case ERROR:
-      logger = console.error;
-      break;
-    default:
-      logger = console.log;
+  if (!logger) {
+    logger = defaultLogger;
   }
   logger('[ %s ][ %s ] %s', type + (type.length < ERROR.length ? ' ' : ''), new Date().toISOString(), msg);
 };
