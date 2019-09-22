@@ -13,11 +13,13 @@ const keys = [
     fp: 'SHA256:nzfiS3UxNnfffvF48FrTN7cTWIDUT8P/ymxFID5q4tY'
   }
 ];
-describe('SSHUtils', function() {
-  for (let i = 0; i < keys.length; i++) {
-    it('should return the correct fingerprint', function() {
-      const fp = SSHFingerprint(keys[i].k);
-      assert.strictEqual(fp, keys[i].fp);
-    });
-  }
+describe('Testing SSHUtils', function() {
+  describe('SSHFingerprint', function() {
+    for (let i = 0; i < keys.length; i++) {
+      it('should return the correct fingerprint', function() {
+        const fp = SSHFingerprint(keys[i].k);
+        assert.strictEqual(fp, keys[i].fp);
+      });
+    }
+  });
 });

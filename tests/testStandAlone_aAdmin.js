@@ -80,7 +80,9 @@ describe('Test account', function() {
     ah = AppHelper(settings);
     try {
       db = await loadDb();
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+    }
   });
 
   after(async function() {
