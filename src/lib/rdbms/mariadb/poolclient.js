@@ -2,7 +2,9 @@ import BaseClient from '../baseclient';
 
 class MariadbPoolClient extends BaseClient {
   db;
+
   conn;
+
   pool;
 
   constructor(db, pool = false) {

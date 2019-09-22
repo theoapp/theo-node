@@ -20,8 +20,8 @@ class GroupManager extends BaseCacheManager {
       offset = 0;
     }
     let total = -1;
-    let where = 'where is_internal = ? ';
-    let whereArgs = [0];
+    const where = 'where is_internal = ? ';
+    const whereArgs = [0];
     if (!skipCount) {
       total = await this.getAllCount(where, whereArgs);
     }
@@ -54,7 +54,7 @@ class GroupManager extends BaseCacheManager {
       offset = 0;
     }
     let where = 'where is_internal = ? ';
-    let whereArgs = [0];
+    const whereArgs = [0];
 
     if (name) {
       where += 'and name like ?';

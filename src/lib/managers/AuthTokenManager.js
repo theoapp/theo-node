@@ -4,6 +4,7 @@ class AuthTokenManager {
   constructor(db) {
     this.db = db;
   }
+
   async getAll() {
     const sql = 'select token, assignee, type from auth_tokens';
     const tokens = await this.db.all(sql);
@@ -21,14 +22,17 @@ class AuthTokenManager {
       clients: agentTokens
     };
   }
+
   create(token, type, assignee = '') {
     const sql = 'insert into auth_tokens (token, assignee, type, created_at) values (?, ?, ?, ?) ';
     return this.db.run(sql, [token, assignee, type, new Date().getTime()]);
   }
+
   delete() {
     const sql = 'delete from auth_tokens';
     return this.db.delete(sql);
   }
+
   static getTokenAssignee(admin, as_admin = false) {
     let token;
     let assignee;

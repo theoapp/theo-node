@@ -108,30 +108,32 @@ const loadData = async function() {
 describe('REST Check keys', function() {
   this.timeout(10000);
 
-  before(function() {
-    return new Promise(async (resolve, reject) => {
-      let res;
-      try {
-        res = await fetch(base_url + '/flushdb', {
-          method: 'POST',
-          headers: {
-            Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
-          }
-        });
-      } catch (e) {
-        reject(e);
-        return;
+  before(function(done) {
+    fetch(base_url + '/flushdb', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
       }
-      if (res.status !== 204) {
-        reject(new Error('Expecting 204 got ' + res.status));
-        return;
-      }
-      // I need to wait a bit..
-      setTimeout(async () => {
-        await loadData();
-        resolve();
-      }, 500);
-    });
+    })
+      .then(res => {
+        if (res.status !== 204) {
+          done(new Error('Expecting 204 got ' + res.status));
+          return;
+        }
+        // I need to wait a bit..
+        setTimeout(() => {
+          loadData()
+            .then(() => {
+              done();
+            })
+            .catch(e => {
+              done(e);
+            });
+        }, 500);
+      })
+      .catch(e => {
+        done(e);
+      });
   });
 
   describe('check accounts creation', function() {

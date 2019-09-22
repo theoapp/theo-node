@@ -2,7 +2,6 @@ import AccountManager from '../../managers/AccountManager';
 import GroupManager from '../../managers/GroupManager';
 import PermissionManager from '../../managers/PermissionManager';
 import EventHelper from '../EventHelper';
-import AuditHelper from '../AuditHelper';
 
 export const adminAddAccountPermission = async (db, account_id, user, host, req) => {
   if (!user) {

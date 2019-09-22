@@ -16,27 +16,26 @@ describe('REST Test account', function() {
   this.timeout(10000);
 
   before(function() {
-    return new Promise(async (resolve, reject) => {
-      let res;
-      try {
-        res = await fetch(base_url + '/flushdb', {
-          method: 'POST',
-          headers: {
-            Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+    return new Promise((resolve, reject) => {
+      fetch(base_url + '/flushdb', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+        }
+      })
+        .then(res => {
+          if (res.status !== 204) {
+            reject(new Error('Expecting 204 got ' + res.status));
+            return;
           }
+          // I need to wait a bit..
+          setTimeout(() => {
+            resolve();
+          }, 500);
+        })
+        .catch(e => {
+          reject(e);
         });
-      } catch (e) {
-        reject(e);
-        return;
-      }
-      if (res.status !== 204) {
-        reject(new Error('Expecting 204 got ' + res.status));
-        return;
-      }
-      // I need to wait a bit..
-      setTimeout(() => {
-        resolve();
-      }, 500);
     });
   });
 
@@ -406,27 +405,26 @@ describe('REST Test group', function() {
   let account_id;
 
   before(function() {
-    return new Promise(async (resolve, reject) => {
-      let res;
-      try {
-        res = await fetch(base_url + '/flushdb', {
-          method: 'POST',
-          headers: {
-            Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+    return new Promise((resolve, reject) => {
+      fetch(base_url + '/flushdb', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+        }
+      })
+        .then(res => {
+          if (res.status !== 204) {
+            reject(new Error('Expecting 204 got ' + res.status));
+            return;
           }
+          // I need to wait a bit..
+          setTimeout(() => {
+            resolve();
+          }, 500);
+        })
+        .catch(e => {
+          reject(e);
         });
-      } catch (e) {
-        reject(e);
-        return;
-      }
-      if (res.status !== 204) {
-        reject(new Error('Expecting 204 got ' + res.status));
-        return;
-      }
-      // I need to wait a bit..
-      setTimeout(() => {
-        resolve();
-      }, 500);
     });
   });
 
@@ -782,7 +780,7 @@ describe('REST Test group', function() {
 
       assert.strictEqual(resGroup.active, 1);
       assert.strictEqual(resGroup.accounts.length, 4);
-      assert.notEqual(resGroup.accounts[0].id, resAccount.id);
+      assert.notStrictEqual(resGroup.accounts[0].id, resAccount.id);
       assert.strictEqual(resGroup.permissions.length, 0);
 
       const res4 = await fetch(base_url + '/accounts/' + resAccount.id, {

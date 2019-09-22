@@ -8,7 +8,7 @@ dotenv.config();
 
 for (const name in process.env) {
   const value = process.env[name];
-  let match = name.match(/^THEO_URL_(.*)$/);
+  const match = name.match(/^THEO_URL_(.*)$/);
   if (match) {
     baseURLs.push(value);
   }
@@ -147,7 +147,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 401 for server ' + base_url,  function(done) {
+      it('should return 401 for server ' + base_url, function(done) {
         setTimeout(async () => {
           const res = await fetch(base_url + '/accounts', {
             method: 'GET',

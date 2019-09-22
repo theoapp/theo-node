@@ -16,27 +16,26 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
   this.timeout(10000);
 
   before(function() {
-    return new Promise(async (resolve, reject) => {
-      let res;
-      try {
-        res = await fetch(base_url + '/flushdb', {
-          method: 'POST',
-          headers: {
-            Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+    return new Promise((resolve, reject) => {
+      fetch(base_url + '/flushdb', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+        }
+      })
+        .then(res => {
+          if (res.status !== 204) {
+            reject(new Error('Expecting 204 got ' + res.status));
+            return;
           }
+          // I need to wait a bit..
+          setTimeout(() => {
+            resolve();
+          }, 500);
+        })
+        .catch(e => {
+          reject(e);
         });
-      } catch (e) {
-        reject(e);
-        return;
-      }
-      if (res.status !== 204) {
-        reject(new Error('Expecting 204 got ' + res.status));
-        return;
-      }
-      // I need to wait a bit..
-      setTimeout(() => {
-        resolve();
-      }, 500);
     });
   });
 
@@ -57,7 +56,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 400);
+      assert.strictEqual(res.status, 400);
     });
   });
 
@@ -66,10 +65,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
-        keys: [
-          { key: publicKeySample2, signature: 'xxxx' },
-          { key: publicKeySample3, signature: 'xxxxx' }
-        ]
+        keys: [{ key: publicKeySample2, signature: 'xxxx' }, { key: publicKeySample3, signature: 'xxxxx' }]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -81,20 +77,20 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         body: JSON.stringify(reqAccount)
       });
 
-      assert.equal(res.status, 200);
-      assert.equal(res.headers.get('content-type'), 'application/json; charset=utf-8');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const resAccount = await res.json();
 
-      assert.equal(typeof resAccount.id, 'number');
-      assert.equal(resAccount.name, reqAccount.name);
-      assert.equal(resAccount.email, reqAccount.email);
-      assert.equal(resAccount.active, 1);
-      assert.equal(resAccount.public_keys.length, 2);
-      assert.equal(resAccount.public_keys[0].public_key, reqAccount.keys[0].key);
-      assert.equal(resAccount.public_keys[0].public_key_sig, reqAccount.keys[0].signature);
-      assert.equal(resAccount.public_keys[1].public_key, reqAccount.keys[1].key);
-      assert.equal(resAccount.public_keys[1].public_key_sig, reqAccount.keys[1].signature);
-      assert.equal(resAccount.permissions.length, 0);
+      assert.strictEqual(typeof resAccount.id, 'number');
+      assert.strictEqual(resAccount.name, reqAccount.name);
+      assert.strictEqual(resAccount.email, reqAccount.email);
+      assert.strictEqual(resAccount.active, 1);
+      assert.strictEqual(resAccount.public_keys.length, 2);
+      assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0].key);
+      assert.strictEqual(resAccount.public_keys[0].public_key_sig, reqAccount.keys[0].signature);
+      assert.strictEqual(resAccount.public_keys[1].public_key, reqAccount.keys[1].key);
+      assert.strictEqual(resAccount.public_keys[1].public_key_sig, reqAccount.keys[1].signature);
+      assert.strictEqual(resAccount.permissions.length, 0);
     });
   });
 
@@ -111,7 +107,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         body: JSON.stringify({ keys })
       });
 
-      assert.equal(res.status, 400);
+      assert.strictEqual(res.status, 400);
     });
     it('should return success', async function() {
       const keys = [{ key: publicKeySample2, signature: 'xxxxxx' }];
@@ -125,7 +121,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         body: JSON.stringify({ keys })
       });
 
-      assert.equal(res.status, 200);
+      assert.strictEqual(res.status, 200);
     });
   });
 });

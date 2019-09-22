@@ -32,8 +32,6 @@ class DbHelper {
       client = this.manager.getClient();
       await client.open();
       await this.checkDb(client);
-    } catch (e) {
-      throw e;
     } finally {
       try {
         if (client) {
@@ -100,14 +98,9 @@ class DbHelper {
   }
 
   async _flush(client) {
-    let done;
-    try {
-      done = await this.manager.flushDb();
-      if (done) EventHelper.emit('theo:flushdb');
-    } catch (e) {
-      throw e;
-    }
+    const done = await this.manager.flushDb();
     if (done) {
+      EventHelper.emit('theo:flushdb');
       try {
         await this.checkDb(client);
         common_debug('check db done');

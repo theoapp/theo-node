@@ -32,6 +32,7 @@ const connectionQueueLimit = process.env.NODE_ENV === 'production' ? 10 : 4;
 
 class ConnectionManager {
   DbClientClass;
+
   pool;
 
   constructor(settings) {

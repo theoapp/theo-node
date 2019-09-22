@@ -126,10 +126,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
-        keys: [
-          { key: publicKeySample, signature: 'xxxx' },
-          { key: publicKeySample2, signature: 'xxxxx' }
-        ]
+        keys: [{ key: publicKeySample, signature: 'xxxx' }, { key: publicKeySample2, signature: 'xxxxx' }]
       };
 
       const resAccount = await adminCreateAccount(db, reqAccount);

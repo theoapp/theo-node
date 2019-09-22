@@ -57,7 +57,7 @@ class AccountManager extends BaseCacheManager {
       offset = 0;
     }
     let where = '';
-    let whereArgs = [];
+    const whereArgs = [];
     if (name && email) {
       where = 'where ( name like ? or email like ? ) ';
       whereArgs.push(`%${name}%`);

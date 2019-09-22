@@ -24,19 +24,16 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
     console.error('Key must be signed!');
     throw err;
   }
-  try {
-    const fingerprint = SSHFingerprint(_key);
-    const id = await km.create(account.id, _key, fingerprint, _signature);
-    if (req && req.auditHelper) {
-      req.auditHelper.log('accounts', 'add_key', account.email, { key: _key, fingerprint });
-    }
-    return {
-      id,
-      public_key: key
-    };
-  } catch (e) {
-    throw e;
+
+  const fingerprint = SSHFingerprint(_key);
+  const id = await km.create(account.id, _key, fingerprint, _signature);
+  if (req && req.auditHelper) {
+    req.auditHelper.log('accounts', 'add_key', account.email, { key: _key, fingerprint });
   }
+  return {
+    id,
+    public_key: key
+  };
 };
 
 export const adminAddAccountKeys = async (db, account_id, keys, req) => {

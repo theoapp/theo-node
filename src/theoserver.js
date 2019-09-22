@@ -23,10 +23,12 @@ const doURLneedDb = function(path) {
 
 class TheoServer extends Microservice {
   dm;
+
   constructor(environment, dm) {
     super(environment);
     this.dm = dm;
   }
+
   setupRoutes(app, express) {
     app.disable('x-powered-by');
     app.use(authMiddleware);

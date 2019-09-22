@@ -19,6 +19,7 @@ class MemcachedManager extends CachedManager {
       // Module not loaded
     }
   }
+
   set(key, value) {
     return new Promise((resolve, reject) => {
       this.memcached.set(key, value, MAX_EXPIRATION, err => {
@@ -29,6 +30,7 @@ class MemcachedManager extends CachedManager {
       });
     });
   }
+
   get(key) {
     return new Promise((resolve, reject) => {
       this.memcached.get(key, (err, data) => {
@@ -42,6 +44,7 @@ class MemcachedManager extends CachedManager {
       });
     });
   }
+
   del(key) {
     return new Promise((resolve, reject) => {
       this.memcached.del(key, value, err => {
@@ -52,6 +55,7 @@ class MemcachedManager extends CachedManager {
       });
     });
   }
+
   flush() {
     return new Promise((resolve, reject) => {
       this.memcached.flush(err => {
@@ -62,6 +66,7 @@ class MemcachedManager extends CachedManager {
       });
     });
   }
+
   quit() {
     try {
       this.memcached.end();
