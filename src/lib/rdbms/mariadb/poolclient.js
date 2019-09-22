@@ -1,7 +1,6 @@
 import BaseClient from '../baseclient';
-import { common_error, common_info } from '../../utils/logUtils';
 
-class MariadbBaseClient extends BaseClient {
+class MariadbPoolClient extends BaseClient {
   db;
   conn;
   pool;
@@ -28,8 +27,6 @@ class MariadbBaseClient extends BaseClient {
   close() {
     if (this.conn) {
       this.conn.release();
-    } else {
-      common_error('Called MariadbClient.close() but conn is undefined');
     }
   }
 
@@ -49,7 +46,7 @@ class MariadbBaseClient extends BaseClient {
     if (!comment) {
       comment = 'Mysql';
     }
-    common_info('DB Server: %s, %s', comment, version);
+    return `${comment}, ${version}`;
   }
 
   all(sql, params) {
@@ -127,4 +124,4 @@ class MariadbBaseClient extends BaseClient {
   }
 }
 
-export default MariadbBaseClient;
+export default MariadbPoolClient;

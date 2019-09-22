@@ -48,7 +48,8 @@ class DbHelper {
   async checkDb(client) {
     let currentVersion;
     try {
-      await client.getServerVersion();
+      const dbversion = await client.getServerVersion();
+      common_info('Db Version', dbversion);
       this.manager.setClient(client);
     } catch (e) {
       common_error('checkDb failed %s', e.message);

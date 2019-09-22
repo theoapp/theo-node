@@ -1,5 +1,4 @@
 import BaseClient from '../baseclient';
-import { common_info } from '../../utils/logUtils';
 
 class SqliteClient extends BaseClient {
   constructor(db) {
@@ -8,7 +7,7 @@ class SqliteClient extends BaseClient {
   }
 
   getServerVersion() {
-    common_info('DB sqlite');
+    return 'DB sqlite';
   }
 
   all(sql, params) {
