@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import AppHelper from '../lib/helpers/AppHelper';
+import AppHelper from '../src/lib/helpers/AppHelper';
 import {
   adminAddAccountPermission,
   adminAddGroupPermission,
@@ -9,11 +9,11 @@ import {
   adminCreateGroupAccount,
   adminEditAccount,
   adminGetAccount
-} from '../lib/helpers/AdminHelper';
+} from '../src/lib/helpers/AdminHelper';
 import accountsJson from './accounts';
 import groupsJson from './groups';
-import { getAuthorizedKeys } from '../lib/helpers/KeysHelper';
-import DbHelper, { releaseDHInstance } from '../lib/helpers/DbHelper';
+import { getAuthorizedKeys } from '../src/lib/helpers/KeysHelper';
+import DbHelper, { releaseDHInstance } from '../src/lib/helpers/DbHelper';
 
 const settings = {
   admin: {

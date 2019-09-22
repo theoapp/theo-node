@@ -33,9 +33,8 @@ source ./docker-compose/test_env
 
 test_standalone () {
     print_test_header Standalone
-    docker run --name theo-tester theo-tester npm run test:standalone
+    docker run --rm --name theo-tester theo-tester npm run test:standalone
     RETVAL=$?
-    docker rm theo-tester
     if [[ ${RETVAL} -gt 0 ]]; then
         echo "ERR test:standalone FAILED"
         exit ${RETVAL}

@@ -1,14 +1,14 @@
 import assert from 'assert';
 
-import AppHelper from '../lib/helpers/AppHelper';
+import AppHelper from '../src/lib/helpers/AppHelper';
 
 import {
   adminAddAccountKeys,
   adminCreateAccount,
   adminDeleteAccountKey,
   adminGetAccount
-} from '../lib/helpers/AdminHelper';
-import DbHelper, { releaseDHInstance } from '../lib/helpers/DbHelper';
+} from '../src/lib/helpers/AdminHelper';
+import DbHelper, { releaseDHInstance } from '../src/lib/helpers/DbHelper';
 
 const publicKeySample =
   'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoUQGPAFUl3xBX+1vxm/o1v4G1KHqXlvg/pVAHrs89isBTcXwNoo4C1YWjF0TCRjhltfvNMNYF8Q1fzEw1anjL+9X26GlXEXr4Nx9MIFFiEiTpUSPGlT13TOIIKW9eEQc9vHydgK1NdpEgz23kcPARWvXbcVtwoLDwfsE1Msvg1qWIN4UiDau/FTetFaq8fcXd3Cun0V+v5DLEfhSB3gNSxWwhdAEaQIpPSJk8VSHKiaOtQ6Besgw8+mjA5u0Mvm4Z9luZ8b7Ky2gUn49HwM/ez7KC9BhoiTsoE8iXjF11J3ttqju0wADZ4P8OQ7y6l7rgNqXyHejhLutvdI3ka3X/ jolly1@newsvine.com';

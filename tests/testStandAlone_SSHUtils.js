@@ -1,4 +1,4 @@
-import { SSHFingerprint } from '../lib/utils/sshUtils';
+import { SSHFingerprint } from '../src/lib/utils/sshUtils';
 import assert from 'assert';
 
 const keys = [
