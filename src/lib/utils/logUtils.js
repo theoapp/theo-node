@@ -16,8 +16,8 @@ let LOG_LEVEL;
 
 let logger;
 
-const defaultLogger = function(...args) {
-  console.log(args);
+const defaultLogger = function(type, date, msg) {
+  console.log('[ %s ][ %s ] %s', type, date, msg);
 };
 
 export const initLogger = function(level = false, logfn = undefined) {
@@ -55,7 +55,7 @@ export const common_log = function(type, message, args) {
   if (!logger) {
     logger = defaultLogger;
   }
-  logger('[ %s ][ %s ] %s', type + (type.length < ERROR.length ? ' ' : ''), new Date().toISOString(), msg);
+  logger(type + (type.length < ERROR.length ? ' ' : ''), new Date().toISOString(), msg);
 };
 
 export const common_debug = function(message, ...args) {

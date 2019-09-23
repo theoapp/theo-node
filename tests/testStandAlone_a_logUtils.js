@@ -11,12 +11,25 @@ import {
   INFO,
   DEBUG
 } from '../src/lib/utils/logUtils';
+import { mockDateToISOString } from './Mocks';
 
 describe('Testing logUtils', () => {
+  let originalDateToISOString;
+  beforeEach(function() {
+    originalDateToISOString = Date.prototype.toISOString;
+    // eslint-disable-next-line no-extend-native
+    Date.prototype.toISOString = mockDateToISOString;
+  });
+
+  afterEach(function() {
+    // eslint-disable-next-line no-extend-native
+    Date.prototype.toISOString = originalDateToISOString;
+  });
+
   describe('Testing LOG_LEVEL ERROR ', () => {
     it('common_debug Should not call the logger function', () => {
       let check = false;
-      initLogger(ERROR, (...args) => {
+      initLogger(ERROR, (type, date, msg) => {
         check = true;
         assert.fail(new Error('DEBUG < ERROR'));
       });
@@ -27,7 +40,7 @@ describe('Testing logUtils', () => {
     });
     it('common_info Should not call the logger function', () => {
       let check = false;
-      initLogger(ERROR, (...args) => {
+      initLogger(ERROR, (type, date, msg) => {
         check = true;
         assert.fail(new Error('INFO < ERROR'));
       });
@@ -38,7 +51,7 @@ describe('Testing logUtils', () => {
     });
     it('common_warn Should not call the logger function', () => {
       let check = false;
-      initLogger(ERROR, (...args) => {
+      initLogger(ERROR, (type, date, msg) => {
         check = true;
         assert.fail(new Error('WARN < ERROR'));
       });
@@ -50,10 +63,11 @@ describe('Testing logUtils', () => {
     it('common_error Should call the logger function', () => {
       let check = false;
       const message = 'Lost in space 4';
-      initLogger(ERROR, (...args) => {
+      initLogger(ERROR, (type, date, msg) => {
         check = true;
-        assert.strictEqual(args[1], 'ERROR');
-        assert.strictEqual(args[3], message);
+        assert.strictEqual(type, 'ERROR');
+        assert.strictEqual(date, '2016-05-04T11:27:29.717Z'); // 4th May 2016 11:27:29,717
+        assert.strictEqual(msg, message);
       });
       common_error(message);
       setImmediate(() => {
@@ -65,7 +79,7 @@ describe('Testing logUtils', () => {
   describe('Testing LOG_LEVEL WARN ', () => {
     it('common_debug Should not call the logger function', () => {
       let check = false;
-      initLogger(WARN, (...args) => {
+      initLogger(WARN, (type, date, msg) => {
         check = true;
         assert.fail(new Error('DEBUG < WARN'));
       });
@@ -76,7 +90,7 @@ describe('Testing logUtils', () => {
     });
     it('common_info Should not call the logger function', () => {
       let check = false;
-      initLogger(WARN, (...args) => {
+      initLogger(WARN, (type, date, msg) => {
         check = true;
         assert.fail(new Error('INFO < WARN'));
       });
@@ -87,7 +101,7 @@ describe('Testing logUtils', () => {
     });
     it('common_warn Should call the logger function', () => {
       let check = false;
-      initLogger(WARN, (...args) => {
+      initLogger(WARN, (type, date, msg) => {
         check = true;
       });
       common_warn('Lost in space 3');
@@ -97,7 +111,7 @@ describe('Testing logUtils', () => {
     });
     it('common_error Should call the logger function', () => {
       let check = false;
-      initLogger(WARN, (...args) => {
+      initLogger(WARN, (type, date, msg) => {
         check = true;
       });
       common_error('Lost in space 4');
@@ -110,7 +124,7 @@ describe('Testing logUtils', () => {
   describe('Testing LOG_LEVEL INFO ', () => {
     it('common_debug Should not call the logger function', () => {
       let check = false;
-      initLogger(INFO, (...args) => {
+      initLogger(INFO, (type, date, msg) => {
         check = true;
         assert.fail(new Error('DEBUG < INFO'));
       });
@@ -121,7 +135,7 @@ describe('Testing logUtils', () => {
     });
     it('common_info Should call the logger function', () => {
       let check = false;
-      initLogger(INFO, (...args) => {
+      initLogger(INFO, (type, date, msg) => {
         check = true;
       });
       common_info('Lost in space 2');
@@ -131,7 +145,7 @@ describe('Testing logUtils', () => {
     });
     it('common_warn Should call the logger function', () => {
       let check = false;
-      initLogger(INFO, (...args) => {
+      initLogger(INFO, (type, date, msg) => {
         check = true;
       });
       common_warn('Lost in space 3');
@@ -141,7 +155,7 @@ describe('Testing logUtils', () => {
     });
     it('common_error Should call the logger function', () => {
       let check = false;
-      initLogger(INFO, (...args) => {
+      initLogger(INFO, (type, date, msg) => {
         check = true;
       });
       common_error('Lost in space 4');
@@ -154,7 +168,7 @@ describe('Testing logUtils', () => {
   describe('Testing LOG_LEVEL DEBUG ', () => {
     it('common_debug Should not call the logger function', () => {
       let check = false;
-      initLogger(DEBUG, (...args) => {
+      initLogger(DEBUG, (type, date, msg) => {
         check = true;
       });
       common_debug('Lost in space');
@@ -164,7 +178,7 @@ describe('Testing logUtils', () => {
     });
     it('common_info Should call the logger function', () => {
       let check = false;
-      initLogger(DEBUG, (...args) => {
+      initLogger(DEBUG, (type, date, msg) => {
         check = true;
       });
       common_info('Lost in space 2');
@@ -174,7 +188,7 @@ describe('Testing logUtils', () => {
     });
     it('common_warn Should call the logger function', () => {
       let check = false;
-      initLogger(DEBUG, (...args) => {
+      initLogger(DEBUG, (type, date, msg) => {
         check = true;
       });
       common_warn('Lost in space 3');
@@ -184,7 +198,7 @@ describe('Testing logUtils', () => {
     });
     it('common_error Should call the logger function', () => {
       let check = false;
-      initLogger(DEBUG, (...args) => {
+      initLogger(DEBUG, (type, date, msg) => {
         check = true;
       });
       common_error('Lost in space 4');
@@ -197,7 +211,7 @@ describe('Testing logUtils', () => {
   describe('Testing LOG_LEVEL default (INFO) ', () => {
     it('common_debug Should not call the logger function', () => {
       let check = false;
-      initLogger((...args) => {
+      initLogger((type, date, msg) => {
         check = true;
         assert.fail(new Error('DEBUG < INFO'));
       });
@@ -208,7 +222,7 @@ describe('Testing logUtils', () => {
     });
     it('common_info Should call the logger function', () => {
       let check = false;
-      initLogger((...args) => {
+      initLogger((type, date, msg) => {
         check = true;
       });
       common_info('Lost in space 2');
@@ -218,7 +232,7 @@ describe('Testing logUtils', () => {
     });
     it('common_warn Should call the logger function', () => {
       let check = false;
-      initLogger((...args) => {
+      initLogger((type, date, msg) => {
         check = true;
       });
       common_warn('Lost in space 3');
@@ -228,7 +242,7 @@ describe('Testing logUtils', () => {
     });
     it('common_error Should call the logger function', () => {
       let check = false;
-      initLogger((...args) => {
+      initLogger((type, date, msg) => {
         check = true;
       });
       common_error('Lost in space 4');
@@ -252,7 +266,6 @@ describe('Testing logUtils', () => {
     });
     it('common_info Should call the logger function', () => {
       initLogger();
-      console.error('');
       common_info('Lost in space 2');
       assert(spy.called);
       spy.restore();
