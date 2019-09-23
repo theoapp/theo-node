@@ -23,6 +23,8 @@
     "test:core:noassignee": "mocha tests/testCoreNoAssignee.js",
     "test:core:restart:noassignee": "mocha tests/testCoreOnRestartNoAssignee.js",
     "test:standalone": "mocha tests/testStandAlone*.js",
+    "test:upgrade:mysql": "mocha tests/testUpgrade_mysql.js",
+    "test:upgrade:sqlite": "mocha tests/testUpgrade_sqlite.js",
     "version": "./updateVersion.sh"
   },
   "author": "Michele <michele@azzolari.it> (macno)",

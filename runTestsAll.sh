@@ -6,4 +6,9 @@ if [[ ${RETVAL} -gt 0 ]]; then
 fi
 ./runTestsCluster.sh skip_build
 RETVAL=$?
+if [[ ${RETVAL} -gt 0 ]]; then
+    exit ${RETVAL}
+fi
+./runTestsUpgrade.sh
+RETVAL=$?
 exit ${RETVAL}
