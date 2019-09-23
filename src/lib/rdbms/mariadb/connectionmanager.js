@@ -36,7 +36,6 @@ class ConnectionManager {
   pool;
 
   constructor(settings) {
-    common_debug('new MariaDB ConnectionManager', settings);
     const { host, port, username, password, database, cluster, ssl_ca } = settings;
     const defaultOptions = {
       host: host,
@@ -99,6 +98,10 @@ class ConnectionManager {
 
   getClient(poolName = false) {
     return new this.DbClientClass(this.pool, poolName);
+  }
+
+  close() {
+    this.pool.end();
   }
 }
 

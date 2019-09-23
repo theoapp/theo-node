@@ -25,6 +25,13 @@ process.on('SIGINT', async () => {
       console.error('Failed to stop server', e.message);
     }
   }
+  if (dh) {
+    try {
+      dh.close();
+    } catch (e) {
+      console.error('Failed to close db', e);
+    }
+  }
   process.exit();
 });
 

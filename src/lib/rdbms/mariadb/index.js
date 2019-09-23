@@ -237,6 +237,10 @@ class MariadbManager extends DbManager {
     }
     return true;
   }
+
+  close() {
+    this.connectionManager.close();
+  }
 }
 
 export default MariadbManager;
