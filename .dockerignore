@@ -10,5 +10,6 @@ build
 data
 env.sample
 docker-compose
-DockerfileTest
+dev
 *.sh
+tmp.*
