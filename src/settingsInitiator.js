@@ -1,38 +1,7 @@
 import { common_error, common_warn } from './lib/utils/logUtils';
 import { md5 } from './lib/utils/cryptoUtils';
-import util from 'util';
+import { loadDbEnvSettings } from '@authkeys/mysql-connman';
 
-const parseDbClusterEnv = function(string) {
-  const config = {
-    rw: [],
-    ro: []
-  };
-  const parts = string.split(',');
-  parts.forEach(function(part) {
-    const [ns, host, port] = part.split(':');
-    if (!config[ns]) {
-      throw new Error(
-        util.format('Invalid MySQL cluster configuration, namespace %s is unknown.\n\tIt must be "rw" o "ro"', ns)
-      );
-    }
-    if (!host) {
-      throw new Error(
-        util.format(
-          'Invalid MySQL cluster configuration, no host defined: %s.\n\tFormat is namespace:host:[port]',
-          part
-        )
-      );
-    }
-    config[ns].push({
-      host,
-      port: Number(port) || 3306
-    });
-  });
-  if (config.rw.length === 0) {
-    throw new Error('Invalid MySQL cluster configuration, no primary server defined');
-  }
-  return config;
-};
 const initSettings = function() {
   let settings = {
     admin: {
@@ -83,53 +52,7 @@ const initSettings = function() {
         }
       }
     } else {
-      const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT, DB_SSL_CA, DB_CLUSTER } = process.env;
-      if (!DB_USER && !settings.db.user) {
-        common_error('DB ERROR! Engine %s required DB_USER', settings.db.engine);
-        process.exit(1);
-      }
-      if (!DB_PASSWORD && !settings.db.password) {
-        common_error('DB ERROR! Engine %s required DB_PASSWORD', settings.db.engine);
-        process.exit(1);
-      }
-      if (!DB_NAME && !settings.db.name) {
-        common_error('DB ERROR! Engine %s required DB_NAME', settings.db.engine);
-        process.exit(1);
-      }
-      if (!DB_CLUSTER && !settings.db.cluster) {
-        if (!DB_HOST && !settings.db.host) {
-          common_error('DB ERROR! Engine %s required DB_HOST or DB_CLUSTER', settings.db.engine);
-          process.exit(1);
-        }
-      }
-
-      if (DB_USER) {
-        settings.db.username = DB_USER;
-      }
-      if (DB_PASSWORD) {
-        settings.db.password = DB_PASSWORD;
-      }
-      if (DB_NAME) {
-        settings.db.database = DB_NAME;
-      }
-      if (DB_CLUSTER) {
-        try {
-          settings.db.cluster = parseDbClusterEnv(DB_CLUSTER);
-        } catch (e) {
-          common_error('DB ERROR!', e.message);
-          process.exit(1);
-        }
-      } else {
-        if (DB_HOST) {
-          settings.db.host = DB_HOST;
-        }
-        if (DB_PORT) {
-          settings.db.port = Number(DB_PORT);
-        }
-      }
-      if (DB_SSL_CA) {
-        settings.db.ssl_ca = DB_SSL_CA;
-      }
+      loadDbEnvSettings(settings.db);
     }
   };
 

@@ -1,7 +1,7 @@
 {
   "name": "theo",
   "version": "0.18.4",
-  "description": "Theo is your keys manager",
+  "description": "Theo is your AuthorizedKeys manager",
   "main": "index.js",
   "repository": "theoapp/theo-node",
   "scripts": {
@@ -11,8 +11,7 @@
     "coverage": "cross-env NODE_ENV=test nyc mocha tests/testStandAlone*.js",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
-    "run:dev": "nodemon  --watch build ./build/index.js",
-    "start:dev": "concurrently --kill-others \"npm run build:dev\" \"sleep 5 && npm run run:dev\"",
+    "start:dev": "nodemon --watch src --exec babel-node ./src/index.js",
     "start": "node ./build/index.js",
     "test": "mocha tests/test*.js",
     "test:api": "mocha tests/testRest*",
@@ -27,13 +26,13 @@
     "test:upgrade:sqlite": "mocha tests/testUpgrade_sqlite.js",
     "version": "./updateVersion.sh"
   },
-  "author": "Michele <michele@azzolari.it> (macno)",
+  "author": "Michele Azzolari <macno@authkeys.io> (macno)",
   "license": "Apache-2.0",
   "dependencies": {
     "@authkeys/microservice": "^2.2.0",
+    "@authkeys/mysql-connman": "^0.4.0",
     "dotenv": "^6.2.0",
     "memcached": "^2.2.2",
-    "mysql2": "^1.7.0",
     "node-fetch": "^2.6.0",
     "redis": "^2.8.0",
     "sqlite3": "^4.1.0",
@@ -42,6 +41,7 @@
   "devDependencies": {
     "@babel/cli": "^7.5.5",
     "@babel/core": "^7.6.0",
+    "@babel/node": "^7.6.2",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/register": "^7.5.5",
@@ -56,7 +56,6 @@
     "sinon": "^7.4.2"
   },
   "optionalDependencies": {
-    "concurrently": "^3.5.1",
     "eslint": "^6.0.1",
     "eslint-config-prettier": "^6.0.0",
     "eslint-config-standard": "^13.0.1",

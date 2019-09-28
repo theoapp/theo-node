@@ -5,10 +5,12 @@ describe('Testing mysql upgrade', () => {
   it('Should return the correct version ', async () => {
     const { DB_HOST, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
     const dbManager = new MariadbManager({
-      host: DB_HOST,
-      username: DB_USER,
-      password: DB_PASSWORD,
-      database: DB_NAME
+      config: {
+        host: DB_HOST,
+        user: DB_USER,
+        password: DB_PASSWORD,
+        database: DB_NAME
+      }
     });
     const client = dbManager.getClient();
     await client.open();

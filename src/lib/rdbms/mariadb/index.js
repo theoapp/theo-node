@@ -3,7 +3,7 @@ import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { common_debug, common_error } from '../../utils/logUtils';
-import ConnectionManager from './connectionmanager';
+import ConnectionManager from '@authkeys/mysql-connman';
 
 class MariadbManager extends DbManager {
   dbVersion = 13;
@@ -51,7 +51,8 @@ class MariadbManager extends DbManager {
 
   constructor(settings) {
     super(settings);
-    this.connectionManager = new ConnectionManager(settings);
+    const { config, cluster, noDbPool } = settings;
+    this.connectionManager = new ConnectionManager(config, noDbPool, cluster);
   }
 
   getEngine() {
