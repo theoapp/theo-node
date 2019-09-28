@@ -1,4 +1,4 @@
-import Microservice from '@authkeys-io/microservice';
+import Microservice from '@authkeys/microservice';
 import { initRoutes } from './routes';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
