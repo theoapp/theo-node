@@ -7,18 +7,24 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_ROOT_HOST: "%"
+    ports:
+      - 3301:3306
   mysql-server-2:
     image: mysql/mysql-server:8.0
     command: ["mysqld","--server_id=2","--binlog_checksum=NONE","--gtid_mode=ON","--enforce_gtid_consistency=ON","--log_bin","--log_slave_updates=ON","--master_info_repository=TABLE","--relay_log_info_repository=TABLE","--transaction_write_set_extraction=XXHASH64","--user=mysql","--skip-host-cache","--skip-name-resolve", "--default_authentication_plugin=mysql_native_password"]
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_ROOT_HOST: "%"
+    ports:
+      - 3302:3306
   mysql-server-3:
     image: mysql/mysql-server:8.0
     command: ["mysqld","--server_id=3","--binlog_checksum=NONE","--gtid_mode=ON","--enforce_gtid_consistency=ON","--log_bin","--log_slave_updates=ON","--master_info_repository=TABLE","--relay_log_info_repository=TABLE","--transaction_write_set_extraction=XXHASH64","--user=mysql","--skip-host-cache","--skip-name-resolve", "--default_authentication_plugin=mysql_native_password"]
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_ROOT_HOST: "%"
+    ports:
+      - 3303:3306
   mysql-shell:
     image: neumayer/mysql-shell-batch
     volumes:
@@ -36,70 +42,5 @@ services:
       MYSQL_SCRIPT: /scripts/db.sql
   cache:
     image: redis:4.0-alpine
-  theo1:
-    image: theo:test
-    container_name: theo1
-    environment:
-      MODE: test
-      LOG_LEVEL: debug
-      DB_ENGINE: mariadb
-      DB_CLUSTER: rw:mysql-server-1:3306,ro:mysql-server-2:3306,ro:mysql-server-2:3306
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
-      CORE_TOKEN: ${CORE_TOKEN}
-      CACHE_ENABLED: redis
-      CACHE_URI: redis://cache:6379
-      CLUSTER_MODE: 1
-      DB_CONN_MAX_RETRY: 30
-      SKIP_UPDATECHECK: 1
-    depends_on:
-      - cache
-      - mysql-server-1
-      - mysql-server-2
-      - mysql-server-3
-  theo2:
-    image: theo:test
-    container_name: theo2
-    environment:
-      MODE: test
-      LOG_LEVEL: debug
-      DB_ENGINE: mariadb
-      DB_CLUSTER: rw:mysql-server-1:3306,ro:mysql-server-2:3306,ro:mysql-server-2:3306
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
-      CORE_TOKEN: ${CORE_TOKEN}
-      CACHE_ENABLED: redis
-      CACHE_URI: redis://cache:6379
-      CLUSTER_MODE: 1
-      DB_CONN_MAX_RETRY: 30
-      SKIP_UPDATECHECK: 1
-    depends_on:
-      - cache
-      - mysql-server-1
-      - mysql-server-2
-      - mysql-server-3
-  theo3:
-    image: theo:test
-    container_name: theo3
-    environment:
-      MODE: test
-      LOG_LEVEL: debug
-      DB_ENGINE: mariadb
-      DB_CLUSTER: rw:mysql-server-1:3306,ro:mysql-server-2:3306,ro:mysql-server-2:3306
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
-      CORE_TOKEN: ${CORE_TOKEN}
-      CACHE_ENABLED: redis
-      CACHE_URI: redis://cache:6379
-      CLUSTER_MODE: 1
-      DB_CONN_MAX_RETRY: 30
-      SKIP_UPDATECHECK: 1
-    depends_on:
-      - cache
-      - mysql-server-1
-      - mysql-server-2
-      - mysql-server-3
-
+    ports:
+      - 6379:6379

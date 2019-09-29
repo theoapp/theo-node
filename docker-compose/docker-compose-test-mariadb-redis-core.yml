@@ -24,6 +24,7 @@ services:
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379
       DB_CONN_MAX_RETRY: 30
+      SKIP_UPDATECHECK: 1
     depends_on:
       - cache
       - db

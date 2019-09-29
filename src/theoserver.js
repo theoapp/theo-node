@@ -17,8 +17,13 @@ import { initRoutes } from './routes';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import { common_error } from './lib/utils/logUtils';
+import UpdateHelper from './lib/helpers/UpdateHelper';
 
 const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
+
+let last_check = 0;
+
+const CHECK_INTERVAL = 60 * 60 * 24 * 7 * 1000;
 
 const doURLneedDb = function(path) {
   for (let i = 0; i < noDbUrls.length; i++) {
@@ -41,6 +46,11 @@ class TheoServer extends Microservice {
   constructor(environment, dm) {
     super(environment);
     this.dm = dm;
+    this.skip_updatecheck = this.envBool(process.env, 'SKIP_UPDATECHECK', false);
+    if (!this.skip_updatecheck) {
+      last_check = Date.now();
+      UpdateHelper.checkUpdate();
+    }
   }
 
   setupRoutes(app, express) {
@@ -64,12 +74,25 @@ class TheoServer extends Microservice {
             return;
           }
           req.db = client;
-
           res.on('finish', () => {
             try {
               client.close();
             } catch (e) {
               common_error('db close', e.message);
+            }
+          });
+        } else {
+          res.on('finish', () => {
+            if (this.skip_updatecheck) {
+              return;
+            }
+            if (Date.now() - last_check > CHECK_INTERVAL) {
+              last_check = Date.now();
+              UpdateHelper.checkUpdate(err => {
+                if (err) {
+                  console.error(err.message);
+                }
+              });
             }
           });
         }

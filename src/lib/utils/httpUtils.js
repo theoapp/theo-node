@@ -36,7 +36,11 @@ const execute = (method, path, data, headers = {}) => {
       error.http_response = res;
       throw error;
     }
-    return res.json();
+    const contentType = res.headers.get('content-type');
+    if (contentType.indexOf('application/json') >= 0) {
+      return res.json();
+    }
+    return res.text();
   });
 };
 

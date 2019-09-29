@@ -9,3 +9,4 @@ services:
       - DB_STORAGE=":memory:"
       - ADMIN_TOKEN=${ADMIN_TOKEN}
       - CLIENT_TOKENS=${CLIENT_TOKENS}
+      - SKIP_UPDATECHECK=1

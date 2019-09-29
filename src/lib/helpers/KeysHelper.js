@@ -38,7 +38,7 @@ export const getAuthorizedKeys = async (dm, user, host) => {
   const cache_key = `${user}_${host}`;
   const _cache = await checkCache(cache_key);
   if (_cache) return { keys: _cache, cache: true };
-  const { keys, cache } = await getAuthorizedKeysAsJson(dm, user, host);
+  const { keys, cache } = await getAuthorizedKeysAsJson(dm, user, host, true);
   const skeys = keys
     .filter(key => {
       return key !== undefined;
@@ -46,19 +46,18 @@ export const getAuthorizedKeys = async (dm, user, host) => {
     .map(key => key.public_key)
     .join('\n');
   if (_cm !== false) {
-    _cm
-      .set(cache_key, skeys)
-      .then()
-      .catch();
+    _cm.set(cache_key, skeys).catch(err => console.error('Failed to save cache for %s', cache_key, err));
   }
   return { keys: skeys, cache };
 };
 
-export const getAuthorizedKeysAsJson = async (dm, user, host) => {
+export const getAuthorizedKeysAsJson = async (dm, user, host, skip_cache = false) => {
   const cache_key = `json:${user}_${host}`;
   const cache = await checkCache(cache_key);
-  if (cache) {
-    return { keys: JSON.parse(cache), cache: true };
+  if (!skip_cache) {
+    if (cache) {
+      return { keys: JSON.parse(cache), cache: true };
+    }
   }
   const db = dm.getClient('ro');
   await db.open();
@@ -72,13 +71,14 @@ export const getAuthorizedKeysAsJson = async (dm, user, host) => {
   } finally {
     db.close();
   }
-  if (_cm !== false) {
-    setImmediate(() => {
-      _cm
-        .set(cache_key, JSON.stringify(keys))
-        .then()
-        .catch(err => console.error('Failed to save cache for %s', cache_key, err));
-    });
+  if (!skip_cache) {
+    if (_cm !== false) {
+      setImmediate(() => {
+        _cm
+          .set(cache_key, JSON.stringify(keys))
+          .catch(err => console.error('Failed to save cache for %s', cache_key, err));
+      });
+    }
   }
   return { keys, cache: false };
 };
