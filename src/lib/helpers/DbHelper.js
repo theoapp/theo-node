@@ -159,15 +159,6 @@ const getInstance = settings => {
   return _instance;
 };
 
-export const loadDbManager = function() {
-  const dh = getInstance();
-  const dm = dh.getManager();
-  if (!dm) {
-    return false;
-  }
-  return dm;
-};
-
 export const releaseDHInstance = () => {
   if (_instance !== null) {
     _instance.close();
