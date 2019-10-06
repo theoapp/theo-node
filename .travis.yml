@@ -1,24 +1,40 @@
 sudo: required
 services:
   - docker
-install: true
+
 stages:
   - test
-  - name: push-image
+  - name: push-image-tag
     if: type != pull_request
-
+  - name: push-image-latest
+    if: type != pull_request
 
 jobs:
   include:
     - stage: test
       script:
       - ./runTestsAll.sh
-    - stage: push-image
-      if: tag IS present
+    - stage: push-image-tag
+      on:
+        tag: true
+        branch: master
+      if: tag =~ /^[0-9]+\.[0-9]+\.[0-9]+(\-(alpha|beta|rc)\.[0-9]+)?$/
       script:
-      - docker build -t theo .
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - docker tag theo $DOCKER_IMAGE:$TRAVIS_TAG
+      - docker build -t $DOCKER_IMAGE:$TRAVIS_TAG .
       - docker push $DOCKER_IMAGE:$TRAVIS_TAG
-      - docker tag theo $DOCKER_IMAGE:latest
+    - stage: push-image-latest
+      if: tag =~ /^[0-9]+\.[0-9]+\.[0-9]+$/
+      on:
+        tag: true
+        branch: master
+      script:
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker pull $DOCKER_IMAGE:$TRAVIS_TAG
+      - docker tag $DOCKER_IMAGE:$TRAVIS_TAG $DOCKER_IMAGE:latest
       - docker push $DOCKER_IMAGE:latest
+      - |
+        if [ ! -z "$THEO_UPDATE_TOKEN" ]; then
+          curl -H "Content-Type: application/json" -H "Authorization: Bearer $THEO_UPDATE_TOKEN" \
+            -d '{"version": "'$TRAVIS_TAG'", "latest": true }' https://update.theo.authkeys.io
+        fi
