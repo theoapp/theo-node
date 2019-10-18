@@ -30,7 +30,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@authkeys/microservice": "^2.2.0",
-    "@authkeys/mysql-connman": "^0.4.0",
+    "@authkeys/mysql-connman": "^0.5.0-rc.0",
     "dotenv": "^6.2.0",
     "memcached": "^2.2.2",
     "node-fetch": "^2.6.0",

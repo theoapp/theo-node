@@ -62,7 +62,7 @@ test_mysql_innodbcluster_redis_core_cluster() {
     theo-tester npm run test:cluster
   RETVAL=$?
   if [[ ${RETVAL} -gt 0 ]]; then
-    echo "ERR docker-compose-test-mariadb-redis-core-cluster FAILED"
+    echo "ERR test_mysql_innodbcluster_redis_core_cluster FAILED"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mysql-innodbcluster-redis-core-cluster.yml logs --tail 50 theo1
     docker-compose -p theotests -f docker-compose/docker-compose-test-mysql-innodbcluster-redis-core-cluster.yml logs --tail 50 theo2
     docker-compose -p theotests -f docker-compose/docker-compose-test-mysql-innodbcluster-redis-core-cluster.yml logs --tail 50 theo3
