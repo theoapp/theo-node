@@ -35,6 +35,6 @@ LABEL org.opencontainers.image.vendor="Authkeys" \
 	org.opencontainers.image.source="https://github.com/theoapp/theo-node" \
 	org.opencontainers.image.title="Theo Server" \
 	org.opencontainers.image.description="The authorized keys manager" \
-	org.opencontainers.image.version="1.0.0-rc.0" \
+	org.opencontainers.image.version="1.0.0-rc.1" \
 	org.opencontainers.image.documentation="https://theoapp.readthedocs.io" \
 	org.opencontainers.image.licenses='Apache-2.0'
