@@ -61,8 +61,8 @@ class DbHelper {
   async checkDb(client) {
     let currentVersion;
     try {
-      const dbversion = await client.getServerVersion();
-      common_info('Db Version', dbversion);
+      const serverVersion = await client.getServerVersion();
+      common_info('Db Version', serverVersion);
       this.manager.setClient(client);
     } catch (e) {
       common_error('checkDb failed %s', e.message);
@@ -85,7 +85,7 @@ class DbHelper {
     if (currentVersion === -999) {
       try {
         currentVersion = await this.manager.createVersionTable();
-      } catch (err) {
+      } catch (e) {
         if (e.code === 'ER_TABLE_EXISTS_ERROR') {
           await setTimeoutPromise(2000);
           this.checkDb(client);
