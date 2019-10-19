@@ -3,6 +3,7 @@ services:
   - docker
 
 stages:
+  - lint
   - test
   - name: push-image-tag
     if: type != pull_request
@@ -11,6 +12,11 @@ stages:
 
 jobs:
   include:
+    - stage: lint
+      node_js: '12'
+      script:
+        - npm i
+        - npm run lint
     - stage: test
       script:
       - ./runTestsAll.sh
