@@ -16,6 +16,7 @@ import Microservice from '@authkeys/microservice';
 import { initRoutes } from './routes';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
+import { auditMiddleware } from './lib/middlewares/AuditMiddleware';
 import { common_error } from './lib/utils/logUtils';
 import UpdateHelper from './lib/helpers/UpdateHelper';
 
@@ -56,6 +57,7 @@ class TheoServer extends Microservice {
   setupRoutes(app, express) {
     app.disable('x-powered-by');
     app.use(authMiddleware);
+    app.use(auditMiddleware);
     app.use(async (req, res, next) => {
       const { path, method } = req;
       res.set('Connection', 'close');
