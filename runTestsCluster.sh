@@ -7,6 +7,14 @@ if [ "$TRAVIS" = "true" ]; then
   WAIT_FOR_DBCLUSTER_SEC=120
 fi
 
+print_test_header () {
+    echo
+    echo "  #####  "
+    echo $1
+    echo "  #####  "
+    echo
+}
+
 if ! [[ "$1" == "skip_build" ]]; then
   # Build theo test image
   docker build --target builder -t theo-tester .
@@ -28,6 +36,7 @@ fi
 source ./docker-compose/test_env
 
 test_mariadb_redis_core_cluster() {
+  print_test_header mariadb_redis_core_cluster
   docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml up -d
   echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
   sleep $WAIT_FOR_DB_SEC
@@ -49,6 +58,7 @@ test_mariadb_redis_core_cluster() {
 }
 
 test_mysql_innodbcluster_redis_core_cluster() {
+  print_test_header mysql_innodbcluster_redis_core_cluster
   docker-compose -p theotests -f docker-compose/docker-compose-test-mysql-innodbcluster-redis-core-cluster.yml up -d
   echo Waiting ${WAIT_FOR_DBCLUSTER_SEC}s for db to start..
   sleep $WAIT_FOR_DBCLUSTER_SEC
