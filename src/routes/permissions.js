@@ -17,7 +17,7 @@ import { getAuthorizedKeysAsFullJson } from '../lib/helpers/KeysHelper';
 
 export default function handlePermissions(express) {
   const router = express.Router();
-  router.get('/:host/:user', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.get('/:host/:user', requireAdminAuthMiddleware, async (req, res) => {
     const { host, user } = req.params;
     try {
       const keys = await getAuthorizedKeysAsFullJson(req.db, user, host);
