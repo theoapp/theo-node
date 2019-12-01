@@ -26,6 +26,27 @@ const publicKeySample2 =
 const publicKeySample3 =
   'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMODOr5BfHfde7yHPYVHDWfqgPbHvtFI9coTBoiLZjADbAAKCVLTL+tddnP7oCJBOM0TEC9ySptIv2kzAcPN6shkQs4Y8AWB2HgAl6cWzNmirRxmbVcUDM7a32q9uIiUHyQ6UIHUsyIaTeFtlldf0AT14r9ilaTRBCEH3r2u4xxVntVpJerBBZijsjfl1KN1N0bG9z9pHkpoUiJpIxGDhG1malhypRKffBSeNo4HNwAAA/SyvJq1jvGdBlZhbZK6kN+AnTdQnA8tSd1BhjXRv3uxUeGBHrYxnlaOvFCNjYsSARZO5iFNclgT/mOM75+luOzLmgf+X5h2y3VFZqjEax jolly2@newsvine.com';
 
+const publicKeySample4 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQCslSylir+Ft5Py7n1eoEd6hJa/QbSVscG+v5H+hl920fgLeO5UF/Ykuszf89heLqJ2QEqqtQPAxeBpIQoWAUu4HGb1c0mS0TlYal5/eYpVrv92TXC79rCNEM/jR0AO9WElqTMfYuVsuvHCxWs0zbKaKcqJN/HuekUp7FsY1Zv5lQ== test@test.net';
+
+const publicKeySample5 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDBBCTYkieaf0EHNs2bkz3td8wgMr+sXgPCydb+SjuDgQSYmQHeYmgiUxuBmPengieId5YA3eZ5cguWz5EgX2aPZ5Af1cxFOhWN7+TG8LRjfKYZnwdRrwvCNWf/xa09k1uHxzfzx2JT0fgcwPWtMVhbZZGKTHED+a5oIPyjiNRRGw== test@test.net';
+
+const publicKeySample6 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDa06TmKq2XN1S5xoSv1wD69cZCkTJFFh6sUb5P0pNoyg5npiKRQixuWD0VA8ExnMzzFCGShoZkLYbU/Dd/VNLfBx2KPSX7iewXlxMaYrcTOtmO9XCkto4HyFELuLlfAnHHTs3Urf1IeNRsSIcHsPHs5uh3xRnugUYu/F7dpasjTw== test@test.net';
+
+const publicKeySample7 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQC9/3ejiuZuvnaOUWyVjDhe5gbZdeTUyrBl4w2ItD9jN2twl7N68uRB9lQgNe+gBXiEuHy/RDGxPFJWU8FKUBMKAZ1cPRzGFSJrPNVIcgQnkHctqjnnNBuBqb+UTqawSkliG+KXRvM216HvLjze3Oq/J6Uy5fRqRiPOyWsEYzvgSQ== test@test.net';
+
+const publicKeySample8 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDVJ+tNkA0XSn2twY+pvjiclKrPnsFiIGWL0tM/gVRRS2J2GPGZc8EDMyZvxfevOMh9dLRQeoJludd0b9s53YX860fP9PKrch9mXL82gelTNcDYUCl/H0i9BkCDoLEZTImeCc9Z/r824e+4JK0YtfRqtwm89BLru2Vmvm6yQ8ZTnw== test@test.net';
+
+const publicKeySample9 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDnTcBR8B6hIxW5YhMPnmtN/W5sVM3rzJjDLxHfSu7Mc0eECTe8BNG7FpyA4zA4uz/H6J4mHo4naUbRHEKYQ1gpAZYYP8lrduK72NGuaStlat+Q2nRhhWhVc026ojPuV8wyBMt2IjnMKg8PizOd1XOgNH5pP8uJfb7iscljvUOiEw== test@test.net';
+
+const publicKeySample10 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDKlJyam2TFE1+dfdwg+52VvPC/rvY8F4m9m62tYvnEfmxi+yrd/Qyn12AJiF+1C5mV1Xhvy6UHwZbSZ1IRuj3FJImk/C5nzsw8zWsupKmI0lmCUjb40WWJ7zbhOnqi3Hpb3oTRdTwKvjnJQ2sAR86D9WLWdLo6Lziw6fvp31SFWw== test@test.net';
+
 describe('REST Test account', function() {
   this.timeout(10000);
 
@@ -189,7 +210,7 @@ describe('REST Test account', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
-        keys: [publicKeySample2, publicKeySample3]
+        keys: [publicKeySample3, publicKeySample4]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -292,7 +313,7 @@ describe('REST Test account', function() {
 
   describe('add 1 key to an account', function() {
     it('should return an account object with 1 key and no permissions', async function() {
-      const keys = [publicKeySample2];
+      const keys = [publicKeySample5];
 
       const res = await fetch(base_url + '/accounts/1/keys', {
         method: 'POST',
@@ -550,7 +571,7 @@ describe('REST Test group', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
-        keys: [publicKeySample2]
+        keys: [publicKeySample6]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -616,7 +637,7 @@ describe('REST Test group', function() {
       const reqAccount = {
         name: 'john doe 3',
         email: 'john.doe.3@example.com',
-        keys: [publicKeySample3]
+        keys: [publicKeySample7]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -682,17 +703,17 @@ describe('REST Test group', function() {
         {
           name: 'john doe 4',
           email: 'john.doe.4@example.com',
-          keys: [publicKeySample3]
+          keys: [publicKeySample8]
         },
         {
           name: 'john doe 5',
           email: 'john.doe.5@example.com',
-          keys: [publicKeySample3]
+          keys: [publicKeySample9]
         },
         {
           name: 'john doe 6',
           email: 'john.doe.6@example.com',
-          keys: [publicKeySample3]
+          keys: [publicKeySample10]
         }
       ];
 

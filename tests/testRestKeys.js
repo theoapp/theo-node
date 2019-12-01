@@ -251,8 +251,8 @@ describe('REST Check keys', function() {
         name: 'John Doe',
         email: 'john.doe@example.com',
         keys: [
-          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD1Df4sV1iiEYsU/73PqxgUveYWk2HzvpOc+RsQhd0ziRKW+lGIWN9wMZ8EOoN565HrPedcDYEbYlCuZ/uvnmOE+1YwxSqeLq/cXRaDjd3KsqdKIgXYReh4HFSWwXdB9T+Qv0bOzRbW34qxDX5VPKb7iaIxphCLDY6WD+6goKn1xq/gSmzA8yteMzdX8K9qT+CeUVBHNIN+cWg5yfOs50jVvgTpr8dJj74NO2j/arxOtaadFrAZuRapN+Cn6AQiQAhp66DQ+H8yYxnEZP5G17uE8MS88qSXTmaW5i1uJDlS28SNgl1Icab1bv1fvZXHk3MSD8S4pPLytE3VpdKMLdaP scallar1b@1und1.de',
-          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDOinZyJR2WUMYqYJ7Urdt4hGrY6DE5iWMp28aLJsyZUwFFBZ01x86mc+rFXN6+V3YlhYbBz2wgeyWMESlE8E4x/jHcjxOjySof2/SKV26BZd0C0/thHnE96SHUC8ZAEBSnJe8mM7obfCeoEYVow8dCL4MhoH84kJFiW+Wutoe/Lvs4drGoDozOAVOvUebBpwJX9jJodRiMbM4Bf55rdO5FOX07EsMqKJTEEhkS3lS5BMwamvH0ZRX5i94vdtrkrzgXIxE1iggMIE3NdF3PStXt7Q2SHXg+9b9CcZ9nl65LLdCWZW5cyC1DRYfq0z6IujMCL7JRPOY3Pf09st7HinJr scallar1b@1und1.de'
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDp0MT4xqNq8B0OtIykxetl9A2oQScEJvGNsMXI3qEhs1hIQIV5pmGehblq12Erahe/FpPFH+gavhFtF3E57mm410duyAdY0fiU81Ay49+IkP+GrLZJq52qVstp+/NlkishI3RsU2le/b2Ei4u5toI9j/fiJYxmCMTuyNYifcVRCw== scallar1b@1und1.de',
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDCXq8CooC0e0AW4kCdxHR9GZf2VN1RXnp7zMVBsqcbRQWpq9/2w7LGybuFwmMPN0D0tCk9yLQFxIV49iAzenXYFGUdyw7lKMEPhxA7h7Hs/z3ccfIsY7rYyKpr3ekGUw/Og/V1W8CY/iULPfKT5OPpfIGf3RTcwdzLlwcfVcgTbw== scallar1b@1und1.de'
         ],
         permissions: [
           {
@@ -281,8 +281,8 @@ describe('REST Check keys', function() {
         name: 'John Doe 2',
         email: 'john.doe2@example.com',
         keys: [
-          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDhUZ36vEwQl+JLfDeqRauGuisnNEbQARbGFhvrVupHhjykbCeMzAtfa7awRSLLtBpCPrqpsbinX9TlehEKsT9hE9ecI6joUaurYuwDJ0zABJUoXHDFgXTuM5YqVIPBqhJ5adqr2W/H2K7Ae0q09x9dekeQPHfRdStY7KbGYkL7oR9nCfHxLQeb8Y0R4P7dWfym6cFrBT9AYFwjgBJi5vndG1SmepJO1UlJDHo3m80SCpyK9L57Hk8ijRlsxdl34fmciTTbrhpnDUs1mOelIZ7Ek2jb+gwnmk2TMwTibLfJtDJm5lSK0z6WXcElDl8zuWuf0xAJ8FHcu4ql5fNQF3Wd eyurmanovev16@gmpg.org',
-          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzZjaqCTfqxKktG9sMWuM3qzvbPwSyIan0VKUlnbETlJ9+fVH56ZeVdyxza2j77QvehMyC9Rfwvx4dxLBwuygICjZWK6Crgz6ygyAPgADvsQgQ7g3h4gAMFra2EyHZIJ1+z23cH28BPkbREwZaN+7ld8xhK+K6xf9QdB15YYIjpVpaAArpk02NHeC5KH/xuruDSbEShvA7afrTRv8ySSXTedj1CdzeaQ0ccypgt7n5wUKD395WHUr1IjwV+URorx6GwB7OucxrL+G1cdFWNxtC5/c2wlk//1cEn2c3TgS/1EhYg65x+BXD1kw5a0UUFMMFo6C2RBzNIkIWS+GVaxnp eyurmanovev16@gmpg.org'
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQC4IQHQc96XU7Te7kOOJ6wxb895Ak4jt24AJ95rQ8UnxD/aPDsRlZAQUQlJiis6oCi+/RHRxjg6zwHIWpQa9vPa2qyDe9k6GMN0Ks2OTkg9ULWmzqbobKwUVusv/QgxTrCk4cSuwvNcrEBw4JtZH9hWWRCwUdUlEc3aJovjOTUraw== eyurmanovev16@gmpg.org',
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQCg2RksaYjPZ+vt1/ooBEV5Fcdz0WgIrqiNLsl3sO8ziApdGFyzHhvVeUzv4Pai8CFcg8iYE+OFXmXcvY2jInCToGDG9a8dAGqlhfM81Y7R1pgQSjqb8TamfN5fQPN4Zf2NbT/w5Mcsrmdy4f7KbUQXmgKJwC+rszsZXR+994IsLw== eyurmanovev16@gmpg.org'
         ],
         permissions: []
       };
@@ -291,8 +291,8 @@ describe('REST Check keys', function() {
         name: 'John Doe 3',
         email: 'john.doe3@example.com',
         keys: [
-          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDTy2/OjrEbQAG2j0QwD86OKkzpPdLlpOcAoEoYOtQVTieF+5S2NmchIm9aZ89CHs3bYVYoolaIFJ8cMCQHsao/SMqGIrVkTNw1/jpHe8Uk74KsFP4qHEfg25ub73iB/nB5dPi+FAyisLGLwC0o/5KJXd7pU9aBta+rNVSwVjdx9DeT1t4kzOBIoC48Al2is4tTmr3jW69B6HfQHMbUoiiRqYlfLRlRqwkIvMmrX3RtuzDyP5I1E+j1/3ITjyn/htwbgbUCmKfWqWW8nk6N+PE/sGDfPVthv7A6DWbXZDStu5xpB2q1JbKeUeb3kUhSnpBy87ahCYOWylIYvyf1NgTB ebatchley17@friendfeed.com',
-          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDn6L+GqagnNhiWkLHGo5ytI0YerMqtEcE6xkLm6xSauHTOg93T9owMo0TiNf2yh9hkWnVlLZpjJ7zvaxGbyFfSHlIO2KzVflDwocAbmNSerAzMwRbvFKXrHwp5+cn3nsKYI65mq+LiKe4SIPTJThZoRntcKFtUpSSVMUYkPbkDaFHZgJVixLdsV0PrxvroDWo3lP/OY9e/ubiFL9vMG+RB5ghJ3bDSzHyCC4oCQsDBMxG1wf0F5gvc4vlLPun8cDICVVY1cwlRzx86/GvXrJ7QPAjPrVELfURzWtSeIiMZJxerbpfnEXw4rE+13noBwbZAalkrsXloK27s7oYkvQwn ebatchley17@friendfeed.com'
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDEs5Oqyx6/BBM38Jvhsu+PJ4Iu3/4FlnfYYeqfeArnCNMbDnifuXIGe3kjAj7ouuTHRq/O0fLkFEuELNCHLSYgF6bgXVFIvlScGZCCdD/Mo7/7Hbu75ntdNCy9u5ESQw+mT/xGLbFQs3ZMpYfk9GwLdkv1kLHVXEyhUcsSqj0q2w== ebatchley17@friendfeed.com',
+          'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQCzSYlwjDYqS4mI6RuTFu5hFkgMqE7oOb2ads33wIN2av1kE/+elmvX4m/Iz+eu7lr9S66g6C3oYR+yzz0T5xLkBH2PLt+W/tctEQGev6IIU3d3I2cknSogVVweTwQLHLOi7A7DPAPFFIIfsf1vOO6zpTK3CxTmQKZ4vDUj/rD11w== ebatchley17@friendfeed.com'
         ],
         permissions: []
       };

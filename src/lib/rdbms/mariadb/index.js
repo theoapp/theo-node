@@ -48,8 +48,9 @@ class MariadbManager extends DbManager {
     'account_id INTEGER NOT NULL, ' +
     'public_key varchar(1024) not null, ' +
     'public_key_sig varchar(1024), ' +
-    'fingerprint varchar(1024), ' +
+    'fingerprint varchar(128), ' +
     'created_at BIGINT UNSIGNED, ' +
+    'unique (fingerprint), ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PERMISSIONS =
@@ -218,6 +219,20 @@ class MariadbManager extends DbManager {
     if (fromVersion < 13) {
       await dbConn.run("alter table auth_tokens add assignee varchar(64) not null default '' after token");
       await dbConn.run("update auth_tokens set assignee = md5(token) where type = 'admin'");
+    }
+    if (fromVersion < 14) {
+      await dbConn.run('alter table public_keys modify fingerprint varchar(128) not null');
+      try {
+        await dbConn.run('alter table public_keys add unique(fingerprint)');
+      } catch (e) {
+        common_error(`!!!! ATTENTION !!!
+Unable to force uniqueness on fingerprint. This means you have the same public key used multiple time, this could be a problem.
+Pleas fix it and then run this command on your database:
+
+alter table public_keys add unique(fingerprint);
+
+`);
+      }
     }
     if (process.env.CLUSTER_MODE === '1') {
       dbConn.close();
