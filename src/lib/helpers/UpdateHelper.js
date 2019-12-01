@@ -38,7 +38,9 @@ class UpdateHelper {
           }
         })
         .catch(e => {
-          cb(e);
+          if (cb) {
+            cb(e);
+          }
         });
     }, timeout);
   };
