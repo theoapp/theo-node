@@ -62,6 +62,7 @@ class SqliteManager extends DbManager {
     'public_key_sig varchar(1024), ' +
     'fingerprint varchar(1024), ' +
     'created_at INTEGER, ' +
+    'UNIQUE (fingerprint), ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
 
   CREATE_TABLE_PERMISSIONS =
