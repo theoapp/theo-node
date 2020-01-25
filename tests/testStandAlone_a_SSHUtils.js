@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { SSHFingerprint } from '../src/lib/utils/sshUtils';
+import { getOpenSSHPublicKey, getSSH2Comment, SSHFingerprint } from '../src/lib/utils/sshUtils';
 import assert from 'assert';
 
 const keys = [
@@ -27,7 +27,121 @@ const keys = [
     fp: 'SHA256:nzfiS3UxNnfffvF48FrTN7cTWIDUT8P/ymxFID5q4tY'
   }
 ];
+
+const invalid_keys = [
+  'fake',
+  '',
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCcHb8ko2Hrd/QKWvem7UP26XXuNUWnD2hm/X//Q4wznPwj2s test@host'
+];
+
+const valid_keys = [
+  {
+    k: `---- BEGIN SSH2 PUBLIC KEY ----
+Comment: "usern@hostrc"
+AAAAB3NzaC1yc2EAAAABJQAAAQEAlBoHzKTp9Al4nA6AN2y1Lw2geuvvUn1CJw2e
+gYGmOmoZvl9kYjc0VRu7xR2NbwapgwNRSmB/7p2gXKsAyzQH1FIV2wc8CG7Ve4px
+Cjzbqa6fNVJyq1JTKmCaVG/m0qtSSWCMuU40xsfYfN9mOVYL7rG4E1BXZetPCo4R
+VDuljdLr0S97fow0CxdmbOVHU0CsZgff6KdaGHOZKTFpQ5bstSRAu6tK4QuowT44
+nKijfc3u79vD+UzI32nQIPWvHXK5JNpeWCkZlll+4BbhAYgrFd3Yuvi/9wO/MdcF
+JPynHFDyk1dudUznyoY2JBdMqvsG0eQ5ZEppDyvsXR9aB2+UUw==
+---- END SSH2 PUBLIC KEY ----`,
+    s: `ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAlBoHzKTp9Al4nA6AN2y1Lw2geuvvUn1CJw2egYGmOmoZvl9kYjc0VRu7xR2NbwapgwNRSmB/7p2gXKsAyzQH1FIV2wc8CG7Ve4pxCjzbqa6fNVJyq1JTKmCaVG/m0qtSSWCMuU40xsfYfN9mOVYL7rG4E1BXZetPCo4RVDuljdLr0S97fow0CxdmbOVHU0CsZgff6KdaGHOZKTFpQ5bstSRAu6tK4QuowT44nKijfc3u79vD+UzI32nQIPWvHXK5JNpeWCkZlll+4BbhAYgrFd3Yuvi/9wO/MdcFJPynHFDyk1dudUznyoY2JBdMqvsG0eQ5ZEppDyvsXR9aB2+UUw== usern@hostrc`
+  },
+  {
+    k: `ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAqIr9zeWOhGmL6kPmo5pqInlbR41NW/R9cfCR
+b3PvasmOIJCZ5BBjlqmok3sBDVkwMvkOqYGkqhOceRzGoh9sTZsEMCgXs7LsRhA7
+jjTxkqolwunn7OQ1DDHYdDFG61g0Mjs1WjvEd9lYeUwGF5ARGALxV+OEDTD/zi4Q
+IKp5TjGKBoSGBLcU+KSfPcN4+vKMUBdoHMVBFIeXLTBeTzmtbGkg+q7bspPso4Kt
+CHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65W
+gzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ== mdiaz@smartlis`,
+    s: `ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAqIr9zeWOhGmL6kPmo5pqInlbR41NW/R9cfCRb3PvasmOIJCZ5BBjlqmok3sBDVkwMvkOqYGkqhOceRzGoh9sTZsEMCgXs7LsRhA7jjTxkqolwunn7OQ1DDHYdDFG61g0Mjs1WjvEd9lYeUwGF5ARGALxV+OEDTD/zi4QIKp5TjGKBoSGBLcU+KSfPcN4+vKMUBdoHMVBFIeXLTBeTzmtbGkg+q7bspPso4KtCHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65WgzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ== mdiaz@smartlis`
+  }
+];
+
+const SSH2Comments = [
+  {
+    k: `---- BEGIN SSH2 PUBLIC KEY ----
+AAAAB3NzaC1yc2EAAAABJQAAAQEAlBoHzKTp9Al4nA6AN2y1Lw2geuvvUn1CJw2e
+gYGmOmoZvl9kYjc0VRu7xR2NbwapgwNRSmB/7p2gXKsAyzQH1FIV2wc8CG7Ve4px
+Cjzbqa6fNVJyq1JTKmCaVG/m0qtSSWCMuU40xsfYfN9mOVYL7rG4E1BXZetPCo4R
+VDuljdLr0S97fow0CxdmbOVHU0CsZgff6KdaGHOZKTFpQ5bstSRAu6tK4QuowT44
+nKijfc3u79vD+UzI32nQIPWvHXK5JNpeWCkZlll+4BbhAYgrFd3Yuvi/9wO/MdcF
+JPynHFDyk1dudUznyoY2JBdMqvsG0eQ5ZEppDyvsXR9aB2+UUw==
+---- END SSH2 PUBLIC KEY ----`,
+    c: ''
+  },
+  {
+    k: `---- BEGIN SSH2 PUBLIC KEY ----
+Comment: "usern@hostrc"
+AAAAB3NzaC1yc2EAAAABJQAAAQEAlBoHzKTp9Al4nA6AN2y1Lw2geuvvUn1CJw2e
+gYGmOmoZvl9kYjc0VRu7xR2NbwapgwNRSmB/7p2gXKsAyzQH1FIV2wc8CG7Ve4px
+Cjzbqa6fNVJyq1JTKmCaVG/m0qtSSWCMuU40xsfYfN9mOVYL7rG4E1BXZetPCo4R
+VDuljdLr0S97fow0CxdmbOVHU0CsZgff6KdaGHOZKTFpQ5bstSRAu6tK4QuowT44
+nKijfc3u79vD+UzI32nQIPWvHXK5JNpeWCkZlll+4BbhAYgrFd3Yuvi/9wO/MdcF
+JPynHFDyk1dudUznyoY2JBdMqvsG0eQ5ZEppDyvsXR9aB2+UUw==
+---- END SSH2 PUBLIC KEY ----`,
+    c: 'usern@hostrc'
+  },
+  {
+    k: `---- BEGIN SSH2 PUBLIC KEY ----
+Comment: usern@hostrc
+AAAAB3NzaC1yc2EAAAABJQAAAQEAlBoHzKTp9Al4nA6AN2y1Lw2geuvvUn1CJw2e
+gYGmOmoZvl9kYjc0VRu7xR2NbwapgwNRSmB/7p2gXKsAyzQH1FIV2wc8CG7Ve4px
+Cjzbqa6fNVJyq1JTKmCaVG/m0qtSSWCMuU40xsfYfN9mOVYL7rG4E1BXZetPCo4R
+VDuljdLr0S97fow0CxdmbOVHU0CsZgff6KdaGHOZKTFpQ5bstSRAu6tK4QuowT44
+nKijfc3u79vD+UzI32nQIPWvHXK5JNpeWCkZlll+4BbhAYgrFd3Yuvi/9wO/MdcF
+JPynHFDyk1dudUznyoY2JBdMqvsG0eQ5ZEppDyvsXR9aB2+UUw==
+---- END SSH2 PUBLIC KEY ----`,
+    c: 'usern@hostrc'
+  },
+  {
+    k: `---- BEGIN SSH2 PUBLIC KEY ----
+Comment: "mdiaz@smartlis"
+AAAAB3NzaC1yc2EAAAABJQAAAQEAqIr9zeWOhGmL6kPmo5pqInlbR41NW/R9cfCR
+b3PvasmOIJCZ5BBjlqmok3sBDVkwMvkOqYGkqhOceRzGoh9sTZsEMCgXs7LsRhA7
+jjTxkqolwunn7OQ1DDHYdDFG61g0Mjs1WjvEd9lYeUwGF5ARGALxV+OEDTD/zi4Q
+IKp5TjGKBoSGBLcU+KSfPcN4+vKMUBdoHMVBFIeXLTBeTzmtbGkg+q7bspPso4Kt
+CHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65W
+gzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ==
+---- END SSH2 PUBLIC KEY ----`,
+    c: 'mdiaz@smartlis'
+  },
+  {
+    k: `---- BEGIN SSH2 PUBLIC KEY ----
+Comment: mdiaz@smartlis
+AAAAB3NzaC1yc2EAAAABJQAAAQEAqIr9zeWOhGmL6kPmo5pqInlbR41NW/R9cfCR
+b3PvasmOIJCZ5BBjlqmok3sBDVkwMvkOqYGkqhOceRzGoh9sTZsEMCgXs7LsRhA7
+jjTxkqolwunn7OQ1DDHYdDFG61g0Mjs1WjvEd9lYeUwGF5ARGALxV+OEDTD/zi4Q
+IKp5TjGKBoSGBLcU+KSfPcN4+vKMUBdoHMVBFIeXLTBeTzmtbGkg+q7bspPso4Kt
+CHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65W
+gzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ==
+---- END SSH2 PUBLIC KEY ----`,
+    c: 'mdiaz@smartlis'
+  }
+];
 describe('Testing SSHUtils', function() {
+  describe('Test getSSH2Comment', function() {
+    it('should return right comment', function() {
+      for (let i = 0; i < SSH2Comments.length; i++) {
+        const comment = getSSH2Comment(SSH2Comments[i].k);
+        assert.strictEqual(comment, SSH2Comments[i].c);
+      }
+    });
+  });
+  describe('Test SSHPublicKeyCheck', function() {
+    it('Should return false with invalid keys', function() {
+      for (let i = 0; i < invalid_keys.length; i++) {
+        const valid = getOpenSSHPublicKey(invalid_keys[i]);
+        assert.strictEqual(valid, false);
+      }
+    });
+    it('Should return true with valid keys', function() {
+      for (let i = 0; i < valid_keys.length; i++) {
+        const opensshFormat = getOpenSSHPublicKey(valid_keys[i].k);
+        assert.strictEqual(opensshFormat, valid_keys[i].s);
+      }
+    });
+  });
   describe('SSHFingerprint', function() {
     for (let i = 0; i < keys.length; i++) {
       it('should return the correct fingerprint', function() {
