@@ -15,7 +15,7 @@
 import AccountManager from '../../managers/AccountManager';
 import KeyManager from '../../managers/KeyManager';
 import AppHelper from '../AppHelper';
-import { SSHFingerprint } from '../../utils/sshUtils';
+import { getOpenSSHPublicKey, SSHFingerprint } from '../../utils/sshUtils';
 import EventHelper from '../EventHelper';
 import { getKeysImporterModule, getKeysImporterModulesList } from '../../keys_importer/modules';
 
@@ -25,7 +25,7 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
   if (typeof key === 'string') {
     _key = key.trim();
   } else {
-    // Object, we got also sign
+    // Object, we got also the signature
     _key = key.key.trim();
     _signature = key.signature.trim();
   }
@@ -38,15 +38,28 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
     console.error('Key must be signed!');
     throw err;
   }
-
+  _key = getOpenSSHPublicKey(_key);
+  if (!_key) {
+    const err = new Error('Invalid key format');
+    err.t_code = 400;
+    throw err;
+  }
   const fingerprint = SSHFingerprint(_key);
+  const fpExists = await km.checkFingerprint(fingerprint);
+  if (fpExists) {
+    const am = new AccountManager(km.db);
+    const _account = await am.get(fpExists.account_id);
+    const err = new Error('This key already exists, linked to account ' + _account.email);
+    err.t_code = 409;
+    throw err;
+  }
   const id = await km.create(account.id, _key, fingerprint, _signature);
   if (req && req.auditHelper) {
     req.auditHelper.log('accounts', 'add_key', account.email, { key: _key, fingerprint });
   }
   return {
     id,
-    public_key: key
+    public_key: _signature ? { key: _key, signature: _signature } : _key
   };
 };
 
@@ -195,13 +208,16 @@ export const adminAddAccountKeyFromService = async (db, account_id, service, use
       if (!_key) {
         continue;
       }
-      const fingerprint = ''; // TODO get ssh key's fingerprint
-      const id = await km.create(account_id, _key, fingerprint);
-      const key = {
-        id,
-        public_key: keys[i]
-      };
-      ret.public_keys.push(key);
+      const fingerprint = SSHFingerprint(_key);
+      const fpExists = await km.checkFingerprint(fingerprint);
+      if (!fpExists) {
+        const id = await km.create(account_id, _key, fingerprint);
+        const key = {
+          id,
+          public_key: keys[i]
+        };
+        ret.public_keys.push(key);
+      }
     }
     EventHelper.emit('theo:change', {
       func: 'account_keys',

@@ -55,6 +55,11 @@ class KeyManager {
     const sql = 'select id, public_key, fingerprint, public_key_sig from public_keys where id = ? and account_id = ?';
     return this.db.get(sql, [id, account_id]);
   }
+
+  async checkFingerprint(fingerprint) {
+    const sql = 'select id, account_id from public_keys where fingerprint = ?';
+    return this.db.get(sql, [fingerprint]);
+  }
 }
 
 export default KeyManager;
