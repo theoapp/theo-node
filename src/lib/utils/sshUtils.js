@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import sshpk from 'sshpk';
+import { common_debug } from './logUtils';
 
 /**
  * @return {string}
@@ -20,4 +21,43 @@ import sshpk from 'sshpk';
 export const SSHFingerprint = function(keyPub) {
   const key = sshpk.parseKey(keyPub, 'ssh');
   return key.fingerprint().toString();
+};
+
+export const getSSH2Comment = function(keyPub) {
+  let comment = '';
+  keyPub.split('\n').forEach(line => {
+    if (line.toLowerCase().indexOf('comment:') === 0) {
+      const _comment = line.substring(8).trim();
+      if (_comment[0] === '"') {
+        comment = _comment.substring(1, _comment.length - 1);
+      } else {
+        comment = _comment;
+      }
+    }
+  });
+  return comment;
+};
+
+export const getOpenSSHPublicKey = function(keyPub) {
+  try {
+    keyPub = keyPub.trim();
+    const key = sshpk.parseKey(keyPub);
+    let openssh = key.toString('ssh');
+    if (!openssh) {
+      common_debug('Key %s is not a valid openssh', keyPub);
+      return false;
+    }
+    if (openssh !== keyPub) {
+      if (key.comment === '(unnamed)') {
+        if (keyPub.indexOf('---- BEGIN SSH2 PUBLIC KEY ----') === 0) {
+          key.comment = getSSH2Comment(keyPub);
+          openssh = key.toString('ssh');
+        }
+      }
+    }
+    return openssh;
+  } catch (e) {
+    common_debug('Key %s is not valid', keyPub, e.message);
+    return false;
+  }
 };
