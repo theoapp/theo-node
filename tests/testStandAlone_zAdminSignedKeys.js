@@ -27,11 +27,27 @@ import DbHelper, { releaseDHInstance } from '../src/lib/helpers/DbHelper';
 const publicKeySample =
   'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoUQGPAFUl3xBX+1vxm/o1v4G1KHqXlvg/pVAHrs89isBTcXwNoo4C1YWjF0TCRjhltfvNMNYF8Q1fzEw1anjL+9X26GlXEXr4Nx9MIFFiEiTpUSPGlT13TOIIKW9eEQc9vHydgK1NdpEgz23kcPARWvXbcVtwoLDwfsE1Msvg1qWIN4UiDau/FTetFaq8fcXd3Cun0V+v5DLEfhSB3gNSxWwhdAEaQIpPSJk8VSHKiaOtQ6Besgw8+mjA5u0Mvm4Z9luZ8b7Ky2gUn49HwM/ez7KC9BhoiTsoE8iXjF11J3ttqju0wADZ4P8OQ7y6l7rgNqXyHejhLutvdI3ka3X/ jolly1@newsvine.com';
 
-const publicKeySample2 =
+const publicKeySample4 =
   'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCb80xLc+9jKls1BzxK6/tZKchHZtdz+GFX+eVINDBx//j6Efgp3J8gg1dVI21rAnYb1GTY0P5wozqe2EzEBCKVvlJHjMjpXk+/dkzLkUcbDlL8F/Rv6pIOn0OqNOuWtQ1c8i7qnDA/EzIGrKpDIdL1vXDxEqgzZmRQgNtNJv6mDfkCXL3JQQAVsoTqypI+BSMktX06MjCKLBLsWJRIfUYSgS3yDg6c8Yg7n1yK5sgiNE1mBgZe+Y8VXMcpy3jaiVQ1ifnIPrkvm0oaqZBmYNLDEKkxA9PPMiMo4ZOOF5icXh7MKc9aunqpRZK22dQwJdYvEi57je+ojI63Vil5gXbr jolly3@newsvine.com';
 
-const publicKeySample3 =
-  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMODOr5BfHfde7yHPYVHDWfqgPbHvtFI9coTBoiLZjADbAAKCVLTL+tddnP7oCJBOM0TEC9ySptIv2kzAcPN6shkQs4Y8AWB2HgAl6cWzNmirRxmbVcUDM7a32q9uIiUHyQ6UIHUsyIaTeFtlldf0AT14r9ilaTRBCEH3r2u4xxVntVpJerBBZijsjfl1KN1N0bG9z9pHkpoUiJpIxGDhG1malhypRKffBSeNo4HNwAAA/SyvJq1jvGdBlZhbZK6kN+AnTdQnA8tSd1BhjXRv3uxUeGBHrYxnlaOvFCNjYsSARZO5iFNclgT/mOM75+luOzLmgf+X5h2y3VFZqjEax jolly2@newsvine.com';
+const publicKeySample5 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDVO8IHg+FWdJwFaOm/uDyU+3RIS4vTJoNjx/OQpl3S+HrPPuQQTmnJ+EP4kw+izU11Jc/RNWYOSCcA12q5kLOSf7dBIf5RnExDLNNMDyd7GRUBpesBQEaXKv6nxaVb/CXNMPl7pFGdhy+XQPIo1ep2GI2d6digqg9xJs3/foUNM/gzW4tUE6toEzLZ6soV7/H9d0FiVPPg9YjAZhHt/v5xkEvlEZ3T8lUio7fohrWMtWtzt4HP9RzB+xNQEqIBqyhB9MOLTcMSDPFRcwnF6jB00DM2fXsYURe17PUUZCe1KCIkp96mtifY6R2MDa1jN6IhPMps0uo9AoxfUVVEbLDN jolly2@newsvine.com';
+
+const publicKeySample6 =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBo5Qq0z3wP4Xh2ql4XzCT+ku35V8H9zBJ2k40pj6i/j5AZqT5VYjJ7+3vOZDsvLgHWXQf6nIjL1jO1uwQdXYqgOfwsrHHdlFPnX/YAQ2w1F67XvyGgoquDJUOJ2V94qRBuqh/doLMtfADT8pK1c3D1O+Q86yMZC60IXxWJzEF3FrlqoJySSCEkdEIEN2N5icqMvLw32f+70U1dVLsWsvpsQ5z86cp5bqe+xzS/vWFoq/sMGnGsm/0D+J2FwmPGTAk6Q5z7HmR5OYIsnT4wPz1is3Ubf6d6Hyi/aDpZrWzv9jrnvK7zKcHZWx3GOclZSCvrh7lnFrSlFiv6gJUZhVp jolly2@newsvine.com';
+
+const publicSSH2Key = `---- BEGIN SSH2 PUBLIC KEY ----
+Comment: "usern@hostrc"
+AAAAB3NzaC1yc2EAAAABJQAAAQEAqIr9zeWOhGmL6kPmo5pqInlbR41NW/R9cfCR
+b3PvasmOIJCZ5BBjlqmok3sBDVkwMvkOqYGkqhOceRzGoh9sTZsEMCgXs7LsRhA7
+jjTxkqolwunn7OQ1DDHYdDFG61g0Mjs1WjvEd9lYeUwGF5ARGALxV+OEDTD/zi4Q
+IKp5TjGKBoSGBLcU+KSfPcN4+vKMUBdoHMVBFIeXLTBeTzmtbGkg+q7bspPso4Kt
+CHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65W
+gzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ==
+---- END SSH2 PUBLIC KEY ----`;
+
+const publicSSH2KeyOpenSSH =
+  'ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAqIr9zeWOhGmL6kPmo5pqInlbR41NW/R9cfCRb3PvasmOIJCZ5BBjlqmok3sBDVkwMvkOqYGkqhOceRzGoh9sTZsEMCgXs7LsRhA7jjTxkqolwunn7OQ1DDHYdDFG61g0Mjs1WjvEd9lYeUwGF5ARGALxV+OEDTD/zi4QIKp5TjGKBoSGBLcU+KSfPcN4+vKMUBdoHMVBFIeXLTBeTzmtbGkg+q7bspPso4KtCHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65WgzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ== usern@hostrc';
 
 const settings = {
   admin: {
@@ -119,7 +135,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       const reqAccount = {
         name: 'john.doe.x',
         email: 'john.doe.x@example.com',
-        keys: [{ key: publicKeySample3, signature: 'xxx' }]
+        keys: [{ key: publicKeySample4, signature: 'xxx' }]
       };
 
       const resAccount = await adminCreateAccount(db, reqAccount);
@@ -140,7 +156,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
-        keys: [{ key: publicKeySample, signature: 'xxxx' }, { key: publicKeySample2, signature: 'xxxxx' }]
+        keys: [{ key: publicKeySample5, signature: 'xxxx' }, { key: publicKeySample6, signature: 'xxxxx' }]
       };
 
       const resAccount = await adminCreateAccount(db, reqAccount);
@@ -175,6 +191,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       const keys = [{ key: publicKeySample, signature: 'xxxx' }];
 
       const retKeys = await adminAddAccountKeys(db, 1, keys);
+
       const resAccount = await adminGetAccount(db, 1);
 
       assert.strictEqual(retKeys.account_id, 1);
@@ -196,6 +213,24 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       }
       const resAccount = await adminGetAccount(db, 1);
       assert.strictEqual(resAccount.public_keys.length, 0);
+    });
+  });
+
+  describe('add 1 SSH2 key to an account', function() {
+    it('should return an account object with 1 key and no permissions', async function() {
+      const keys = [{ key: publicSSH2Key, signature: 'xxxx' }];
+
+      const retKeys = await adminAddAccountKeys(db, 1, keys);
+
+      const resAccount = await adminGetAccount(db, 1);
+
+      assert.strictEqual(retKeys.account_id, 1);
+      assert.strictEqual(retKeys.public_keys.length, 1);
+      assert.strictEqual(retKeys.public_keys[0].public_key.key, publicSSH2KeyOpenSSH);
+      assert.strictEqual(retKeys.public_keys[0].public_key.signature, keys[0].signature);
+      assert.strictEqual(resAccount.public_keys.length, 1);
+      assert.strictEqual(resAccount.public_keys[0].public_key, publicSSH2KeyOpenSSH);
+      assert.strictEqual(resAccount.public_keys[0].public_key_sig, keys[0].signature);
     });
   });
 });
