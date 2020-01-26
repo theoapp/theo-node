@@ -14,7 +14,7 @@
 
 import { common_error, common_warn } from './lib/utils/logUtils';
 import { md5 } from './lib/utils/cryptoUtils';
-import { loadDbEnvSettings } from '@authkeys/mysql-connman';
+import { getLoadDbEnvSettings } from './dbInitiator';
 
 const initSettings = function() {
   let settings = {
@@ -66,6 +66,7 @@ const initSettings = function() {
         }
       }
     } else {
+      const loadDbEnvSettings = getLoadDbEnvSettings();
       loadDbEnvSettings(settings.db);
     }
   };
