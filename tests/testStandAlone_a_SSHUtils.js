@@ -129,10 +129,15 @@ describe('Testing SSHUtils', function() {
     });
   });
   describe('Test SSHPublicKeyCheck', function() {
-    it('Should return false with invalid keys', function() {
+    it('Should throw an error with invalid keys', function() {
       for (let i = 0; i < invalid_keys.length; i++) {
-        const valid = getOpenSSHPublicKey(invalid_keys[i]);
-        assert.strictEqual(valid, false);
+        let valid;
+        try {
+          valid = getOpenSSHPublicKey(invalid_keys[i]);
+        } catch (e) {
+          assert.strictEqual(e instanceof Error, true);
+        }
+        assert.strictEqual(valid, undefined);
       }
     });
     it('Should return true with valid keys', function() {

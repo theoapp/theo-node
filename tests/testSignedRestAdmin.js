@@ -172,7 +172,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
         body: JSON.stringify({ keys })
       });
 
-      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.status, 400);
     });
   });
 });

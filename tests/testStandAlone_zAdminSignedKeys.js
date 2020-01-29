@@ -46,9 +46,6 @@ CHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65W
 gzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ==
 ---- END SSH2 PUBLIC KEY ----`;
 
-const publicSSH2KeyOpenSSH =
-  'ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAqIr9zeWOhGmL6kPmo5pqInlbR41NW/R9cfCRb3PvasmOIJCZ5BBjlqmok3sBDVkwMvkOqYGkqhOceRzGoh9sTZsEMCgXs7LsRhA7jjTxkqolwunn7OQ1DDHYdDFG61g0Mjs1WjvEd9lYeUwGF5ARGALxV+OEDTD/zi4QIKp5TjGKBoSGBLcU+KSfPcN4+vKMUBdoHMVBFIeXLTBeTzmtbGkg+q7bspPso4KtCHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65WgzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ== usern@hostrc';
-
 const settings = {
   admin: {
     token: ''
@@ -217,20 +214,15 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
   });
 
   describe('add 1 SSH2 key to an account', function() {
-    it('should return an account object with 1 key and no permissions', async function() {
+    it('should throw an error because of signature', async function() {
       const keys = [{ key: publicSSH2Key, signature: 'xxxx' }];
-
-      const retKeys = await adminAddAccountKeys(db, 1, keys);
-
-      const resAccount = await adminGetAccount(db, 1);
-
-      assert.strictEqual(retKeys.account_id, 1);
-      assert.strictEqual(retKeys.public_keys.length, 1);
-      assert.strictEqual(retKeys.public_keys[0].public_key.key, publicSSH2KeyOpenSSH);
-      assert.strictEqual(retKeys.public_keys[0].public_key.signature, keys[0].signature);
-      assert.strictEqual(resAccount.public_keys.length, 1);
-      assert.strictEqual(resAccount.public_keys[0].public_key, publicSSH2KeyOpenSSH);
-      assert.strictEqual(resAccount.public_keys[0].public_key_sig, keys[0].signature);
+      let retKeys;
+      try {
+        retKeys = await adminAddAccountKeys(db, 1, keys);
+      } catch (e) {
+        assert.strictEqual(e instanceof Error, true);
+      }
+      assert.strictEqual(retKeys, undefined);
     });
   });
 });
