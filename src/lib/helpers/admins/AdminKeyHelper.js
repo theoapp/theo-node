@@ -26,8 +26,8 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
     _key = key.trim();
   } else {
     // Object, we got also the signature
-    _key = key.key.trim();
-    _signature = key.signature.trim();
+    _key = key.key && key.key.trim();
+    _signature = key.signature && key.signature.trim();
   }
   if (!_key) {
     return false;
@@ -38,12 +38,18 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
     console.error('Key must be signed!');
     throw err;
   }
-  _key = getOpenSSHPublicKey(_key);
-  if (!_key) {
-    const err = new Error('Invalid key format');
-    err.t_code = 400;
-    throw err;
+  try {
+    _key = getOpenSSHPublicKey(_key, signRequired);
+    if (!_key) {
+      const err = new Error('Invalid key format');
+      err.t_code = 400;
+      throw err;
+    }
+  } catch (e) {
+    e.t_code = 400;
+    throw e;
   }
+
   const fingerprint = SSHFingerprint(_key);
   const fpExists = await km.checkFingerprint(fingerprint);
   if (fpExists) {

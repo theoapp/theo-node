@@ -38,26 +38,24 @@ export const getSSH2Comment = function(keyPub) {
   return comment;
 };
 
-export const getOpenSSHPublicKey = function(keyPub) {
-  try {
-    keyPub = keyPub.trim();
-    const key = sshpk.parseKey(keyPub);
-    let openssh = key.toString('ssh');
-    if (!openssh) {
-      common_debug('Key %s is not a valid openssh', keyPub);
-      return false;
-    }
-    if (openssh !== keyPub) {
-      if (key.comment === '(unnamed)') {
-        if (keyPub.indexOf('---- BEGIN SSH2 PUBLIC KEY ----') === 0) {
-          key.comment = getSSH2Comment(keyPub);
-          openssh = key.toString('ssh');
-        }
-      }
-    }
-    return openssh;
-  } catch (e) {
-    common_debug('Key %s is not valid', keyPub, e.message);
+export const getOpenSSHPublicKey = function(keyPub, signRequired) {
+  keyPub = keyPub.trim();
+  const key = sshpk.parseKey(keyPub);
+  let openssh = key.toString('ssh');
+  if (!openssh) {
+    common_debug('Key %s is not a valid OpenSSH Public Key', keyPub);
     return false;
   }
+  if (openssh !== keyPub) {
+    if (signRequired) {
+      throw new Error('You must sign an OpenSSH Public Key');
+    }
+    if (key.comment === '(unnamed)') {
+      if (keyPub.indexOf('---- BEGIN SSH2 PUBLIC KEY ----') === 0) {
+        key.comment = getSSH2Comment(keyPub);
+        openssh = key.toString('ssh');
+      }
+    }
+  }
+  return openssh;
 };
