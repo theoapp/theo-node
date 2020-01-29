@@ -42,7 +42,7 @@ jobs:
       - |
         if [ -n "$THEO_UPDATE_TOKEN" ]; then
           curl -H "Content-Type: application/json" -H "Authorization: Bearer $THEO_UPDATE_TOKEN" \
-            -d '{"version": "'$TRAVIS_TAG'", "latest": true }' https://update.theo.authkeys.io
+            -d '{"code": "'$TRAVIS_TAG'", "latest": true }' https://update.theo.authkeys.io/version
         fi
       - |
         if [ -n "$MICROBADGE_TOKEN" ]; then
