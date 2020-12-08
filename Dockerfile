@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm i --no-optional
+RUN npm ci --no-optional
 
 COPY . .
 
@@ -20,7 +20,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm i --no-optional &&\
+RUN npm ci --no-optional &&\
     npm cache clean --force
 
 COPY --from=builder /usr/src/app/build ./build/
