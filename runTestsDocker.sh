@@ -173,8 +173,9 @@ test_mysql () {
     docker-compose -p theotests -f docker-compose/docker-compose-test-mysql.yml up -d
     echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
     # On travis it takes a lot to start...
-    sleep 60
-    docker exec -it mysql-server mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
+    sleep 30
+    docker-compose -p theotests -f docker-compose/docker-compose-test-mysql.yml \
+        exec -T db mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
         -e "create database ${MYSQL_DATABASE}; create user ${MYSQL_USER}@'%' identified by '${MYSQL_PASSWORD}'; grant all on ${MYSQL_DATABASE}.* to  ${MYSQL_USER}@'%';"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mysql.yml restart theo
     sleep $WAIT_FOR_DB_SEC
