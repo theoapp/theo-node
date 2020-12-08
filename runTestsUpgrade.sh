@@ -51,7 +51,7 @@ test_mysql_upgrade() {
     mysqld --skip-host-cache --skip-name-resolve --default_authentication_plugin=mysql_native_password
   echo "Wait 60 s.."
   sleep 60
-  docker exec -it theo-mysql-db mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
+  docker exec theo-mysql-db mysql -uroot -p${MYSQL_ROOT_PASSWORD} \
       -e "create database ${MYSQL_DATABASE}; create user ${MYSQL_USER}@'%' identified by '${MYSQL_PASSWORD}'; grant all on ${MYSQL_DATABASE}.* to  ${MYSQL_USER}@'%';"
   # start theo old
   echo "Starting ${THEO_INITIAL_IMAGE}"
