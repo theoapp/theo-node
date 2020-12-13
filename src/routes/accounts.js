@@ -96,7 +96,7 @@ export default function handleAccounts(express) {
         res.json({ status: 201 });
       } else {
         res.status(500);
-        res.json({ status: 500, reason: 'Unkown error' });
+        res.json({ status: 500, reason: 'Unknown error' });
       }
     } catch (err) {
       console.error(err);
@@ -113,7 +113,7 @@ export default function handleAccounts(express) {
         res.json({ status: 201 });
       } else {
         res.status(500);
-        res.json({ status: 500, reason: 'Unkown error' });
+        res.json({ status: 500, reason: 'Unknown error' });
       }
     } catch (err) {
       res.status(err.t_code || 500);
@@ -139,7 +139,7 @@ export default function handleAccounts(express) {
         res.json({ status: 201 });
       } else {
         res.status(500);
-        res.json({ status: 500, reason: 'Unkown error' });
+        res.json({ status: 500, reason: 'Unknown error' });
       }
     } catch (err) {
       res.status(err.t_code || 500);
@@ -176,12 +176,13 @@ export default function handleAccounts(express) {
         res.json({ status: 201 });
       } else {
         res.status(500);
-        res.json({ status: 500, reason: 'Unkown error' });
+        res.json({ status: 500, reason: 'Unknown error' });
       }
     } catch (err) {
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
+
   return router;
 }
