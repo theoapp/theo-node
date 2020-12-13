@@ -1,0 +1,37 @@
+name: release to docker hub
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Log into registry
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+    - name: build image and push
+      run: ./scripts/buildDockerImage.sh push
+    - name: call AK webhook
+      run: |
+        # Strip git ref prefix from version
+        VERSION=$(./scripts/getVersion.sh)
+        LATEST_TAG=$(git tag | sort --version-sort | tail -n 1)
+        if [ "$LATEST_TAG" = "$DOCKER_TAG" ]; then
+          LATEST=true
+        else
+          LATEST=false
+        fi
+        if [ -n "${{ secrets.THEO_UPDATE_TOKEN }}" ]; then
+          curl -H "Content-Type: application/json" -H "Authorization: Bearer ${{ secrets.THEO_UPDATE_TOKEN }}" \
+            -d '{"code": "'$VERSION'", "latest": ${LATEST} }' https://update.theo.authkeys.io/version
+        fi
+    - name: call microbadger webhook
+      run: |
+        if [ -n "${{ secrets.MICROBADGE_TOKEN }}" ]; then
+          curl -XPOST https://hooks.microbadger.com/images/theoapp/theo/${{ secrets.MICROBADGE_TOKEN }}
+        fi
