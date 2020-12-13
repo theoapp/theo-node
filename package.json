@@ -25,7 +25,7 @@
     "test:upgrade:mysql": "mocha tests/testUpgrade_mysql.js",
     "test:upgrade:sqlite": "mocha tests/testUpgrade_sqlite.js",
     "preversion": "npm run lint",
-    "version": "./updateVersion.sh"
+    "version": "./scripts/updateVersion.sh"
   },
   "author": "Michele Azzolari <macno@authkeys.io> (macno)",
   "license": "Apache-2.0",
