@@ -26,7 +26,7 @@ import {
 } from '../src/lib/helpers/AdminHelper';
 import accountsJson from './accounts';
 import groupsJson from './groups';
-import { getAuthorizedKeys } from '../src/lib/helpers/KeysHelper';
+import { getAuthorizedKeys, getAuthorizedKeysAsJson } from '../src/lib/helpers/KeysHelper';
 import DbHelper, { releaseDHInstance } from '../src/lib/helpers/DbHelper';
 
 const settings = {
@@ -82,15 +82,16 @@ const loadData = async function(db) {
         db,
         account.id,
         accountsJson[i].permissions[ii].user,
-        accountsJson[i].permissions[ii].host
+        accountsJson[i].permissions[ii].host,
+        accountsJson[i].permissions[ii].ssh_options
       );
     }
   }
   for (let i = 0; i < groupsJson.length; i++) {
     const group = await adminCreateGroup(db, { name: groupsJson[i].name });
     for (let ii = 0; ii < groupsJson[i].permissions.length; ii++) {
-      const { user, host } = groupsJson[i].permissions[ii];
-      await adminAddGroupPermission(db, group.id, user, host);
+      const { user, host, ssh_options } = groupsJson[i].permissions[ii];
+      await adminAddGroupPermission(db, group.id, user, host, ssh_options);
     }
     for (let ii = 0; ii < groupsJson[i].accounts.length; ii++) {
       const account = await adminGetAccount(db, groupsJson[i].accounts[ii].email);
@@ -149,6 +150,21 @@ describe('Check keys', function() {
     it('should return 10 rows per 4 users (5 + 2 + 2 + 1)', async function() {
       const { keys: res } = await getAuthorizedKeys(dm, 'name', 'edu');
       assert.strictEqual(res.split('\n').length, 10);
+    });
+  });
+
+  describe('check authorized_keys for user=root and host=mil', function() {
+    it('should return 5 rows per 2 user (2 + 2 + 1) 4 of them with options', async function() {
+      const res = await getAuthorizedKeysAsJson(dm, 'root', 'xxx');
+      res.keys.forEach(k => {
+        if (k.email === 'jolly3@newsvine.com') {
+          assert.strictEqual(k.ssh_options, '');
+        } else if (k.email === 'klocal1@ezinearticles.com') {
+          assert.strictEqual(k.ssh_options, 'from="192.168.2.1,192.168.1.1"');
+        } else {
+          assert.strictEqual(k.ssh_options, 'from="192.168.1.1"');
+        }
+      });
     });
   });
 

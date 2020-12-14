@@ -17,7 +17,7 @@ import GroupManager from '../../managers/GroupManager';
 import PermissionManager from '../../managers/PermissionManager';
 import EventHelper from '../EventHelper';
 
-export const adminAddAccountPermission = async (db, account_id, user, host, req) => {
+export const adminAddAccountPermission = async (db, account_id, user, host, ssh_options, req) => {
   if (!user) {
     const error = new Error('Malformed object, user is required');
     error.code = 400;
@@ -51,7 +51,7 @@ export const adminAddAccountPermission = async (db, account_id, user, host, req)
   }
   const pm = new PermissionManager(db);
   try {
-    const permission_id = await pm.create(group_id, user, host);
+    const permission_id = await pm.create(group_id, user, host, ssh_options);
     EventHelper.emit('theo:change', {
       func: 'account_permissions',
       action: 'add',
@@ -61,11 +61,13 @@ export const adminAddAccountPermission = async (db, account_id, user, host, req)
     if (req && req.auditHelper) {
       req.auditHelper.log('accounts', 'add_permission', account.email, {
         user,
-        host
+        host,
+        ssh_options
       });
     }
     return { account_id, permission_id };
   } catch (err) {
+    console.error(err);
     err.t_code = 500;
     throw err;
   }
@@ -106,6 +108,52 @@ export const adminDeleteAccountPermission = async (db, account_id, permission_id
       req.auditHelper.log('accounts', 'remove_permission', account.email, {
         user: permission.user,
         host: permission.host
+      });
+    }
+    return true;
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminUpdateAccountPermission = async (db, account_id, permission_id, ssh_options, req) => {
+  const am = new AccountManager(db);
+  let account;
+  try {
+    if (isNaN(account_id)) {
+      account = await am.getByEmail(account_id);
+    } else {
+      account = await am.get(account_id);
+    }
+  } catch (err) {
+    err.t_code = 404;
+    console.log('Throw 404');
+    throw err;
+  }
+  const gm = new GroupManager(db);
+  const group_id = await gm.getIdByName(account.email);
+  const pm = new PermissionManager(db);
+  try {
+    const permission = await pm.get(group_id, permission_id);
+    if (!permission) {
+      const error = new Error('Permission not found');
+      error.t_code = 404;
+      throw error;
+    }
+    await pm.updateSSHOptions(group_id, permission_id, ssh_options);
+    EventHelper.emit('theo:change', {
+      func: 'account_permissions',
+      action: 'update',
+      object: account.id,
+      receiver: 'admin'
+    });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('accounts', 'update_permission', account.email, {
+        user: permission.user,
+        host: permission.host,
+        ssh_options_old: permission.ssh_options,
+        ssh_options_new: req.body.ssh_options
       });
     }
     return true;

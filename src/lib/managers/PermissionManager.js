@@ -12,17 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AccountManager from './AccountManager';
 import GroupManager from './GroupManager';
+import { renderSSHOptions, parseSSHOptions, mergeSSHOptions } from '../utils/sshOptionsUtils';
 
 class PermissionManager {
-  constructor(db, am, gm) {
+  constructor(db, gm) {
     this.db = db;
-    if (am) {
-      this.am = am;
-    } else {
-      this.am = new AccountManager(this.db);
-    }
     if (gm) {
       this.gm = gm;
     } else {
@@ -41,57 +36,105 @@ class PermissionManager {
       and (a.expire_at = 0 or a.expire_at > ?) `;
   }
 
-  match(user, host) {
-    const sql = `select distinct k.public_key, k.public_key_sig, k.fingerprint, a.email 
+  async match(user, host) {
+    const sql = `select distinct k.public_key, k.public_key_sig, k.fingerprint, a.email, p.ssh_options 
        from accounts a, public_keys k, tgroups g, groups_accounts ga, permissions p 
-    ${PermissionManager._getMatchSqlWhere(false)}`;
-    return this.db.all(sql, [host, user, Date.now()]);
+    ${PermissionManager._getMatchSqlWhere(false)}
+    order by k.fingerprint, p.ssh_options desc
+    `;
+    const rows = await this.db.all(sql, [host, user, Date.now()]);
+    const keys = {};
+    rows.forEach(r => {
+      parseSSHOptions(r);
+      if (keys[r.fingerprint]) {
+        if (keys[r.fingerprint].ssh_options || r.ssh_options) {
+          keys[r.fingerprint].ssh_options = mergeSSHOptions(keys[r.fingerprint].ssh_options, r.ssh_options);
+        }
+      } else {
+        keys[r.fingerprint] = r;
+      }
+    });
+    return Object.keys(keys).map(k => {
+      const ret = keys[k];
+      if (ret.ssh_options) {
+        ret.ssh_options = renderSSHOptions(ret.ssh_options);
+      }
+      return ret;
+    });
   }
 
-  search(user, host) {
-    const sql = `select distinct a.id, a.email, p.host, p.user 
+  async search(user, host) {
+    const sql = `select distinct a.id, a.email, p.host, p.user, p.ssh_options
        from accounts a, tgroups g, groups_accounts ga, permissions p 
     ${PermissionManager._getMatchSqlWhere(true)}`;
-    return this.db.all(sql, [host, user, Date.now()]);
+    const rows = await this.db.all(sql, [host, user, Date.now()]);
+    return rows.map(parseSSHOptions);
   }
 
-  getAll(account_id, limit, offset) {
-    let sql = 'select id, user, host, created_at from permissions where account_id = ? order by created_at ';
+  async getAll(account_id, limit, offset) {
+    let sql =
+      'select id, user, host, ssh_options, created_at from permissions where account_id = ? order by created_at ';
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return this.db.all(sql, [account_id]);
+    const rows = await this.db.all(sql, [account_id]);
+    return rows.map(parseSSHOptions);
   }
 
-  getAllGroup(group_id, limit, offset) {
-    let sql = 'select id, user, host, created_at from permissions where group_id = ? order by created_at ';
+  async getAllGroup(group_id, limit, offset) {
+    let sql = 'select id, user, host, ssh_options, created_at from permissions where group_id = ? order by created_at ';
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return this.db.all(sql, [group_id]);
+    const rows = await this.db.all(sql, [group_id]);
+    return rows.map(parseSSHOptions);
   }
 
-  async create(group_id, user, host) {
-    const sql = 'insert into permissions (group_id, user, host, created_at) values (?, ?, ?, ?) ';
-    const lastId = await this.db.insert(sql, [group_id, user, host, new Date().getTime()]);
+  async create(group_id, user, host, ssh_options) {
+    if (!ssh_options && ssh_options !== '') {
+      ssh_options = '';
+    } else {
+      if (typeof ssh_options !== 'object') {
+        throw new Error('ssh_options is not an object: ' + typeof ssh_options);
+      }
+      ssh_options = JSON.stringify(ssh_options);
+    }
+    const sql = 'insert into permissions (group_id, user, host, ssh_options, created_at) values (?, ?, ?, ?, ?) ';
+    const lastId = await this.db.insert(sql, [group_id, user, host, ssh_options, new Date().getTime()]);
     await this.gm.setUpdatedAt(group_id);
     return lastId;
   }
 
   async get(group_id, id) {
-    const sql = 'select host, user from permissions where id = ? and group_id = ?';
-    return this.db.get(sql, [id, group_id]);
+    const sql = 'select host, user, ssh_options from permissions where id = ? and group_id = ?';
+    const row = await this.db.get(sql, [id, group_id]);
+    return parseSSHOptions(row);
   }
 
   async delete(group_id, id) {
     const sql = 'delete from permissions where id = ? and group_id = ?';
     const changes = await this.db.delete(sql, [id, group_id]);
+    await this.gm.setUpdatedAt(group_id);
+    return changes;
+  }
+
+  async updateSSHOptions(group_id, id, ssh_options) {
+    if (!ssh_options && ssh_options !== '') {
+      ssh_options = '';
+    } else {
+      if (typeof ssh_options !== 'object') {
+        throw new Error('ssh_options is not an object: ' + typeof ssh_options);
+      }
+      ssh_options = JSON.stringify(ssh_options);
+    }
+    const sql = 'update permissions set ssh_options = ? where id = ? and group_id = ?';
+    const changes = await this.db.update(sql, [ssh_options, id, group_id]);
     await this.gm.setUpdatedAt(group_id);
     return changes;
   }

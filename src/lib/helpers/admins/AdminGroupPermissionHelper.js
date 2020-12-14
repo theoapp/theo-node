@@ -15,7 +15,7 @@
 import GroupManager from '../../managers/GroupManager';
 import PermissionManager from '../../managers/PermissionManager';
 
-export const adminAddGroupPermission = async (db, group_id, user, host, req) => {
+export const adminAddGroupPermission = async (db, group_id, user, host, ssh_options, req) => {
   if (!user) {
     const error = new Error('Malformed object, user is required');
     error.code = 400;
@@ -42,9 +42,9 @@ export const adminAddGroupPermission = async (db, group_id, user, host, req) => 
   }
   const pm = new PermissionManager(db);
   try {
-    const permission_id = await pm.create(group_id, user, host);
+    const permission_id = await pm.create(group_id, user, host, ssh_options);
     if (req && req.auditHelper) {
-      req.auditHelper.log('groups', 'add_permission', group.name, { host, user });
+      req.auditHelper.log('groups', 'add_permission', group.name, { host, user, ssh_options });
     }
     return { group_id, permission_id };
   } catch (err) {
@@ -85,6 +85,51 @@ export const adminDeleteGroupPermission = async (db, group_id, permission_id, re
     const { host, user } = permission;
     if (req && req.auditHelper) {
       req.auditHelper.log('groups', 'remove_permission', group.name, { host, user });
+    }
+    return true;
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
+    throw err;
+  }
+};
+
+export const adminUpdateGroupPermission = async (db, group_id, permission_id, ssh_options, req) => {
+  const gm = new GroupManager(db);
+  let group;
+  try {
+    if (isNaN(group_id)) {
+      group = await gm.getByName(group_id);
+      group_id = group.id;
+    } else {
+      group = await gm.get(group_id);
+    }
+  } catch (err) {
+    err.t_code = 404;
+    console.log('Throw 404');
+    throw err;
+  }
+  const pm = new PermissionManager(db);
+  try {
+    const permission = await pm.get(group_id, permission_id);
+    if (!permission) {
+      const error = new Error('Permission not found');
+      error.t_code = 404;
+      throw error;
+    }
+    const ret = await pm.updateSSHOptions(group_id, permission_id, ssh_options);
+    if (ret === 0) {
+      const error = new Error('Permission not found');
+      error.t_code = 404;
+      throw error;
+    }
+    const { host, user, ssh_options: ssh_options_old } = permission;
+    if (req && req.auditHelper) {
+      req.auditHelper.log('groups', 'update_permission', group.name, {
+        host,
+        user,
+        ssh_options_old,
+        ssh_options_new: ssh_options
+      });
     }
     return true;
   } catch (err) {
