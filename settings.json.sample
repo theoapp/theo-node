@@ -8,9 +8,9 @@
       "knkjnknfjfnjenkln"
     ]
   },
-  db: {
-    engine: 'sqlite',
-    storage: './data/theo.db'
+  "db": {
+    "engine": "sqlite",
+    "storage": "./data/theo.db"
   },
   "server": {
     "http_port": 8890
