@@ -20,7 +20,7 @@ import { common_debug, common_error } from '../../utils/logUtils';
 import ConnectionManager from '@authkeys/mysql-connman';
 
 class MariadbManager extends DbManager {
-  dbVersion = 13;
+  dbVersion = 15;
 
   CREATE_TABLE_AUTH_TOKENS =
     'create table auth_tokens (token varchar(128) binary PRIMARY KEY, assignee varchar(64) NOT NULL, type varchar(5) NOT NULL, created_at BIGINT UNSIGNED)';
@@ -58,6 +58,7 @@ class MariadbManager extends DbManager {
     'group_id INTEGER, ' +
     'user varchar(256) binary not null, ' +
     'host varchar(256) binary not null, ' +
+    'ssh_options TEXT not null, ' +
     'created_at BIGINT UNSIGNED, ' +
     'INDEX k_permissions_host_user (host, user),' +
     'CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE)';
@@ -233,6 +234,9 @@ alter table public_keys add unique(fingerprint);
 
 `);
       }
+    }
+    if (fromVersion < 15) {
+      await dbConn.run('alter table permissions add ssh_options TEXT not null after host');
     }
     if (process.env.CLUSTER_MODE === '1') {
       dbConn.close();
