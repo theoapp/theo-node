@@ -114,7 +114,7 @@ class AccountManager extends BaseCacheManager {
     const gam = new GroupAccountManager(this.db);
     account.groups = await gam.getAllByAccount(id);
     account.permissions = [];
-    const pm = new PermissionManager(this.db, this);
+    const pm = new PermissionManager(this.db);
     for (let i = 0; i < account.groups.length; i++) {
       const permissions = await pm.getAllGroup(account.groups[i].id);
       if (account.groups[i].is_internal) {

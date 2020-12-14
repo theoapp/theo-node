@@ -23,7 +23,8 @@ import {
   adminDeleteAccountKey,
   adminDeleteAccountPermission,
   adminEditAccount,
-  adminGetAccount
+  adminGetAccount,
+  adminUpdateAccountPermission
 } from '../lib/helpers/AdminHelper';
 
 export default function handleAccounts(express) {
@@ -157,10 +158,10 @@ export default function handleAccounts(express) {
     }
   });
 
-  router.post('/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
-    const { user, host } = req.body;
+  router.post('/:id/permissions', requireAdminAuthMiddleware, async (req, res) => {
+    const { user, host, ssh_options } = req.body;
     try {
-      const ret = await adminAddAccountPermission(req.db, req.params.id, user, host, req);
+      const ret = await adminAddAccountPermission(req.db, req.params.id, user, host, ssh_options, req);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
@@ -179,6 +180,30 @@ export default function handleAccounts(express) {
         res.json({ status: 500, reason: 'Unknown error' });
       }
     } catch (err) {
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
+
+  router.put('/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res) => {
+    console.log('xxx', req.body);
+    try {
+      const done = await adminUpdateAccountPermission(
+        req.db,
+        req.params.id,
+        Number(req.params.permission_id),
+        req.body.ssh_options,
+        req
+      );
+      if (done) {
+        res.status(201);
+        res.json({ status: 201 });
+      } else {
+        res.status(500);
+        res.json({ status: 500, reason: 'Unknown error' });
+      }
+    } catch (err) {
+      console.error(err);
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
     }

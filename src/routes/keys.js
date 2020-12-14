@@ -60,7 +60,8 @@ const checkUserHost = async function(dm, accept, user, host, res, fingerprint) {
 
 export default function handleKeys(express) {
   const router = express.Router();
-  router.get('/:host/:user', requireAuthMiddleware, async (req, res, next) => {
+
+  router.get('/:host/:user', requireAuthMiddleware, async (req, res) => {
     const accept = req.header('Accept');
     const { host, user } = req.params;
     const { f } = req.query;
@@ -72,10 +73,11 @@ export default function handleKeys(express) {
       }
       res.status(err.t_code || 500);
       res.json({ status: err.t_code || 500, reason: err.message });
+      console.error(err);
     }
   });
 
-  router.get('/:user', requireAuthMiddleware, async (req, res, next) => {
+  router.get('/:user', requireAuthMiddleware, async (req, res) => {
     const accept = req.header('Accept');
     const { user } = req.params;
     const { f } = req.query;

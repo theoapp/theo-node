@@ -15,5 +15,42 @@
         "email": "scallar1b@1und1.de"
       }
     ]
+  },
+  {
+    "name": "admin2",
+    "permissions": [
+      {
+        "user": "root",
+        "host": "xxx",
+        "ssh_options": {
+          "from": ["192.168.1.1"]
+        }
+      }
+    ],
+    "accounts": [
+      {
+        "email": "klocal1@ezinearticles.com"
+      },
+      {
+        "email": "hantonchik3@deviantart.com"
+      }
+    ]
+  },
+  {
+    "name": "admin3",
+    "permissions": [
+      {
+        "user": "%",
+        "host": "xxx",
+        "ssh_options": {
+          "from": ["192.168.2.1"]
+        }
+      }
+    ],
+    "accounts": [
+      {
+        "email": "klocal1@ezinearticles.com"
+      }
+    ]
   }
 ]

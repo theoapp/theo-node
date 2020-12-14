@@ -26,12 +26,15 @@ import {
   adminDeleteAccount,
   adminDeleteAccountKey,
   adminDeleteAccountPermission,
+  adminDeleteGroup,
   adminDeleteGroupAccount,
   adminDeleteGroupPermission,
   adminEditAccount,
   adminEditGroup,
   adminGetAccount,
-  adminGetGroup
+  adminGetGroup,
+  adminUpdateAccountPermission,
+  adminUpdateGroupPermission
 } from '../src/lib/helpers/AdminHelper';
 import DbHelper, { releaseDHInstance } from '../src/lib/helpers/DbHelper';
 
@@ -309,6 +312,154 @@ describe('Test account', function() {
       }
       const resAccount = await adminGetAccount(db, 1);
       assert.strictEqual(resAccount.permissions.length, 0);
+    });
+  });
+
+  describe('add 1 permission with options to an account', function() {
+    it('should return an account object with no key and 1 permission', async function() {
+      const permission = {
+        user: 'mark',
+        host: 'debian',
+        ssh_options: {
+          from: ['172.16.0.0/24']
+        }
+      };
+
+      const retPermission = await adminAddAccountPermission(
+        db,
+        1,
+        permission.user,
+        permission.host,
+        permission.ssh_options
+      );
+      const resAccount = await adminGetAccount(db, 1);
+
+      assert.strictEqual(retPermission.account_id, 1);
+      assert.strictEqual(typeof retPermission.permission_id, 'number');
+      assert.strictEqual(resAccount.permissions.length, 1);
+      assert.strictEqual(resAccount.permissions[0].user, permission.user);
+      assert.strictEqual(resAccount.permissions[0].host, permission.host);
+      assert.strictEqual(
+        Object.keys(resAccount.permissions[0].ssh_options).length,
+        Object.keys(permission.ssh_options).length
+      );
+      assert.strictEqual(resAccount.permissions[0].ssh_options.from.length, permission.ssh_options.from.length);
+      assert.strictEqual(resAccount.permissions[0].ssh_options.from[0], permission.ssh_options.from[0]);
+    });
+  });
+
+  describe('add 1 permission with other options to an account', function() {
+    let account_id;
+    let permission_id;
+    after(async function() {
+      await adminDeleteAccount(db, account_id);
+    });
+
+    it('should return an account object with no key and 1 permission', async function() {
+      const reqAccount = {
+        name: 'john.doe',
+        email: 'john.doe.4@example.com'
+      };
+
+      const resAccountX = await adminCreateAccount(db, reqAccount);
+
+      account_id = resAccountX.id;
+
+      const permission = {
+        user: '%',
+        host: 'debian',
+        ssh_options: {
+          from: ['192.168.1.0/24', '10.10.0.0/16'],
+          'no-user-rc': true
+        }
+      };
+
+      const retPermission = await adminAddAccountPermission(
+        db,
+        account_id,
+        permission.user,
+        permission.host,
+        permission.ssh_options
+      );
+
+      const resAccount = await adminGetAccount(db, account_id);
+
+      assert.strictEqual(retPermission.account_id, account_id);
+      assert.strictEqual(typeof retPermission.permission_id, 'number');
+      assert.strictEqual(resAccount.permissions.length, 1);
+      assert.strictEqual(resAccount.permissions[0].user, permission.user);
+      assert.strictEqual(resAccount.permissions[0].host, permission.host);
+      assert.strictEqual(
+        Object.keys(resAccount.permissions[0].ssh_options).length,
+        Object.keys(permission.ssh_options).length
+      );
+      assert.strictEqual(resAccount.permissions[0].ssh_options.from.length, permission.ssh_options.from.length);
+      assert.strictEqual(resAccount.permissions[0].ssh_options.from[0], permission.ssh_options.from[0]);
+      assert.strictEqual(resAccount.permissions[0].ssh_options.from[1], permission.ssh_options.from[1]);
+      permission_id = resAccount.permissions[0].id;
+    });
+
+    it('should return an account object with no key and 1 permission', async function() {
+      await adminUpdateAccountPermission(db, account_id, permission_id, { from: [] });
+
+      const resAccount2 = await adminGetAccount(db, account_id);
+      assert.strictEqual(resAccount2.permissions[0].ssh_options.from.length, 0);
+    });
+  });
+
+  describe('add 1 permission with other options to a group', function() {
+    let permission_id;
+    let group_id;
+    after(async function() {
+      await adminDeleteGroup(db, group_id);
+    });
+
+    it('should return an account object with no key and 1 permission', async function() {
+      const reqGroup = {
+        name: 'developersx'
+      };
+
+      const group = await adminCreateGroup(db, reqGroup);
+
+      group_id = group.id;
+
+      const permission = {
+        user: '%',
+        host: 'debian',
+        ssh_options: {
+          from: ['192.168.1.0/24', '10.10.0.0/16'],
+          'no-user-rc': true
+        }
+      };
+
+      await adminAddGroupPermission(db, group_id, permission.user, permission.host, permission.ssh_options);
+
+      const resGroup = await adminGetGroup(db, group_id);
+
+      assert.strictEqual(typeof resGroup.id, 'number');
+      assert.strictEqual(resGroup.name, reqGroup.name);
+      assert.strictEqual(resGroup.active, 1);
+      assert.strictEqual(resGroup.accounts.length, 0);
+      assert.strictEqual(resGroup.permissions.length, 1);
+
+      assert.strictEqual(resGroup.permissions.length, 1);
+      assert.strictEqual(resGroup.permissions[0].user, permission.user);
+      assert.strictEqual(resGroup.permissions[0].host, permission.host);
+      assert.strictEqual(
+        Object.keys(resGroup.permissions[0].ssh_options).length,
+        Object.keys(permission.ssh_options).length
+      );
+      assert.strictEqual(resGroup.permissions[0].ssh_options.from.length, permission.ssh_options.from.length);
+      assert.strictEqual(resGroup.permissions[0].ssh_options.from[0], permission.ssh_options.from[0]);
+      assert.strictEqual(resGroup.permissions[0].ssh_options.from[1], permission.ssh_options.from[1]);
+      permission_id = resGroup.permissions[0].id;
+    });
+
+    it('should return a group object with no key and 1 permission', async function() {
+      await adminUpdateGroupPermission(db, group_id, permission_id, { from: [] });
+
+      const resGroup = await adminGetGroup(db, group_id);
+      assert.strictEqual(resGroup.permissions[0].ssh_options.from.length, 0);
     });
   });
 

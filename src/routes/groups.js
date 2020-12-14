@@ -23,7 +23,8 @@ import {
   adminDeleteGroupAccount,
   adminDeleteGroupPermission,
   adminEditGroup,
-  adminGetGroup
+  adminGetGroup,
+  adminUpdateGroupPermission
 } from '../lib/helpers/AdminHelper';
 
 export default function handleGroups(express) {
@@ -184,10 +185,10 @@ export default function handleGroups(express) {
     }
   });
 
-  router.post('/:id/permissions', requireAdminAuthMiddleware, async (req, res, next) => {
-    const { user, host } = req.body;
+  router.post('/:id/permissions', requireAdminAuthMiddleware, async (req, res) => {
+    const { user, host, ssh_options } = req.body;
     try {
-      const ret = await adminAddGroupPermission(req.db, req.params.id, user, host, req);
+      const ret = await adminAddGroupPermission(req.db, req.params.id, user, host, ssh_options, req);
       res.json(ret);
     } catch (err) {
       res.status(err.t_code || 500);
@@ -195,7 +196,7 @@ export default function handleGroups(express) {
     }
   });
 
-  router.delete('/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.delete('/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res) => {
     try {
       const done = await adminDeleteGroupPermission(req.db, req.params.id, Number(req.params.permission_id), req);
       if (done) {
@@ -211,5 +212,26 @@ export default function handleGroups(express) {
     }
   });
 
+  router.put('/:id/permissions/:permission_id', requireAdminAuthMiddleware, async (req, res) => {
+    try {
+      const done = await adminUpdateGroupPermission(
+        req.db,
+        req.params.id,
+        Number(req.params.permission_id),
+        req.body.ssh_options,
+        req
+      );
+      if (done) {
+        res.status(201);
+        res.json({ status: 201 });
+      } else {
+        res.status(500);
+        res.json({ status: 500, reason: 'Unknown error' });
+      }
+    } catch (err) {
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
   return router;
 }

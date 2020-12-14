@@ -43,7 +43,9 @@ export const getAuthorizedKeys = async (dm, user, host) => {
     .filter(key => {
       return key !== undefined;
     })
-    .map(key => key.public_key)
+    .map(key => {
+      return `${key.ssh_options ? `${key.ssh_options} ` : ''}${key.public_key}`;
+    })
     .join('\n');
   if (_cm !== false) {
     _cm.set(cache_key, skeys).catch(err => console.error('Failed to save cache for %s', cache_key, err));
