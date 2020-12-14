@@ -29,6 +29,7 @@ test_sqlite_upgrade() {
   sleep 5
   docker stop theo-sqlite-test
   docker run --rm --name theo-sqlite-test -d -v $PWD/tmp.$$:/data -e DB_STORAGE=/data/theo.db theo:test
+  sleep 5
   docker stop theo-sqlite-test
   docker run --rm --name theo-sqlite-test -v $PWD/tmp.$$:/data -e DB_STORAGE=/data/theo.db theo-tester \
     npm run test:upgrade:sqlite
