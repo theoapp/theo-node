@@ -31,7 +31,7 @@ try {
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 13;
+  dbVersion = 15;
 
   CREATE_TABLE_AUTH_TOKENS =
     'create table auth_tokens (token text PRIMARY KEY, assignee text, type varchar(5), created_at INTEGER)';
@@ -70,6 +70,7 @@ class SqliteManager extends DbManager {
     'group_id INTEGER, ' +
     'user varchar(512), ' +
     'host varchar(512), ' +
+    'ssh_options TEXT, ' +
     'created_at INTEGER, ' +
     'FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE)';
 
@@ -247,6 +248,9 @@ class SqliteManager extends DbManager {
           rows[i].token
         ]);
       }
+    }
+    if (fromVersion < 15) {
+      await this.client.run("alter table permissions add ssh_options TEXT not null default ''");
     }
     await this.updateVersion();
   }
