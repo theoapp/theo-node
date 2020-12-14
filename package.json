@@ -68,5 +68,9 @@
     "eslint-plugin-standard": "^4.0.0",
     "nodemon": "^1.19.0",
     "prettier": "^1.5.3"
+  },
+  "nyc": {
+    "include": "src",
+    "exclude": "test"
   }
 }
