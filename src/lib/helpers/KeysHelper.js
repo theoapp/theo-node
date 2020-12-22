@@ -55,8 +55,8 @@ export const getAuthorizedKeys = async (dm, user, host) => {
 
 export const getAuthorizedKeysAsJson = async (dm, user, host, skip_cache = false) => {
   const cache_key = `json:${user}_${host}`;
-  const cache = await checkCache(cache_key);
   if (!skip_cache) {
+    const cache = await checkCache(cache_key);
     if (cache) {
       return { keys: JSON.parse(cache), cache: true };
     }
