@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import GroupManager from './GroupManager';
-import { renderSSHOptions, parseSSHOptions, mergeSSHOptions } from '../utils/sshOptionsUtils';
+import { renderSSHOptions, parseSSHOptions, mergeSSHOptions, calculateDistance } from '../utils/sshOptionsUtils';
 
 class PermissionManager {
   constructor(db, gm) {
@@ -28,27 +28,39 @@ class PermissionManager {
   static _getMatchSqlWhere(excludeKeys = false) {
     return `where ? like p.host and ? like p.user 
       ${!excludeKeys ? 'and k.account_id = a.id ' : ''}
-      and g.id = p.group_id 
+      and g.id = p.group_id
       and g.id = ga.group_id 
       and a.id = ga.account_id 
-      and a.active = 1 
-      and g.active = 1 
+      and a.active = 1
+      and g.active = 1
       and (a.expire_at = 0 or a.expire_at > ?) `;
   }
 
   async match(user, host) {
-    const sql = `select distinct k.public_key, k.public_key_sig, k.fingerprint, a.email, p.ssh_options 
-       from accounts a, public_keys k, tgroups g, groups_accounts ga, permissions p 
+    const matchLen = user.length + host.length;
+    const sql = `select k.public_key, k.public_key_sig, k.fingerprint, a.email, p.ssh_options,
+      k.key_ssh_options, p.host, p.user
+      from accounts a, public_keys k, tgroups g, groups_accounts ga, permissions p
     ${PermissionManager._getMatchSqlWhere(false)}
-    order by k.fingerprint, p.ssh_options desc
+    order by k.fingerprint
     `;
     const rows = await this.db.all(sql, [host, user, Date.now()]);
     const keys = {};
     rows.forEach(r => {
       parseSSHOptions(r);
+      calculateDistance(matchLen, r);
       if (keys[r.fingerprint]) {
-        if (keys[r.fingerprint].ssh_options || r.ssh_options) {
-          keys[r.fingerprint].ssh_options = mergeSSHOptions(keys[r.fingerprint].ssh_options, r.ssh_options);
+        // If a key has its own SSH options, do not overwrite them
+        if (!r.key_ssh_options) {
+          if (keys[r.fingerprint].ssh_options || r.ssh_options) {
+            if (r.distance < keys[r.fingerprint].distance) {
+              keys[r.fingerprint] = r;
+            } else if (r.distance === keys[r.fingerprint].distance) {
+              keys[r.fingerprint].ssh_options = mergeSSHOptions(keys[r.fingerprint].ssh_options, r.ssh_options);
+            }
+          }
+        } else {
+          keys[r.fingerprint] = r;
         }
       } else {
         keys[r.fingerprint] = r;
@@ -59,6 +71,10 @@ class PermissionManager {
       if (ret.ssh_options) {
         ret.ssh_options = renderSSHOptions(ret.ssh_options);
       }
+      delete ret.key_ssh_options;
+      delete ret.host;
+      delete ret.user;
+      delete ret.distance;
       return ret;
     });
   }

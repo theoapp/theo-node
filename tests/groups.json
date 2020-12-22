@@ -52,5 +52,22 @@
         "email": "klocal1@ezinearticles.com"
       }
     ]
+  },
+  {
+    "name": "admin4",
+    "permissions": [
+      {
+        "user": "xxx",
+        "host": "%",
+        "ssh_options": {
+          "from": ["192.168.3.1"]
+        }
+      }
+    ],
+    "accounts": [
+      {
+        "email": "klocal1@ezinearticles.com"
+      }
+    ]
   }
 ]

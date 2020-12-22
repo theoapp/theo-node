@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import AccountManager from './AccountManager';
+import { parseSSHOptions } from '../utils/sshOptionsUtils';
 
 class KeyManager {
   constructor(db, am) {
@@ -24,22 +25,23 @@ class KeyManager {
     }
   }
 
-  getAll(account_id, limit, offset) {
+  async getAll(account_id, limit, offset) {
     let sql =
-      'select id, public_key, fingerprint, public_key_sig, created_at from public_keys where account_id = ? order by created_at ';
+      'select id, public_key, fingerprint, public_key_sig, key_ssh_options, created_at from public_keys where account_id = ? order by created_at ';
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return this.db.all(sql, [account_id]);
+    const rows = await this.db.all(sql, [account_id]);
+    return rows.map(parseSSHOptions);
   }
 
-  async create(account_id, key, fingerprint, signature = null) {
+  async create(account_id, key, fingerprint, signature = null, ssh_options = '') {
     const sql =
-      'insert into public_keys (account_id, public_key, fingerprint, public_key_sig, created_at) values (?, ?, ?, ?, ?) ';
-    const id = await this.db.insert(sql, [account_id, key, fingerprint, signature, new Date().getTime()]);
+      'insert into public_keys (account_id, public_key, fingerprint, public_key_sig, key_ssh_options, created_at) values (?, ?, ?, ?, ?, ?) ';
+    const id = await this.db.insert(sql, [account_id, key, fingerprint, signature, ssh_options, new Date().getTime()]);
     await this.am.setUpdatedAt(account_id);
     return id;
   }
@@ -51,9 +53,18 @@ class KeyManager {
     return changes;
   }
 
+  async update(account_id, id, ssh_options = '') {
+    const sql = 'update public_keys set key_ssh_options = ? where id = ? and account_id = ?';
+    const changes = await this.db.delete(sql, [ssh_options, id, account_id]);
+    await this.am.setUpdatedAt(account_id);
+    return changes;
+  }
+
   async get(account_id, id) {
-    const sql = 'select id, public_key, fingerprint, public_key_sig from public_keys where id = ? and account_id = ?';
-    return this.db.get(sql, [id, account_id]);
+    const sql =
+      'select id, public_key, fingerprint, public_key_sig, key_ssh_options from public_keys where id = ? and account_id = ?';
+    const row = await this.db.get(sql, [id, account_id]);
+    return parseSSHOptions(row);
   }
 
   async checkFingerprint(fingerprint) {
