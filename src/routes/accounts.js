@@ -24,7 +24,8 @@ import {
   adminDeleteAccountPermission,
   adminEditAccount,
   adminGetAccount,
-  adminUpdateAccountPermission
+  adminUpdateAccountPermission,
+  adminUpdateAccountKey
 } from '../lib/helpers/AdminHelper';
 
 export default function handleAccounts(express) {
@@ -132,7 +133,29 @@ export default function handleAccounts(express) {
     }
   });
 
-  router.delete('/:id/keys/:key_id', requireAdminAuthMiddleware, async (req, res, next) => {
+  router.put('/:id/keys/:key_id', requireAdminAuthMiddleware, async (req, res) => {
+    const { ssh_options } = req.body;
+    if (!ssh_options || typeof ssh_options !== 'object') {
+      res.status(400);
+      res.json({ status: 400, reason: 'Invalid payload' });
+      return;
+    }
+    try {
+      const done = await adminUpdateAccountKey(req.db, req.params.id, Number(req.params.key_id), ssh_options, req);
+      if (done) {
+        res.status(201);
+        res.json({ status: 201 });
+      } else {
+        res.status(500);
+        res.json({ status: 500, reason: 'Unknown error' });
+      }
+    } catch (err) {
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
+    }
+  });
+
+  router.delete('/:id/keys/:key_id', requireAdminAuthMiddleware, async (req, res) => {
     try {
       const done = await adminDeleteAccountKey(req.db, req.params.id, Number(req.params.key_id), req);
       if (done) {

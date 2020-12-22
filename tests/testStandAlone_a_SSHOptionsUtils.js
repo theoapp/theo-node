@@ -13,9 +13,56 @@
 // limitations under the License.
 
 import assert from 'assert';
-import { mergeSSHOptions, parseSSHOptions, renderSSHOptions } from '../src/lib/utils/sshOptionsUtils';
+import {
+  calculateDistance,
+  mergeSSHOptions,
+  parseSSHOptions,
+  renderSSHOptions
+} from '../src/lib/utils/sshOptionsUtils';
 
 describe('Testing SSH Options Utils', function() {
+  describe('Test calculateDistance', function() {
+    const host = 'wwwserver';
+    const user = 'nobody';
+    const matchLen = host.length + user.length;
+    const data = [
+      {
+        permission: {
+          host: 'wwwserver',
+          user: 'nobody'
+        },
+        distance: 0
+      },
+      {
+        permission: {
+          host: '%',
+          user: '%'
+        },
+        distance: 13
+      },
+      {
+        permission: {
+          host: 'wwwserver%',
+          user: 'nobody%'
+        },
+        distance: 0
+      },
+      {
+        permission: {
+          host: 'www%',
+          user: '%'
+        },
+        distance: 10
+      }
+    ];
+    data.forEach((v, i) => {
+      it(`should return a distance [${i}]`, function() {
+        calculateDistance(matchLen, v.permission);
+        assert.strictEqual(v.permission.distance, v.distance);
+      });
+    });
+  });
+
   describe('Test parseSSHOptions', function() {
     ['', false, undefined].forEach((v, i) => {
       it(`should return false if ssh_options is empty [${i}]`, function() {
@@ -267,13 +314,13 @@ describe('Testing SSH Options Utils', function() {
       {
         a: { 'no-agent-forwarding': true, 'no-port-forwarding': true },
         b: {
-          'no-x11-forwarding': true,
+          'no-X11-forwarding': true,
           'no-user-rc': true
         },
         ret: {
           'no-agent-forwarding': true,
           'no-port-forwarding': true,
-          'no-x11-forwarding': true,
+          'no-X11-forwarding': true,
           'no-user-rc': true
         }
       }
@@ -369,10 +416,10 @@ describe('Testing SSH Options Utils', function() {
         in: {
           'no-agent-forwarding': true,
           'no-port-forwarding': true,
-          'no-x11-forwarding': true,
+          'no-X11-forwarding': true,
           'no-user-rc': true
         },
-        out: 'no-agent-forwarding,no-port-forwarding,no-user-rc,no-x11-forwarding'
+        out: 'no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding'
       },
       {
         in: {

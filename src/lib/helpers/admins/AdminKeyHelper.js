@@ -22,12 +22,15 @@ import { getKeysImporterModule, getKeysImporterModulesList } from '../../keys_im
 const adminAddAccountKey = async (km, signRequired, key, account, req) => {
   let _key;
   let _signature;
+  let ssh_options;
   if (typeof key === 'string') {
     _key = key.trim();
   } else {
     // Object, we got also the signature
     _key = key.key && key.key.trim();
     _signature = key.signature && key.signature.trim();
+    // .. and/or maybe ssh_options
+    ssh_options = key.ssh_options;
   }
   if (!_key) {
     return false;
@@ -40,14 +43,14 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
   }
   try {
     _key = getOpenSSHPublicKey(_key, signRequired);
-    if (!_key) {
-      const err = new Error('Invalid key format');
-      err.t_code = 400;
-      throw err;
-    }
   } catch (e) {
     e.t_code = 400;
     throw e;
+  }
+  if (!_key) {
+    const err = new Error('Invalid key format');
+    err.t_code = 400;
+    throw err;
   }
 
   const fingerprint = SSHFingerprint(_key);
@@ -59,9 +62,19 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
     err.t_code = 409;
     throw err;
   }
-  const id = await km.create(account.id, _key, fingerprint, _signature);
+  if (!ssh_options && ssh_options !== '') {
+    ssh_options = '';
+  } else {
+    if (typeof ssh_options !== 'object') {
+      const err = new Error('ssh_options is not an object: ' + typeof ssh_options);
+      err.t_code = 400;
+      throw err;
+    }
+    ssh_options = JSON.stringify(ssh_options);
+  }
+  const id = await km.create(account.id, _key, fingerprint, _signature, ssh_options);
   if (req && req.auditHelper) {
-    req.auditHelper.log('accounts', 'add_key', account.email, { key: _key, fingerprint });
+    req.auditHelper.log('accounts', 'add_key', account.email, { key: _key, fingerprint, ssh_options });
   }
   return {
     id,
@@ -110,6 +123,61 @@ export const adminAddAccountKeys = async (db, account_id, keys, req) => {
     if (!err.t_code) {
       err.t_code = 500;
     }
+    throw err;
+  }
+};
+
+export const adminUpdateAccountKey = async function(db, account_id, key_id, ssh_options, req) {
+  const am = new AccountManager(db);
+  let account;
+  try {
+    if (isNaN(account_id)) {
+      account = await am.getByEmail(account_id);
+      account_id = account.id;
+    } else {
+      account = await am.get(account_id);
+    }
+  } catch (err) {
+    err.t_code = 404;
+    console.log('Throw 404');
+    throw err;
+  }
+  if (!ssh_options && ssh_options !== '') {
+    ssh_options = '';
+  } else {
+    if (typeof ssh_options !== 'object') {
+      const err = new Error('ssh_options is not an object: ' + typeof ssh_options);
+      err.t_code = 400;
+      throw err;
+    }
+    ssh_options = JSON.stringify(ssh_options);
+  }
+  const km = new KeyManager(db);
+  try {
+    const key = await km.get(account_id, key_id);
+    if (!key) {
+      const error = new Error('Key not found');
+      error.t_code = 404;
+      throw error;
+    }
+    await km.update(account_id, key_id, ssh_options);
+    EventHelper.emit('theo:change', {
+      func: 'account_keys',
+      action: 'update',
+      object: account_id,
+      receiver: 'admin',
+      ssh_options
+    });
+    if (req && req.auditHelper) {
+      req.auditHelper.log('accounts', 'update_key', account.email, {
+        key: key.public_key,
+        fingerprint: key.fingerprint,
+        ssh_options
+      });
+    }
+    return true;
+  } catch (err) {
+    if (!err.t_code) err.t_code = 500;
     throw err;
   }
 };

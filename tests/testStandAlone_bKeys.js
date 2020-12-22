@@ -153,16 +153,31 @@ describe('Check keys', function() {
     });
   });
 
-  describe('check authorized_keys for user=root and host=mil', function() {
+  describe('check authorized_keys for user=root and host=xxx', function() {
     it('should return 5 rows per 2 user (2 + 2 + 1) 4 of them with options', async function() {
       const res = await getAuthorizedKeysAsJson(dm, 'root', 'xxx');
+      assert.strictEqual(res.keys.length, 5);
       res.keys.forEach(k => {
         if (k.email === 'jolly3@newsvine.com') {
           assert.strictEqual(k.ssh_options, '');
         } else if (k.email === 'klocal1@ezinearticles.com') {
-          assert.strictEqual(k.ssh_options, 'from="192.168.2.1,192.168.1.1"');
+          assert.strictEqual(k.ssh_options, 'from="192.168.1.1"');
         } else {
           assert.strictEqual(k.ssh_options, 'from="192.168.1.1"');
+        }
+      });
+    });
+  });
+
+  describe('check authorized_keys for user=xxx and host=xxx', function() {
+    it('should return 3 rows per 2 user (2 + 1) 2 of them with options', async function() {
+      const res = await getAuthorizedKeysAsJson(dm, 'xxx', 'xxx');
+      assert.strictEqual(res.keys.length, 3);
+      res.keys.forEach(k => {
+        if (k.email === 'jolly3@newsvine.com') {
+          assert.strictEqual(k.ssh_options, '');
+        } else if (k.email === 'klocal1@ezinearticles.com') {
+          assert.strictEqual(k.ssh_options, 'from="192.168.2.1,192.168.3.1"');
         }
       });
     });
