@@ -46,12 +46,12 @@ const settings = {
 };
 
 let ah;
-let dh;
+
 let dm;
 const loadDb = function() {
   return new Promise((resolve, reject) => {
     try {
-      dh = DbHelper(ah.getSettings('db'));
+      const dh = DbHelper(ah.getSettings('db'));
       dm = dh.getManager();
       if (!dm) {
         console.error('Unable to load DB Manager!!!');
@@ -189,6 +189,46 @@ describe('Check keys', function() {
       await adminEditAccount(db, 'scallar1b@1und1.de', undefined, now - 60000);
       const { keys: res } = await getAuthorizedKeys(dm, 'name', 'edu');
       assert.strictEqual(res.split('\n').length, 8);
+    });
+  });
+
+  describe('check authorized_keys for user=ansibleusr and host=testansible', function() {
+    it('should return 3 rows per 3 users (1 + 1 + 1) with correct ssh_options', async function() {
+      const { keys: res } = await getAuthorizedKeysAsJson(dm, 'ansibleusr', 'testansible');
+      assert.strictEqual(res.length, 3);
+      assert.strictEqual(res[0].ssh_options, 'command="ansible"');
+      assert.strictEqual(res[1].ssh_options, '');
+      assert.strictEqual(res[2].ssh_options, 'from="192.168.3.1",restrict');
+    });
+
+    it('should return 3 rows per 3 users (1 + 1 + 1) with correct ssh_options', async function() {
+      const { keys } = await getAuthorizedKeys(dm, 'ansibleusr', 'testansible');
+      const res = keys.split('\n');
+      assert.strictEqual(res.length, 3);
+      assert.strictEqual(res[0].indexOf('command="ansible" '), 0);
+      assert.strictEqual(res[1].indexOf('ssh'), 0);
+      assert.strictEqual(res[2].indexOf('from="192.168.3.1",restrict '), 0);
+    });
+  });
+
+  describe('check authorized_keys for user=ansibleusr and host=testansible2', function() {
+    it('should return 3 rows per 3 users (1 + 1 + 1) with correct ssh_options', async function() {
+      const { keys: res } = await getAuthorizedKeysAsJson(dm, 'ansibleusr', 'testansible2');
+      assert.strictEqual(res.length, 4);
+      assert.strictEqual(res[0].ssh_options, 'command="ansible"');
+      assert.strictEqual(res[1].ssh_options, '');
+      assert.strictEqual(res[2].ssh_options, '');
+      assert.strictEqual(res[3].ssh_options, 'from="192.168.3.1",restrict');
+    });
+
+    it('should return 3 rows per 3 users (1 + 1 + 1) with correct ssh_options', async function() {
+      const { keys } = await getAuthorizedKeys(dm, 'ansibleusr', 'testansible2');
+      const res = keys.split('\n');
+      assert.strictEqual(res.length, 4);
+      assert.strictEqual(res[0].indexOf('command="ansible" '), 0, 'index 0');
+      assert.strictEqual(res[1].indexOf('ssh'), 0, 'index 1');
+      assert.strictEqual(res[2].indexOf('ssh'), 0, 'index 2');
+      assert.strictEqual(res[3].indexOf('from="192.168.3.1",restrict '), 0, 'index 3');
     });
   });
 });
