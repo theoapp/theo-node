@@ -67,13 +67,11 @@ const settings = {
 
 let ah;
 
-let dh;
 const loadDb = function() {
   return new Promise((resolve, reject) => {
-    let dm;
     try {
-      dh = DbHelper(ah.getSettings('db'));
-      dm = dh.getManager();
+      const dh = DbHelper(ah.getSettings('db'));
+      const dm = dh.getManager();
       if (!dm) {
         console.error('Unable to load DB Manager!!!');
         process.exit(99);

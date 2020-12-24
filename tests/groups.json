@@ -69,5 +69,25 @@
         "email": "klocal1@ezinearticles.com"
       }
     ]
+  },
+  {
+    "name": "ansible",
+    "permissions": [
+      {
+        "user": "ansibleusr",
+        "host": "%",
+        "ssh_options": {
+          "from": ["192.168.3.1"]
+        }
+      }
+    ],
+    "accounts": [
+      {
+        "email": "ansible1@newsvine.com"
+      },
+      {
+        "email": "ansible2@newsvine.com"
+      }
+    ]
   }
 ]

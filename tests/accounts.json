@@ -1155,5 +1155,56 @@
         "host": "%"
       }
     ]
+  },
+  {
+    "name": "Ansible Usr 1",
+    "email": "ansible1@newsvine.com",
+    "keys": [
+      {
+        "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEBupVTTt8oSX+gTLJZdLdsCv9DLNAtUZTH8SAutbRF1 ci@ccl",
+        "ssh_options": {
+          "command": "ansible"
+        }
+      }
+    ],
+    "permissions": [
+      {
+        "user": "ansibleusr",
+        "host": "%"
+      }
+    ]
+  },
+  {
+    "name": "Ansible Usr 2",
+    "email": "ansible2@newsvine.com",
+    "keys": [
+      {
+        "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEbGTKYE7VrLICAkHiloLvwNMPeDRcnUJQK33Dos81l/ ci@scrhan-infra"
+      }
+    ],
+    "permissions": [
+      {
+        "user": "ansibleusr",
+        "host": "%",
+        "ssh_options": {
+          "restrict": true
+        }
+      }
+    ]
+  },
+  {
+    "name": "Ansible Usr 3",
+    "email": "ansible3@newsvine.com",
+    "keys": [
+      {
+        "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGyb6o8E8xXRYTeAyZPatI2CPsBQWzOn8sp7i8xYzib2 ci@test"
+      }
+    ],
+    "permissions": [
+      {
+        "user": "ansibleusr",
+        "host": "testansible2"
+      }
+    ]
   }
 ]
