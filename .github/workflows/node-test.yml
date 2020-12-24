@@ -1,13 +1,9 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Node.js CI
+name: Node.js CI test
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: push
 
 jobs:
   lint-test-build:
@@ -24,10 +20,3 @@ jobs:
     - run: npm run lint
     - run: npm run test:standalone
     - run: npm run build --if-present
-
-  full-test:
-    runs-on: ubuntu-latest
-    needs: lint-test-build
-    steps:
-    - uses: actions/checkout@v2
-    - run: ./runTestsAll.sh
