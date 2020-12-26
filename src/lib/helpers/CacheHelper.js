@@ -29,10 +29,10 @@ class CacheHelper {
       this.manager = new ManagerClass(settings.settings);
     }
     EventHelper.on('theo:flushdb', () => {
-      setImmediate(async () => {
-        try {
-          await this.manager.flush();
-        } catch (e) {}
+      setImmediate(() => {
+        if (this.manager) {
+          this.manager.flush().catch(console.error);
+        }
       });
     });
   }
