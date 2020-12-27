@@ -9,6 +9,6 @@ RETVAL=$?
 if [[ ${RETVAL} -gt 0 ]]; then
     exit ${RETVAL}
 fi
-./runTestsUpgrade.sh
+./runTestsUpgrade.sh skip_build
 RETVAL=$?
 exit ${RETVAL}
