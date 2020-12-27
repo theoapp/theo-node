@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AccountManager from './AccountManager';
 import { parseSSHOptions } from '../utils/sshOptionsUtils';
 
 class KeyManager {
@@ -21,7 +20,7 @@ class KeyManager {
     if (am) {
       this.am = am;
     } else {
-      this.am = new AccountManager(this.db);
+      throw new Error('Missing required AccountManager parameter');
     }
   }
 

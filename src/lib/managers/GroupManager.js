@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import GroupAccountManager from './GroupAccountManager';
-import PermissionManager from './PermissionManager';
 import BaseCacheManager, { MAX_ROWS } from './BaseCacheManager';
 
 class GroupManager extends BaseCacheManager {
@@ -132,9 +130,9 @@ class GroupManager extends BaseCacheManager {
     return group ? group.id : false;
   }
 
-  async create(name, active = 1) {
+  create(name, active = 1) {
     const sql = 'insert into tgroups (name, active, is_internal, created_at) values (?, ?, ?, ?) ';
-    return this.db.insert(sql, [name, active, name.indexOf('@') > 0, new Date().getTime()]);
+    return this.db.insert(sql, [name, active, name.indexOf('@') > 0, Date.now()]);
   }
 
   async delete(id) {
@@ -166,11 +164,9 @@ class GroupManager extends BaseCacheManager {
     return changes;
   }
 
-  async getFull(id) {
+  async getFull(id, gam, pm) {
     const group = await this.get(id);
-    const gam = new GroupAccountManager(this.db, this);
     group.accounts = await gam.getAllAccounts(id);
-    const pm = new PermissionManager(this.db, this);
     group.permissions = await pm.getAllGroup(id);
     return group;
   }

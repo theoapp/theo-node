@@ -84,32 +84,58 @@ class SqliteManager extends DbManager {
   }
 
   prepareDb(storage) {
-    if (!this.is_in_memory) {
-      // If db file does not exists...
-      if (!fs.existsSync(storage)) {
-        // if parent directory does not exists..
-        const parentDir = dirname(storage);
-        if (!fs.existsSync(parentDir)) {
-          // let create it..
-          try {
-            fs.mkdirSync(parentDir, { recursive: true });
-          } catch (err) {
-            console.error('ERROR creating dir structure for Sqlite db file: %s', storage, err.message);
-            throw err;
+    if (storage) {
+      if (!this.is_in_memory) {
+        // If db file does not exists...
+        if (!fs.existsSync(storage)) {
+          // if parent directory does not exists..
+          const parentDir = dirname(storage);
+          if (!fs.existsSync(parentDir)) {
+            // let create it..
+            try {
+              fs.mkdirSync(parentDir, { recursive: true });
+            } catch (err) {
+              console.error('ERROR creating dir structure for Sqlite db file: %s', storage, err.message);
+              throw err;
+            }
           }
         }
       }
     }
-    this.db = new sqlite3.Database(storage);
-    this.db.run('PRAGMA foreign_keys = ON');
+    // this.openDb();
   }
 
   getEngine() {
     return 'sqlite';
   }
 
-  getClient(pool = false) {
-    return new SqliteClient(this.db);
+  openDb(next) {
+    console.log('Opening db');
+    this.db = new sqlite3.Database(this.options.storage, err => {
+      if (err) {
+        return;
+      }
+      this.db.exec('PRAGMA foreign_keys = ON');
+      console.log('Opened db');
+      next && next();
+    });
+  }
+
+  getClient(pool = false, next = false) {
+    if (!this.db || this.db.closed) {
+      this.openDb(() => {
+        if (next) {
+          next(new SqliteClient(this.db));
+        }
+      });
+      if (next) {
+        return;
+      }
+    }
+    if (!next) {
+      return new SqliteClient(this.db);
+    }
+    next(new SqliteClient(this.db));
   }
 
   setClient(client) {
@@ -117,8 +143,18 @@ class SqliteManager extends DbManager {
   }
 
   close() {
+    if (this.db.closed) return;
+    this.db.closed = true;
     console.log('Closing db');
-    this.db.close();
+    return new Promise((resolve, reject) => {
+      this.db.close(err => {
+        if (err) {
+          return reject(err);
+        }
+        console.log('Closed');
+        resolve();
+      });
+    });
   }
 
   async createVersionTable() {
@@ -151,8 +187,8 @@ class SqliteManager extends DbManager {
   }
 
   async updateVersion() {
-    const sql = 'update _version set value = ' + this.dbVersion;
-    return this.client.run(sql);
+    const sql = 'update _version set value = ?';
+    return this.client.run(sql, [this.dbVersion]);
   }
 
   async upgradeDb(fromVersion) {
@@ -261,33 +297,39 @@ class SqliteManager extends DbManager {
 
   async getCurrentVersion() {
     const sqlCheck = 'select value from _version';
+    let row;
     try {
-      return await this.client.get(sqlCheck);
+      row = await this.client.get(sqlCheck);
     } catch (e) {
       if (e.errno === 1) {
         return false;
       }
       throw e;
     }
+    return row;
   }
 
   async flushDb() {
+    console.log('Flushing db...');
+    /*
     if (this.is_in_memory) {
-      this.close();
-      this.prepareDb(IN_MEMORY_DB);
+      await this.close();
+      await this.prepareDb(this.options.storage);
     } else {
-      const tables = 'public_keys, groups_accounts, permissions, tgroups, accounts, auth_tokens, _version'.split(',');
-      for (let i = 0; i < tables.length; i++) {
-        const sqlDrop = 'drop table ' + tables[i];
-        try {
-          await this.client.run(sqlDrop);
-          console.log('Dropped ', tables[i]);
-        } catch (e) {
-          console.error('Failed to drop %s', tables[i], e);
-          // it doesn't exists
-        }
+
+     */
+    const tables = 'public_keys, groups_accounts, permissions, tgroups, accounts, auth_tokens, _version'.split(',');
+    for (let i = 0; i < tables.length; i++) {
+      const sqlDrop = 'drop table ' + tables[i];
+      try {
+        await this.client.run(sqlDrop);
+        console.log('Dropped ', tables[i]);
+      } catch (e) {
+        console.error('Failed to drop %s', tables[i], e);
+        // it doesn't exists
       }
     }
+    // }
     return true;
   }
 }

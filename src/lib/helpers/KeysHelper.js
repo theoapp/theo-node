@@ -71,7 +71,10 @@ export const getAuthorizedKeysAsJson = async (dm, user, host, skip_cache = false
     err.t_code = 500;
     throw err;
   } finally {
-    db.close();
+    const ret = db.close();
+    if (ret && ret instanceof Promise) {
+      ret.catch(err => console.error(err));
+    }
   }
   if (!skip_cache) {
     if (_cm !== false) {

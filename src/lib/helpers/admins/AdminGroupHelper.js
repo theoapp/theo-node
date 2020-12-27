@@ -13,6 +13,8 @@
 // limitations under the License.
 
 import GroupManager from '../../managers/GroupManager';
+import PermissionManager from '../../managers/PermissionManager';
+import GroupAccountManager from '../../managers/GroupAccountManager';
 import EventHelper from '../EventHelper';
 
 export const adminCreateGroup = async (db, group, req, onlyId = false) => {
@@ -21,8 +23,16 @@ export const adminCreateGroup = async (db, group, req, onlyId = false) => {
     error.t_code = 400;
     throw error;
   }
+
   const gm = new GroupManager(db);
-  const check = await gm.checkName(group.name);
+
+  let check;
+  try {
+    check = await gm.checkName(group.name);
+  } catch (err) {
+    err.t_code = 500;
+    throw err;
+  }
   if (check) {
     const error = new Error('Group already exists');
     error.t_code = 409;
@@ -42,7 +52,9 @@ export const adminCreateGroup = async (db, group, req, onlyId = false) => {
       }
     }
     if (onlyId) return id;
-    return gm.getFull(id);
+    const pm = new PermissionManager(db, this);
+    const gam = new GroupAccountManager(db, this);
+    return gm.getFull(id, gam, pm);
   } catch (err) {
     err.t_code = 500;
     throw err;
@@ -51,11 +63,13 @@ export const adminCreateGroup = async (db, group, req, onlyId = false) => {
 
 export const adminGetGroup = async (db, id) => {
   const gm = new GroupManager(db);
+  const pm = new PermissionManager(db, this);
+  const gam = new GroupAccountManager(db, this);
   try {
     if (isNaN(id)) {
       id = await gm.getIdByName(id);
     }
-    return gm.getFull(id);
+    return gm.getFull(id, gam, pm);
   } catch (err) {
     if (!err.t_code) err.t_code = 500;
     throw err;

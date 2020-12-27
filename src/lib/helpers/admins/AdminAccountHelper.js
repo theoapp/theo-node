@@ -13,9 +13,11 @@
 // limitations under the License.
 
 import AccountManager from '../../managers/AccountManager';
-import EventHelper from '../EventHelper';
 import GroupManager from '../../managers/GroupManager';
-import { adminAddAccountKeys, adminCreateGroup, adminCreateGroupAccount } from '../AdminHelper';
+import { adminCreateGroup } from './AdminGroupHelper';
+import EventHelper from '../EventHelper';
+import { adminAddAccountKeys } from './AdminKeyHelper';
+import { adminCreateGroupAccount } from './AdminGroupAccountHelper';
 
 export const adminCreateAccount = async (db, account, req) => {
   if (!account.email) {
@@ -123,12 +125,10 @@ export const adminGetAccount = async (db, account_id) => {
     } else {
       account = await am.getFull(Number(account_id));
     }
-    EventHelper.emit('theo:fetch', {
-      func: 'account',
-      action: 'get',
-      object: account.id
-    });
   } catch (err) {
+    if (err.t_code) {
+      throw err;
+    }
     const error = new Error('Account not found');
     error.t_code = 404;
     throw error;
@@ -161,7 +161,6 @@ export const adminDeleteAccount = async (db, account_id, req) => {
     } catch (e) {
       // I don't care
     }
-
     EventHelper.emit('theo:change', {
       func: 'account',
       action: 'delete',
