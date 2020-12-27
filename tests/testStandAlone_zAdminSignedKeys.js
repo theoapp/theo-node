@@ -65,31 +65,22 @@ const settings = {
   }
 };
 
-let ah;
+const dh = DbHelper(settings.db);
+const dm = dh.getManager();
+if (!dm) {
+  console.error('Unable to load DB Manager!!!');
+  process.exit(99);
+}
 
-const loadDb = function() {
+const loadDb = async function() {
   return new Promise((resolve, reject) => {
-    try {
-      const dh = DbHelper(ah.getSettings('db'));
-      const dm = dh.getManager();
-      if (!dm) {
-        console.error('Unable to load DB Manager!!!');
-        process.exit(99);
-      }
-      dh.init()
+    dm.getClient(false, function(db) {
+      dh.init(db)
         .then(() => {
-          resolve(dm.getClient());
+          resolve(db);
         })
-        .catch(e => {
-          console.error('Failed to initialize db', e.message);
-          console.error(e);
-          process.exit(99);
-        });
-    } catch (e) {
-      console.error('Failed to load DB Manager!!!', e.message);
-      console.error(e);
-      process.exit(99);
-    }
+        .catch(e => reject(e));
+    });
   });
 };
 
@@ -97,14 +88,18 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
   this.timeout(10000);
   let db;
   before(async function() {
-    ah = AppHelper(settings);
+    const ah = AppHelper(settings);
     try {
-      db = await loadDb();
-    } catch (err) {}
+      db = await loadDb(ah);
+    } catch (err) {
+      console.error(err);
+    }
   });
 
-  after(async function() {
-    releaseDHInstance();
+  after(function(done) {
+    releaseDHInstance()
+      .then(done)
+      .catch(e => done(e));
   });
 
   describe('with name and email and 1 key', function() {
@@ -151,7 +146,10 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
-        keys: [{ key: publicKeySample5, signature: 'xxxx' }, { key: publicKeySample6, signature: 'xxxxx' }]
+        keys: [
+          { key: publicKeySample5, signature: 'xxxx' },
+          { key: publicKeySample6, signature: 'xxxxx' }
+        ]
       };
 
       const resAccount = await adminCreateAccount(db, reqAccount);
