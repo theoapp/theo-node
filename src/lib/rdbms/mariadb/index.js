@@ -278,6 +278,7 @@ alter table public_keys add unique(fingerprint);
 
   close() {
     this.connectionManager.close();
+    return Promise.resolve();
   }
 }
 

@@ -128,7 +128,7 @@ class AccountManager extends BaseCacheManager {
   }
 
   async get(id) {
-    const sql = 'select ' + SELECT_ACCOUNT_MIN + ' from accounts where id = ? ';
+    const sql = `select ${SELECT_ACCOUNT_MIN} from accounts where id = ?`;
     const row = await this.db.get(sql, [id]);
     if (!row) {
       const err = new Error('Account not found');
@@ -139,7 +139,7 @@ class AccountManager extends BaseCacheManager {
   }
 
   async getByEmail(email) {
-    const sql = 'select ' + SELECT_ACCOUNT_MIN + ' from accounts where email = ? ';
+    const sql = `select ${SELECT_ACCOUNT_MIN} from accounts where email = ?`;
     const row = await this.db.get(sql, [email]);
     if (!row) {
       const err = new Error('Account not found');

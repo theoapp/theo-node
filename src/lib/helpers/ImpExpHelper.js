@@ -58,7 +58,7 @@ export const imp = async (db, dump) => {
   }
   if (dump.accounts) {
     const am = new AccountManager(db);
-    const km = new KeyManager(db);
+    const km = new KeyManager(db, am);
     const gam = new GroupAccountManager(db);
     for (let i = 0; i < dump.accounts.length; i++) {
       const account = dump.accounts[i];

@@ -20,6 +20,10 @@ import { setTimeoutPromise } from '../utils/processUtils';
 let _instance;
 
 class DbHelper {
+  settings;
+
+  manager;
+
   constructor(settings) {
     if (!settings) {
       throw new Error('DbHelper() needs settings.db');
@@ -41,19 +45,21 @@ class DbHelper {
     return this.manager;
   }
 
-  async init() {
-    let client;
+  async init(client) {
+    const gotClient = !!client;
     try {
-      client = this.manager.getClient();
-      await client.open();
+      if (!client) {
+        client = this.manager.getClient();
+        await client.open();
+      }
       await this.checkDb(client);
     } finally {
-      try {
-        if (client) {
-          client.close();
+      if (!gotClient && client) {
+        try {
+          await client.close();
+        } catch (e) {
+          //
         }
-      } catch (e) {
-        //
       }
     }
   }
@@ -88,12 +94,11 @@ class DbHelper {
       } catch (e) {
         if (e.code === 'ER_TABLE_EXISTS_ERROR') {
           await setTimeoutPromise(2000);
-          this.checkDb(client);
+          return this.checkDb(client);
         } else {
           common_error('Unable to create _version table: [%s] %s', e.code, e.message);
           process.exit(90);
         }
-        return;
       }
     } else if (currentVersion < 0) {
       common_error('Db in initialization, exiting ');
@@ -148,7 +153,7 @@ class DbHelper {
   }
 
   close() {
-    this.manager.close();
+    return this.manager.close();
   }
 }
 
@@ -159,11 +164,10 @@ const getInstance = settings => {
   return _instance;
 };
 
-export const releaseDHInstance = () => {
+export const releaseDHInstance = async () => {
   if (_instance !== null) {
-    _instance.close();
+    await _instance.close();
   }
-  _instance = null;
 };
 
 export default getInstance;

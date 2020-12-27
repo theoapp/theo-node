@@ -101,7 +101,7 @@ export const adminAddAccountKeys = async (db, account_id, keys, req) => {
     account_id,
     public_keys: []
   };
-  const km = new KeyManager(db);
+  const km = new KeyManager(db, am);
   const ah = AppHelper();
   const settingsKeys = ah.getSettings('keys');
   const signRequired = settingsKeys && settingsKeys.sign === true;
@@ -152,7 +152,7 @@ export const adminUpdateAccountKey = async function(db, account_id, key_id, ssh_
     }
     ssh_options = JSON.stringify(ssh_options);
   }
-  const km = new KeyManager(db);
+  const km = new KeyManager(db, am);
   try {
     const key = await km.get(account_id, key_id);
     if (!key) {
@@ -197,7 +197,7 @@ export const adminDeleteAccountKey = async (db, account_id, key_id, req) => {
     console.log('Throw 404');
     throw err;
   }
-  const km = new KeyManager(db);
+  const km = new KeyManager(db, am);
   try {
     const key = await km.get(account_id, key_id);
     if (!key) {
@@ -275,7 +275,7 @@ export const adminAddAccountKeyFromService = async (db, account_id, service, use
     account_id,
     public_keys: []
   };
-  const km = new KeyManager(db);
+  const km = new KeyManager(db, am);
   try {
     for (let i = 0; i < keys.length; i++) {
       const _key = keys[i].trim();

@@ -85,8 +85,7 @@ class SqliteClient extends BaseClient {
     return new Promise((resolve, reject) => {
       this.db.run(sql, params, function(err) {
         if (err) {
-          reject(err);
-          return;
+          return reject(err);
         }
         resolve(this.changes);
       });
@@ -95,10 +94,12 @@ class SqliteClient extends BaseClient {
 
   open() {
     // Do nothing
+    return Promise.resolve();
   }
 
   close() {
     // Do nothing
+    return Promise.resolve();
   }
 }
 
