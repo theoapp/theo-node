@@ -14,8 +14,6 @@
 
 import assert from 'assert';
 
-import AppHelper from '../src/lib/helpers/AppHelper';
-
 import {
   adminAddAccountKeys,
   adminAddAccountPermission,
@@ -36,7 +34,9 @@ import {
   adminUpdateAccountPermission,
   adminUpdateGroupPermission
 } from '../src/lib/helpers/AdminHelper';
-import DbHelper, { releaseDHInstance } from '../src/lib/helpers/DbHelper';
+import DbHelper from '../src/lib/helpers/DbHelper';
+
+import AppHelper from '../src/lib/helpers/AppHelper';
 
 const publicKeySample =
   'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoUQGPAFUl3xBX+1vxm/o1v4G1KHqXlvg/pVAHrs89isBTcXwNoo4C1YWjF0TCRjhltfvNMNYF8Q1fzEw1anjL+9X26GlXEXr4Nx9MIFFiEiTpUSPGlT13TOIIKW9eEQc9vHydgK1NdpEgz23kcPARWvXbcVtwoLDwfsE1Msvg1qWIN4UiDau/FTetFaq8fcXd3Cun0V+v5DLEfhSB3gNSxWwhdAEaQIpPSJk8VSHKiaOtQ6Besgw8+mjA5u0Mvm4Z9luZ8b7Ky2gUn49HwM/ez7KC9BhoiTsoE8iXjF11J3ttqju0wADZ4P8OQ7y6l7rgNqXyHejhLutvdI3ka3X/ jolly1@newsvine.com';
@@ -76,31 +76,22 @@ const settings = {
   }
 };
 
-let ah;
+const dh = DbHelper(settings.db);
+const dm = dh.getManager();
+if (!dm) {
+  console.error('Unable to load DB Manager!!!');
+  process.exit(99);
+}
 
-const loadDb = function() {
+const loadDb = async function() {
   return new Promise((resolve, reject) => {
-    try {
-      const dh = DbHelper(ah.getSettings('db'));
-      const dm = dh.getManager();
-      if (!dm) {
-        console.error('Unable to load DB Manager!!!');
-        process.exit(99);
-      }
-      dh.init()
+    dm.getClient(false, function(db) {
+      dh.init(db)
         .then(() => {
-          resolve(dm.getClient());
+          resolve(db);
         })
-        .catch(e => {
-          console.error('Failed to initialize db', e.message);
-          console.error(e);
-          process.exit(99);
-        });
-    } catch (e) {
-      console.error('Failed to load DB Manager!!!', e.message);
-      console.error(e);
-      process.exit(99);
-    }
+        .catch(e => reject(e));
+    });
   });
 };
 
@@ -108,16 +99,19 @@ describe('Test account', function() {
   this.timeout(10000);
   let db;
   before(async function() {
-    ah = AppHelper(settings);
+    const ah = AppHelper(settings);
     try {
-      db = await loadDb();
+      db = await loadDb(ah);
     } catch (err) {
       console.error(err);
     }
   });
 
-  after(async function() {
-    releaseDHInstance();
+  after(function(done) {
+    dm.flushDb()
+      .then(() => dm.close())
+      .then(() => done())
+      .catch(e => done(err));
   });
 
   describe('with name and email', function() {
@@ -504,13 +498,19 @@ describe('Test group', function() {
   this.timeout(10000);
   let db;
   before(async function() {
+    const ah = AppHelper(settings);
     try {
-      db = await loadDb();
-    } catch (err) {}
+      db = await loadDb(ah);
+    } catch (err) {
+      console.error(err);
+    }
   });
 
-  after(async function() {
-    releaseDHInstance();
+  after(function(done) {
+    dm.flushDb()
+      .then(() => dm.close())
+      .then(() => done())
+      .catch(e => done(err));
   });
 
   let group_id;
