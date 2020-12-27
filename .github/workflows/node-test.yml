@@ -6,17 +6,37 @@ name: Node.js CI test
 on: push
 
 jobs:
-  lint-test-build:
-
-    runs-on: ubuntu-latest
-
+  lint:
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js 14.x
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v2
       with:
-        node-version: 14.x
+        node-version: '14'
     - run: npm ci
     - run: npm run lint
-    - run: npm run test:standalone
-    - run: npm run build --if-present
+
+  test:
+    runs-on: ubuntu-20.04
+    needs: lint
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: npm ci --no-optional
+      - run: npm run test:standalone
+
+  build:
+    runs-on: ubuntu-20.04
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: npm ci --no-optional
+      - run: npm run build --if-present
