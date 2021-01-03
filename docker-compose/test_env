@@ -1,5 +1,11 @@
+# docker images
+export MARIADB_IMAGE=mariadb:10.5
+export MYSQLSERVER_IMAGE=mysql/mysql-server:8.0
+export REDIS_IMAGE=redis:6.0
+export MEMCACHED_IMAGE=memcached:1-alpine
 
-## mariadb/mysql
+# mariadb/mysql
+
 export MYSQL_ROOT_PASSWORD=ex4mple
 export MYSQL_DATABASE=theo
 export MYSQL_USER=theouser

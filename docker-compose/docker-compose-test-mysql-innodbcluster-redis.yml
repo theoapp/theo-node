@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
   mysql-server-1:
-    image: mysql/mysql-server:8.0
+    image: ${MYSQLSERVER_IMAGE}
     command:
       - "mysqld"
       - "--server_id=1"
@@ -24,7 +24,7 @@ services:
     ports:
       - 3301:3306
   mysql-server-2:
-    image: mysql/mysql-server:8.0
+    image: ${MYSQLSERVER_IMAGE}
     command:
       - "mysqld"
       - "--server_id=2"
@@ -46,7 +46,7 @@ services:
     ports:
       - 3302:3306
   mysql-server-3:
-    image: mysql/mysql-server:8.0
+    image: ${MYSQLSERVER_IMAGE}
     command:
       - "mysqld"
       - "--server_id=3"
@@ -83,6 +83,6 @@ services:
       MYSQLSH_SCRIPT: /scripts/setupCluster.js
       MYSQL_SCRIPT: /scripts/db.sql
   cache:
-    image: redis:4.0-alpine
+    image: ${REDIS_IMAGE}
     ports:
       - 6379:6379

@@ -48,7 +48,7 @@ test_mysql_upgrade() {
   echo "Starting mysql-server"
   docker run --rm --name theo-mysql-db -d \
     -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
-    mysql/mysql-server:8.0 \
+    ${MYSQLSERVER_IMAGE} \
     mysqld --skip-host-cache --skip-name-resolve --default_authentication_plugin=mysql_native_password
   echo "Wait 60 s.."
   sleep 60
@@ -102,7 +102,7 @@ test_mariadb_upgrade() {
     -e MYSQL_USER=${MYSQL_USER}  \
     -e MYSQL_PASSWORD=${MYSQL_PASSWORD}  \
     -e MYSQL_DATABASE=${MYSQL_DATABASE}  \
-    mariadb:10.2
+    ${MARIADB_IMAGE}
   echo "Wait 60 s.."
   sleep 60
   # start theo old
