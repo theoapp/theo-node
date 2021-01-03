@@ -7,15 +7,13 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Log into registry
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
     - name: build image and push
-      run: ./scripts/buildDockerImage.sh push
+      run: ./scripts/buildDockerImages.sh all push
     - name: call AK webhook
       run: |
         # Strip git ref prefix from version
