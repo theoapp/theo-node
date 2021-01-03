@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
   mysql-server-1:
-    image: mysql/mysql-server:8.0
+    image: ${MYSQLSERVER_IMAGE}
     command:
       - "mysqld"
       - "--server_id=1"
@@ -22,7 +22,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_ROOT_HOST: "%"
   mysql-server-2:
-    image: mysql/mysql-server:8.0
+    image: ${MYSQLSERVER_IMAGE}
     command:
       - "mysqld"
       - "--server_id=2"
@@ -42,7 +42,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_ROOT_HOST: "%"
   mysql-server-3:
-    image: mysql/mysql-server:8.0
+    image: ${MYSQLSERVER_IMAGE}
     command:
       - "mysqld"
       - "--server_id=3"
@@ -77,7 +77,7 @@ services:
       MYSQLSH_SCRIPT: /scripts/setupCluster.js
       MYSQL_SCRIPT: /scripts/db.sql
   cache:
-    image: redis:4.0-alpine
+    image: ${REDIS_IMAGE}
   theo1:
     image: theo:test
     container_name: theo1

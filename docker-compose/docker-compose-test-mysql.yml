@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
   db:
-    image: mysql/mysql-server:8.0
+    image: ${MYSQLSERVER_IMAGE}
     container_name: mysql-server
     command: ["mysqld","--skip-host-cache","--skip-name-resolve"]
     environment:
