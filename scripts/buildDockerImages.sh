@@ -111,9 +111,7 @@ build_mysql () {
 
   TAG_NAME=${DOCKER_TAG}-mysql
 
-  npm uninstall sqlite3
-  npm uninstall redis
-  npm uninstall memcached
+  npm uninstall sqlite3 redis memcached
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -166,10 +164,4 @@ if [ "$1" = "all" ]; then
 
 else
    build_${1} "$2"
-fi
-
-if [ "$2" = "push" ]; then
-  if [ -n "$MICROBADGE_TOKEN" ]; then
-    curl -XPOST https://hooks.microbadger.com/images/theoapp/theo/${MICROBADGE_TOKEN}
-  fi
 fi
