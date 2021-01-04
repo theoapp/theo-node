@@ -19,13 +19,30 @@ import PermissionManager from '../managers/PermissionManager';
 import KeyManager from '../managers/KeyManager';
 import GroupAccountManager from '../managers/GroupAccountManager';
 
-const getAll = async manager => {
-  const total = await manager.getAllCount();
+const getAllGroups = async db => {
+  const gm = new GroupManager(db);
+  const gam = new GroupAccountManager(db);
+  const pm = new PermissionManager(db);
+  const total = await gm.getAllCount('where is_internal = ? ', [0]);
   const items = [];
   while (items.length < total) {
-    const itemIds = await manager.getAll(MAX_ROWS, items.length, true);
+    const itemIds = await gm.getAll(MAX_ROWS, items.length, false, 'id', 'asc');
     for (let i = 0; i < itemIds.rows.length; i++) {
-      const account = await manager.getFull(itemIds.rows[i].id);
+      const account = await gm.getFull(itemIds.rows[i].id, gam, pm);
+      items.push(account);
+    }
+  }
+  return items;
+};
+
+const getAllAccounts = async db => {
+  const am = new AccountManager(db);
+  const total = await am.getAllCount();
+  const items = [];
+  while (items.length < total) {
+    const itemIds = await am.getAll(MAX_ROWS, items.length, false, 'id', 'asc');
+    for (let i = 0; i < itemIds.rows.length; i++) {
+      const account = await am.getFull(itemIds.rows[i].id);
       items.push(account);
     }
   }
@@ -33,9 +50,11 @@ const getAll = async manager => {
 };
 
 export const exp = async db => {
+  const groups = await getAllGroups(db);
+  const accounts = await getAllAccounts(db);
   return {
-    groups: await getAll(new GroupManager(db)),
-    accounts: await getAll(new AccountManager(db))
+    accounts,
+    groups
   };
 };
 
@@ -49,7 +68,7 @@ export const imp = async (db, dump) => {
         const id = await gm.create(group.name, group.active);
         for (let ii = 0; ii < group.permissions.length; ii++) {
           const permission = group.permissions[ii];
-          await pm.create(id, permission.user, permission.host);
+          await pm.create(id, permission.user, permission.host, permission.ssh_options);
         }
       } catch (e) {
         console.error('IMP: Failed to create group %s', group.name, e);
@@ -71,10 +90,17 @@ export const imp = async (db, dump) => {
           }
           await km.create(id, public_key.public_key, public_key.fingerprint, public_key.public_key_sig);
         }
+        const group_id = await gm.create(account.email);
         for (let ii = 0; ii < account.groups.length; ii++) {
           const group = account.groups[ii];
           const group_id = await gm.getIdByName(group.name);
           await gam.create(group_id, id);
+        }
+        for (let ii = 0; ii < account.permissions.length; ii++) {
+          const permission = account.permissions[ii];
+          if (permission.is_internal) {
+            await pm.create(group_id, permission.user, permission.host, permission.ssh_options);
+          }
         }
       } catch (e) {
         console.error('IMP: Failed to create account %s', account.email, e);
