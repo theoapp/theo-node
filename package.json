@@ -11,7 +11,7 @@
     "coverage": "cross-env NODE_ENV=test nyc mocha tests/testStandAlone*.js",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
-    "start:dev": "nodemon --watch src --exec babel-node ./src/index.js",
+    "start:dev": "nodemon --signal SIGTERM --watch .env --watch src --exec babel-node ./src/index.js",
     "start": "node ./build/index.js",
     "test": "mocha tests/test*.js",
     "test:api": "mocha tests/testRest*",
@@ -26,6 +26,9 @@
     "test:upgrade:sqlite": "mocha tests/testUpgrade_sqlite.js",
     "preversion": "npm run lint",
     "version": "./scripts/updateVersion.sh"
+  },
+  "nodemonConfig": {
+    "delay": 2000
   },
   "author": "Michele Azzolari <macno@authkeys.io> (macno)",
   "license": "Apache-2.0",
