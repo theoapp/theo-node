@@ -16,6 +16,7 @@ import assert from 'assert';
 import {
   calculateDistance,
   mergeSSHOptions,
+  parseKeySSHOptions,
   parseSSHOptions,
   renderSSHOptions
 } from '../src/lib/utils/sshOptionsUtils';
@@ -67,7 +68,7 @@ describe('Testing SSH Options Utils', function() {
     ['', false, undefined].forEach((v, i) => {
       it(`should return false if ssh_options is empty [${i}]`, function() {
         const ret = parseSSHOptions({ ssh_options: v });
-        assert.strictEqual(ret.ssh_options, '');
+        assert.strictEqual(ret.ssh_options, false);
       });
     });
     [
@@ -77,6 +78,24 @@ describe('Testing SSH Options Utils', function() {
       it(`should return an object if ssh_options is populated string [${i}]`, function() {
         const ret = parseSSHOptions({ ssh_options: v });
         assert.strictEqual(typeof ret.ssh_options, 'object');
+      });
+    });
+  });
+
+  describe('Test parseKeySSHOptions', function() {
+    ['', false, undefined].forEach((v, i) => {
+      it(`should return false if key_ssh_options is empty [${i}]`, function() {
+        const ret = parseKeySSHOptions({ key_ssh_options: v });
+        assert.strictEqual(ret.key_ssh_options, false);
+      });
+    });
+    [
+      '{"from": ["10.10.10.1"],"no-user-rc": true}',
+      '{"from": ["10.10.10.1","172.16.1.3"],"no-user-rc": true, "no-pty": true}'
+    ].forEach((v, i) => {
+      it(`should return an object if key_ssh_options is populated string [${i}]`, function() {
+        const ret = parseKeySSHOptions({ key_ssh_options: v });
+        assert.strictEqual(typeof ret.key_ssh_options, 'object');
       });
     });
   });

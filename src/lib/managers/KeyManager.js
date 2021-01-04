@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { parseSSHOptions } from '../utils/sshOptionsUtils';
+import { parseKeySSHOptions } from '../utils/sshOptionsUtils';
 
 class KeyManager {
   constructor(db, am) {
@@ -34,7 +34,7 @@ class KeyManager {
       sql += ' offset ' + offset;
     }
     const rows = await this.db.all(sql, [account_id]);
-    return rows.map(parseSSHOptions);
+    return rows.map(parseKeySSHOptions);
   }
 
   async create(account_id, key, fingerprint, signature = null, ssh_options = '') {
@@ -63,7 +63,7 @@ class KeyManager {
     const sql =
       'select id, public_key, fingerprint, public_key_sig, key_ssh_options from public_keys where id = ? and account_id = ?';
     const row = await this.db.get(sql, [id, account_id]);
-    return parseSSHOptions(row);
+    return parseKeySSHOptions(row);
   }
 
   async checkFingerprint(fingerprint) {
