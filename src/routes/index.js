@@ -75,7 +75,7 @@ export const initRoutes = express => {
   router.use('/permissions', handlePermissions(express));
 
   // import/export
-  router.use('/permissions', handleImpExp(express));
+  router.use('/impexp', handleImpExp(express));
 
   router.post('/flushdb', requireAdminAuthMiddleware, async (req, res, next) => {
     if (!process.env.MODE || process.env.MODE !== 'test') {
