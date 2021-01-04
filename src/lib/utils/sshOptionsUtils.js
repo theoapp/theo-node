@@ -1,10 +1,17 @@
 export const parseSSHOptions = function(row) {
-  if (row.key_ssh_options) {
-    row.ssh_options = JSON.parse(row.key_ssh_options);
-  } else if (row.ssh_options) {
+  if (row.ssh_options) {
     row.ssh_options = JSON.parse(row.ssh_options);
   } else {
-    row.ssh_options = '';
+    row.ssh_options = false;
+  }
+  return row;
+};
+
+export const parseKeySSHOptions = function(row) {
+  if (row.key_ssh_options) {
+    row.key_ssh_options = JSON.parse(row.key_ssh_options);
+  } else {
+    row.key_ssh_options = false;
   }
   return row;
 };

@@ -13,7 +13,13 @@
 // limitations under the License.
 
 import GroupManager from './GroupManager';
-import { renderSSHOptions, parseSSHOptions, mergeSSHOptions, calculateDistance } from '../utils/sshOptionsUtils';
+import {
+  renderSSHOptions,
+  parseSSHOptions,
+  mergeSSHOptions,
+  calculateDistance,
+  parseKeySSHOptions
+} from '../utils/sshOptionsUtils';
 
 class PermissionManager {
   constructor(db, gm) {
@@ -47,8 +53,11 @@ class PermissionManager {
     const rows = await this.db.all(sql, [host, user, Date.now()]);
     const keys = {};
     rows.forEach(r => {
-      parseSSHOptions(r);
-      calculateDistance(matchLen, r);
+      parseKeySSHOptions(r);
+      if (!r.key_ssh_options) {
+        parseSSHOptions(r);
+        calculateDistance(matchLen, r);
+      }
       if (keys[r.fingerprint]) {
         // If a key has its own SSH options, do not overwrite them
         if (!r.key_ssh_options) {
@@ -68,8 +77,12 @@ class PermissionManager {
     });
     return Object.keys(keys).map(k => {
       const ret = keys[k];
-      if (ret.ssh_options) {
+      if (ret.key_ssh_options) {
+        ret.ssh_options = renderSSHOptions(ret.key_ssh_options);
+      } else if (ret.ssh_options) {
         ret.ssh_options = renderSSHOptions(ret.ssh_options);
+      } else {
+        ret.ssh_options = '';
       }
       delete ret.key_ssh_options;
       delete ret.host;
