@@ -43,8 +43,9 @@ const uptime_start = Date.now();
 
 export const initRoutes = express => {
   const router = express.Router();
-  router.get('/', (req, res, next) => {
-    res.json({ status: 200 });
+  router.get('/', (req, res) => {
+    const { name, description } = packageJson;
+    res.json({ name, description });
   });
 
   router.get('/uptime', requireAdminAuthMiddleware, (req, res) => {

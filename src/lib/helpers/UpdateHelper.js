@@ -15,32 +15,46 @@
 import packageJson from '../../../package';
 import { http_get } from '../utils/httpUtils';
 import semver from 'semver';
-import { common_info } from '../utils/logUtils';
+import { common_debug, common_warn } from '../utils/logUtils';
+
+const CHECK_UPDATE_URL = 'https://update.theo.authkeys.io/version';
 
 class UpdateHelper {
   static _getHttpHeaders() {
     return {
-      'User-Agent': packageJson.name + '/' + packageJson.version
+      'User-Agent': packageJson.name + '/' + packageJson.version,
+      Accept: 'application/json'
     };
   }
 
-  static checkUpdate = function(cb) {
-    console.log('checkUpdate');
-    const timeout = Math.floor(Math.random() * (60000 - 1000) + 1000);
+  static checkUpdate = function(quick = false) {
+    const timeout = quick ? 0 : Math.floor(Math.random() * (60000 - 1000) + 1000);
+    if (!quick) {
+      common_debug('checkUpdate in %s ms', timeout);
+    }
     setTimeout(function() {
-      http_get('https://update.theo.authkeys.io/version', UpdateHelper._getHttpHeaders())
-        .then(version => {
-          if (semver.gt(version, packageJson.version)) {
-            common_info('\n\n\t!!! Update available: %s !!!\n', version);
+      http_get(CHECK_UPDATE_URL, UpdateHelper._getHttpHeaders())
+        .then(data => {
+          if (!data) {
+            common_warn('Failed to check new version, empty response');
+            return;
           }
-          if (cb) {
-            cb(null, true);
+          let version;
+          let securityUpdate = false;
+          if (typeof data === 'object') {
+            version = data.version;
+            securityUpdate = data.security_update;
+          } else {
+            version = data;
+          }
+          if (semver.gt(version, packageJson.version)) {
+            common_warn('');
+            common_warn('   !!! %s Update available: %s !!!', securityUpdate ? 'Security' : '', version);
+            common_warn('');
           }
         })
         .catch(e => {
-          if (cb) {
-            cb(e);
-          }
+          common_warn('Failed to check new version:', e.message);
         });
     }, timeout);
   };
