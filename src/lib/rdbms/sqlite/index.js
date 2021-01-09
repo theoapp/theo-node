@@ -110,13 +110,11 @@ class SqliteManager extends DbManager {
   }
 
   openDb(next) {
-    console.log('Opening db');
     this.db = new sqlite3.Database(this.options.storage, err => {
       if (err) {
         return;
       }
       this.db.exec('PRAGMA foreign_keys = ON');
-      console.log('Opened db');
       next && next();
     });
   }
