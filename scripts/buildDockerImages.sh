@@ -24,7 +24,7 @@ is_valid_tag () {
 }
 
 is_latest_tag () {
-  LATEST_GIT_TAG=$(git tag | grep ^[0-9]*\.[0-9]*\.[0-9]*$ | sort -V | tail -n 1)
+  LATEST_GIT_TAG=$(git tag | grep -E '^[0-9]*\.[0-9]*\.[0-9]*$' | sort -V | tail -n 1)
   if [ "$LATEST_GIT_TAG" = "$DOCKER_TAG" ]; then
     return 0
   else
@@ -58,9 +58,9 @@ build_full () {
   is_latest_tag
   RETVAL=$?
   if [ $RETVAL -eq 0 ]; then
-    docker_build latest
+    docker tag ${DOCKER_IMAGE}:${TAG_NAME} ${DOCKER_IMAGE}:latest
     if [ "$1" = "push" ]; then
-        docker_push "${TAG_NAME}"
+        docker push ${DOCKER_IMAGE}:latest
     fi
   fi
 }

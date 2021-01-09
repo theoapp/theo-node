@@ -20,7 +20,7 @@ jobs:
       run: |
         # Strip git ref prefix from version
         VERSION=$(./scripts/getVersion.sh)
-        LATEST_TAG=$(git tag | grep ^[0-9]*\.[0-9]*\.[0-9]*$ | sort --version-sort | tail -n 1)
+        LATEST_TAG=$(git tag | grep -E '^[0-9]*\.[0-9]*\.[0-9]*$' | sort --version-sort | tail -n 1)
         if [ "$LATEST_TAG" = "$DOCKER_TAG" ]; then
           LATEST=true
         else
@@ -28,7 +28,7 @@ jobs:
         fi
         if [ -n "${{ secrets.THEO_UPDATE_TOKEN }}" ]; then
           curl -H "Content-Type: application/json" -H "Authorization: Bearer ${{ secrets.THEO_UPDATE_TOKEN }}" \
-            -d '{"code": "'$VERSION'", "latest": ${LATEST} }' https://update.theo.authkeys.io/version
+            -d '{"code": "'$VERSION'", "latest": '.${LATEST}.' }' https://update.theo.authkeys.io/version
         fi
     - name: call microbadger webhook
       run: |
