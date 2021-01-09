@@ -17,14 +17,14 @@ import { initRoutes } from './routes';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import { auditMiddleware } from './lib/middlewares/AuditMiddleware';
-import { common_error } from './lib/utils/logUtils';
+import { common_error, common_warn } from './lib/utils/logUtils';
 import UpdateHelper from './lib/helpers/UpdateHelper';
 
 const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
 
 let last_check = 0;
 
-const CHECK_INTERVAL = 60 * 60 * 24 * 7 * 1000;
+const CHECK_INTERVAL = 604800000; // 7days: 7 * 24 * 60 * 60 * 1000;
 
 const doURLneedDb = function(path) {
   for (let i = 0; i < noDbUrls.length; i++) {
@@ -50,7 +50,12 @@ class TheoServer extends Microservice {
     this.skip_updatecheck = this.envBool(process.env, 'SKIP_UPDATECHECK', false);
     if (!this.skip_updatecheck) {
       last_check = Date.now();
-      UpdateHelper.checkUpdate();
+      UpdateHelper.checkUpdate(true);
+    } else {
+      common_warn('         SKIP_UPDATECHECK');
+      common_warn('    we will not check for new versions!');
+      common_warn('    be sure to star https://github.com/theoapp/theo-node');
+      common_warn('    to be notified when a new release is out!');
     }
   }
 
@@ -69,7 +74,7 @@ class TheoServer extends Microservice {
           try {
             await client.open();
           } catch (err) {
-            console.error(err);
+            common_error('Failed to open db:', err.message);
             // Ops..
             res.status(500);
             res.json({ status: 500, reason: 'A problem occurred, please retry' });
@@ -80,24 +85,18 @@ class TheoServer extends Microservice {
             try {
               client.close();
             } catch (e) {
-              common_error('db close', e.message);
-            }
-          });
-        } else {
-          res.on('finish', () => {
-            if (this.skip_updatecheck) {
-              return;
-            }
-            if (Date.now() - last_check > CHECK_INTERVAL) {
-              last_check = Date.now();
-              UpdateHelper.checkUpdate(err => {
-                if (err) {
-                  console.error(err.message);
-                }
-              });
+              common_error('failed to close db:', e.message);
             }
           });
         }
+      }
+      if (!this.skip_updatecheck) {
+        res.on('finish', () => {
+          if (Date.now() - last_check > CHECK_INTERVAL) {
+            last_check = Date.now();
+            UpdateHelper.checkUpdate();
+          }
+        });
       }
       next();
     });
