@@ -27,8 +27,8 @@ jobs:
           LATEST=false
         fi
         if [ -n "${{ secrets.THEO_UPDATE_TOKEN }}" ]; then
-          curl -H "Content-Type: application/json" -H "Authorization: Bearer ${{ secrets.THEO_UPDATE_TOKEN }}" \
-            -d '{"code": "'$VERSION'", "latest": '.${LATEST}.' }' https://update.theo.authkeys.io/version
+          curl --fail -s -H "Content-Type: application/json" -H "Authorization: Bearer ${{ secrets.THEO_UPDATE_TOKEN }}" \
+            -d '{"code": "'$VERSION'", "latest": '${LATEST}' }' https://update.theo.authkeys.io/version
         fi
     - name: call microbadger webhook
       run: |
