@@ -362,6 +362,22 @@ describe('REST Check keys', function() {
       const text = await res.text();
       assert.strictEqual(text.split('\n').length, 12);
     });
+    if (process.env.THEO_USE_CACHE === '1') {
+      it('should return 12 rows per 5 users (5 + 2 + 2 + 1 + 2) with X-From-Cache', async function() {
+        const res = await fetch(base_url + '/authorized_keys/edu/name', {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
+          }
+        });
+        assert.strictEqual(res.status, 200);
+        const fromCache = res.headers.get('X-From-Cache');
+        assert.strictEqual(fromCache, 'true');
+        assert.strictEqual(res.headers.get('content-type'), 'text/plain; charset=utf-8');
+        const text = await res.text();
+        assert.strictEqual(text.split('\n').length, 12);
+      });
+    }
   });
 
   describe('remove group, check authorized_keys for user=name and host=edu', function() {

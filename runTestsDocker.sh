@@ -111,6 +111,7 @@ test_sqlite_memcached () {
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
         -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
+        -e "THEO_USE_CACHE=1" \
         theo-tester npm run test:api
     RETVAL=$?
     if [[ ${RETVAL} -gt 0 ]]; then
@@ -155,6 +156,7 @@ test_mariadb_redis () {
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
         -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
+        -e "THEO_USE_CACHE=1" \
         theo-tester npm run test:api
     RETVAL=$?
     if [[ ${RETVAL} -gt 0 ]]; then
