@@ -103,6 +103,27 @@ test_sqlite_signed () {
     fi
 }
 
+test_sqlite_inmemory () {
+    # sqlite + inmemory
+    print_test_header "sqlite + inmemory"
+    docker-compose -p theotests -f docker-compose/docker-compose-test-inmemory.yml up -d
+    docker run --network theotests_default --rm --link theo \
+        -e "THEO_URL=http://theo:9100" \
+        -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
+        -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
+        -e "THEO_USE_CACHE=1" \
+        theo-tester npm run test:api
+    RETVAL=$?
+    if [[ ${RETVAL} -gt 0 ]]; then
+        docker logs --tail 30 theo
+    fi
+    docker-compose -p theotests -f docker-compose/docker-compose-test-inmemory.yml down
+    if [[ ${RETVAL} -gt 0 ]]; then
+        echo "ERR docker-compose-test-inmemory FAILED"
+        exit ${RETVAL}
+    fi
+}
+
 test_sqlite_memcached () {
     # sqlite + memcached
     print_test_header "sqlite + memcached"
@@ -264,6 +285,7 @@ if [[ "$1" = "" ]]; then
     test_sqlite
     test_sqlite_audit
     test_sqlite_signed
+    test_sqlite_inmemory
     test_sqlite_memcached
     test_mariadb
     test_mariadb_redis
