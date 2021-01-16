@@ -14,10 +14,12 @@
 
 import Memcached from './memcached';
 import Redis from './redis';
+import InMemoryCacheManager from './inmemory';
 
 const modules = {
   memcached: Memcached,
-  redis: Redis
+  redis: Redis,
+  inmemory: InMemoryCacheManager
 };
 
 export const getCacheModule = name => {
