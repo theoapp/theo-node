@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
-    - name: Use Node.js 12.x
+    - name: Use Node.js 14.x
       uses: actions/setup-node@v2
       with:
-        node-version: '12'
+        node-version: '14'
+    - run: npm i -g npm
     - run: npm ci
     - run: npm run lint
 
@@ -22,10 +23,11 @@ jobs:
     needs: lint
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 12.x
+      - name: Use Node.js 14.x
         uses: actions/setup-node@v2
         with:
-          node-version: '12'
+          node-version: '14'
+      - run: npm i -g npm
       - run: npm ci --no-optional
       - run: npm run test:standalone
 
@@ -34,9 +36,10 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 12.x
+      - name: Use Node.js 14.x
         uses: actions/setup-node@v2
         with:
-          node-version: '12'
+          node-version: '14'
+      - run: npm i -g npm
       - run: npm ci --no-optional
       - run: npm run build --if-present

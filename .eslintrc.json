@@ -8,13 +8,14 @@
   ],
   "parser": "babel-eslint",
   "rules": {
-    "no-undef": "off",
-    "no-use-before-define": "off",
+    "no-undef": "warn",
+    "no-use-before-define": "warn",
     "no-console": "off",
     "camelcase": "off",
     "prettier/prettier": [
       "error",
       {
+        "arrowParens": "avoid",
         "printWidth": 120,
         "tabWidth": 2,
         "singleQuote": true,
