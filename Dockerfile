@@ -1,18 +1,18 @@
 # builder image
-FROM node:12-alpine AS builder
+FROM node:14-alpine AS builder
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm ci --no-optional
+RUN npm i -g npm && npm ci --no-optional
 
 COPY . .
 
 RUN npm run build
 
 # production image
-FROM node:12-alpine
+FROM node:14-alpine
 
 ENV NODE_ENV=production
 
@@ -20,7 +20,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --no-optional &&\
+RUN npm i -g npm && npm ci --no-optional &&\
     npm cache clean --force
 
 COPY --from=builder /usr/src/app/build ./build/
