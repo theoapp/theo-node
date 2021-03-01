@@ -14,6 +14,7 @@
 
 import { getOpenSSHPublicKey, getSSH2Comment, SSHFingerprint } from '../src/lib/utils/sshUtils';
 import assert from 'assert';
+import { describe, it } from 'mocha';
 
 const keys = [
   {
@@ -119,17 +120,17 @@ gzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ==
     c: 'mdiaz@smartlis'
   }
 ];
-describe('Testing SSHUtils', function() {
-  describe('Test getSSH2Comment', function() {
-    it('should return right comment', function() {
+describe('Testing SSHUtils', function () {
+  describe('Test getSSH2Comment', function () {
+    it('should return right comment', function () {
       for (let i = 0; i < SSH2Comments.length; i++) {
         const comment = getSSH2Comment(SSH2Comments[i].k);
         assert.strictEqual(comment, SSH2Comments[i].c);
       }
     });
   });
-  describe('Test SSHPublicKeyCheck', function() {
-    it('Should throw an error with invalid keys', function() {
+  describe('Test SSHPublicKeyCheck', function () {
+    it('Should throw an error with invalid keys', function () {
       for (let i = 0; i < invalid_keys.length; i++) {
         let valid;
         try {
@@ -140,16 +141,16 @@ describe('Testing SSHUtils', function() {
         assert.strictEqual(valid, undefined);
       }
     });
-    it('Should return true with valid keys', function() {
+    it('Should return true with valid keys', function () {
       for (let i = 0; i < valid_keys.length; i++) {
         const opensshFormat = getOpenSSHPublicKey(valid_keys[i].k);
         assert.strictEqual(opensshFormat, valid_keys[i].s);
       }
     });
   });
-  describe('SSHFingerprint', function() {
+  describe('SSHFingerprint', function () {
     for (let i = 0; i < keys.length; i++) {
-      it('should return the correct fingerprint', function() {
+      it('should return the correct fingerprint', function () {
         const fp = SSHFingerprint(keys[i].k);
         assert.strictEqual(fp, keys[i].fp);
       });

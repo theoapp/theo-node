@@ -30,11 +30,11 @@ let LOG_LEVEL;
 
 let logger;
 
-const defaultLogger = function(type, date, msg) {
+const defaultLogger = function (type, date, msg) {
   console.log('[ %s ][ %s ] %s', type, date, msg);
 };
 
-export const initLogger = function(level = false, logfn = undefined) {
+export const initLogger = function (level = false, logfn = undefined) {
   if (typeof level === 'function') {
     logfn = level;
     level = false;
@@ -61,7 +61,7 @@ export const initLogger = function(level = false, logfn = undefined) {
   }
 };
 
-export const common_log = function(type, message, args) {
+export const common_log = function (type, message, args) {
   if (LEVELS[type] > LOG_LEVEL) {
     return;
   }
@@ -72,18 +72,18 @@ export const common_log = function(type, message, args) {
   logger(type + (type.length < ERROR.length ? ' ' : ''), new Date().toISOString(), msg);
 };
 
-export const common_debug = function(message, ...args) {
+export const common_debug = function (message, ...args) {
   common_log(DEBUG, message, args);
 };
 
-export const common_info = function(message, ...args) {
+export const common_info = function (message, ...args) {
   common_log(INFO, message, args);
 };
 
-export const common_warn = function(message, ...args) {
+export const common_warn = function (message, ...args) {
   common_log(WARN, message, args);
 };
 
-export const common_error = function(message, ...args) {
+export const common_error = function (message, ...args) {
   common_log(ERROR, message, args);
 };

@@ -26,7 +26,7 @@ import AuthTokenManager from '../lib/managers/AuthTokenManager';
 import { loadCacheManager } from '../lib/helpers/CacheHelper';
 import { millisecondsToStr } from '../lib/utils/dateUtils';
 
-const notifyReloadTokens = function() {
+const notifyReloadTokens = function () {
   setImmediate(async () => {
     const cm = loadCacheManager();
     try {

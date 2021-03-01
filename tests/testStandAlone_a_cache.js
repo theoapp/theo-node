@@ -16,6 +16,7 @@ import assert from 'assert';
 import RedisManager from '../src/lib/cache/redis';
 import MemcachedManager from '../src/lib/cache/memcached';
 import { getCacheModule } from '../src/lib/cache/modules';
+import { describe, it } from 'mocha';
 
 describe('Testing cache', () => {
   describe('Testing getCacheModule', () => {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import assert from 'assert';
-
+import { describe, it, before, after } from 'mocha';
 import AppHelper from '../src/lib/helpers/AppHelper';
 
 import {
@@ -72,9 +72,9 @@ if (!dm) {
   process.exit(99);
 }
 
-const loadDb = async function() {
+const loadDb = async function () {
   return new Promise((resolve, reject) => {
-    dm.getClient(false, function(db) {
+    dm.getClient(false, function (db) {
       dh.init(db)
         .then(() => {
           resolve(db);
@@ -84,10 +84,10 @@ const loadDb = async function() {
   });
 };
 
-describe('REQUIRE_SIGNED_KEY test account / keys', function() {
+describe('REQUIRE_SIGNED_KEY test account / keys', function () {
   this.timeout(10000);
   let db;
-  before(async function() {
+  before(async function () {
     const ah = AppHelper(settings);
     try {
       db = await loadDb(ah);
@@ -96,14 +96,14 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
     }
   });
 
-  after(function(done) {
+  after(function (done) {
     releaseDHInstance()
       .then(done)
       .catch(e => done(e));
   });
 
-  describe('with name and email and 1 key', function() {
-    it('should return an error because key is not signed', async function() {
+  describe('with name and email and 1 key', function () {
+    it('should return an error because key is not signed', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
@@ -121,7 +121,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       assert.notStrictEqual(typeof error, 'undefined');
       assert.strictEqual(typeof resAccount, 'undefined');
     });
-    it('should return an account object with 1 key and no permissions', async function() {
+    it('should return an account object with 1 key and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe.x',
         email: 'john.doe.x@example.com',
@@ -141,8 +141,8 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
     });
   });
 
-  describe('with name and email and 2 keys', function() {
-    it('should return an account object with 2 keys and no permissions', async function() {
+  describe('with name and email and 2 keys', function () {
+    it('should return an account object with 2 keys and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
@@ -167,8 +167,8 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
     });
   });
 
-  describe('add 1 key to an account', function() {
-    it('should return an error because key is not signed', async function() {
+  describe('add 1 key to an account', function () {
+    it('should return an error because key is not signed', async function () {
       const keys = [publicKeySample];
       let resAccount;
       let error;
@@ -180,7 +180,7 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
       assert.notStrictEqual(typeof error, 'undefined');
       assert.strictEqual(typeof resAccount, 'undefined');
     });
-    it('should return an account object with 1 key and no permissions', async function() {
+    it('should return an account object with 1 key and no permissions', async function () {
       const keys = [{ key: publicKeySample, signature: 'xxxx' }];
 
       const retKeys = await adminAddAccountKeys(db, 1, keys);
@@ -197,8 +197,8 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
     });
   });
 
-  describe('delete 1 key to an account', function() {
-    it('should return an account object with no key and no permissions', async function() {
+  describe('delete 1 key to an account', function () {
+    it('should return an account object with no key and no permissions', async function () {
       try {
         await adminDeleteAccountKey(db, 1, 4);
       } catch (err) {
@@ -209,8 +209,8 @@ describe('REQUIRE_SIGNED_KEY test account / keys', function() {
     });
   });
 
-  describe('add 1 SSH2 key to an account', function() {
-    it('should throw an error because of signature', async function() {
+  describe('add 1 SSH2 key to an account', function () {
+    it('should throw an error because of signature', async function () {
       const keys = [{ key: publicSSH2Key, signature: 'xxxx' }];
       let retKeys;
       try {

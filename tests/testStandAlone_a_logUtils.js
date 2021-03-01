@@ -25,17 +25,18 @@ import {
   INFO,
   DEBUG
 } from '../src/lib/utils/logUtils';
+import { describe, it, beforeEach, afterEach } from 'mocha';
 import { mockDateToISOString } from './Mocks';
 
 describe('Testing logUtils', () => {
   let originalDateToISOString;
-  beforeEach(function() {
+  beforeEach(function () {
     originalDateToISOString = Date.prototype.toISOString;
     // eslint-disable-next-line no-extend-native
     Date.prototype.toISOString = mockDateToISOString;
   });
 
-  afterEach(function() {
+  afterEach(function () {
     // eslint-disable-next-line no-extend-native
     Date.prototype.toISOString = originalDateToISOString;
   });

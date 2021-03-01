@@ -27,12 +27,12 @@ class UpdateHelper {
     };
   }
 
-  static checkUpdate = function(quick = false) {
+  static checkUpdate = function (quick = false) {
     const timeout = quick ? 0 : Math.floor(Math.random() * (60000 - 1000) + 1000);
     if (!quick) {
       common_debug('checkUpdate in %s ms', timeout);
     }
-    setTimeout(function() {
+    setTimeout(function () {
       http_get(CHECK_UPDATE_URL, UpdateHelper._getHttpHeaders())
         .then(data => {
           if (!data) {

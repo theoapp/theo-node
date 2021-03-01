@@ -27,7 +27,7 @@ const redisSubscribe = (cm, dm, ah) => {
     common_error('%s. Retrying in %d ms', e.message, nextRetry);
     // Close connection and try again...
     cm.close(conn);
-    setTimeout(function() {
+    setTimeout(function () {
       redisSubscribe(cm, dm, ah);
     }, nextRetry);
   });
@@ -57,7 +57,7 @@ const redisSubscribe = (cm, dm, ah) => {
   });
 };
 
-const initCache = function(subscribe_core_token, dm, ah) {
+const initCache = function (subscribe_core_token, dm, ah) {
   let ch;
   let cm;
   try {

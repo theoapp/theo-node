@@ -61,7 +61,7 @@ class MemcachedManager extends CachedManager {
 
   del(key) {
     return new Promise((resolve, reject) => {
-      this.memcached.del(key, value, err => {
+      this.memcached.delete(key, err => {
         if (err) {
           return reject(err);
         }

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import dotenv from 'dotenv';
-
+import { describe, it, before } from 'mocha';
 import assert from 'assert';
 import fetch from 'node-fetch';
 
@@ -47,10 +47,10 @@ const publicKeySample9 =
 const publicKeySample10 =
   'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDKlJyam2TFE1+dfdwg+52VvPC/rvY8F4m9m62tYvnEfmxi+yrd/Qyn12AJiF+1C5mV1Xhvy6UHwZbSZ1IRuj3FJImk/C5nzsw8zWsupKmI0lmCUjb40WWJ7zbhOnqi3Hpb3oTRdTwKvjnJQ2sAR86D9WLWdLo6Lziw6fvp31SFWw== test@test.net';
 
-describe('REST Test account', function() {
+describe('REST Test account', function () {
   this.timeout(10000);
 
-  before(function() {
+  before(function () {
     return new Promise((resolve, reject) => {
       fetch(base_url + '/flushdb', {
         method: 'POST',
@@ -74,8 +74,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('check admin function with no Authorization header', function() {
-    it('should return en error 401', async function() {
+  describe('check admin function with no Authorization header', function () {
+    it('should return en error 401', async function () {
       const res = await fetch(base_url + '/accounts', {
         method: 'GET'
       });
@@ -86,8 +86,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('with name and email', function() {
-    it('should return an account object with no keys nor permissions', async function() {
+  describe('with name and email', function () {
+    it('should return an account object with no keys nor permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe@example.com'
@@ -115,8 +115,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('retrieve account by email', function() {
-    it('should return an account object with no keys nor permissions', async function() {
+  describe('retrieve account by email', function () {
+    it('should return an account object with no keys nor permissions', async function () {
       const email = 'john.doe@example.com';
       const res = await fetch(base_url + '/accounts/' + email, {
         method: 'GET',
@@ -136,8 +136,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('without name', function() {
-    it('should return an error', async function() {
+  describe('without name', function () {
+    it('should return an error', async function () {
       const reqAccount = {
         email: 'john.doe@example.com'
       };
@@ -155,8 +155,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('without email', function() {
-    it('should return an error', async function() {
+  describe('without email', function () {
+    it('should return an error', async function () {
       const reqAccount = {
         name: 'john.doe'
       };
@@ -174,8 +174,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('with name and email and 1 key', function() {
-    it('should return an account object with 1 key and no permissions', async function() {
+  describe('with name and email and 1 key', function () {
+    it('should return an account object with 1 key and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
@@ -205,8 +205,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('with name and email and 2 keys', function() {
-    it('should return an account object with 2 keys and no permissions', async function() {
+  describe('with name and email and 2 keys', function () {
+    it('should return an account object with 2 keys and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
@@ -237,8 +237,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('disable account', function() {
-    it('should return an account object with active set to 0', async function() {
+  describe('disable account', function () {
+    it('should return an account object with active set to 0', async function () {
       const res = await fetch(base_url + '/accounts/' + 1, {
         method: 'PUT',
         headers: {
@@ -264,8 +264,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('enable account', function() {
-    it('should return an account object with active set to 1', async function() {
+  describe('enable account', function () {
+    it('should return an account object with active set to 1', async function () {
       const res = await fetch(base_url + '/accounts/' + 1, {
         method: 'PUT',
         headers: {
@@ -291,8 +291,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('delete account', function() {
-    it('should return 404', async function() {
+  describe('delete account', function () {
+    it('should return 404', async function () {
       const res = await fetch(base_url + '/accounts/2', {
         method: 'DELETE',
         headers: {
@@ -311,8 +311,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('add 1 key to an account', function() {
-    it('should return an account object with 1 key and no permissions', async function() {
+  describe('add 1 key to an account', function () {
+    it('should return an account object with 1 key and no permissions', async function () {
       const keys = [publicKeySample5];
 
       const res = await fetch(base_url + '/accounts/1/keys', {
@@ -346,8 +346,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('delete 1 key to an account', function() {
-    it('should return an account object with no key and no permissions', async function() {
+  describe('delete 1 key to an account', function () {
+    it('should return an account object with no key and no permissions', async function () {
       const res = await fetch(base_url + '/accounts/1/keys/4', {
         method: 'DELETE',
         headers: {
@@ -370,8 +370,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('add 1 permission to an account', function() {
-    it('should return an account object with no key and 1 permission', async function() {
+  describe('add 1 permission to an account', function () {
+    it('should return an account object with no key and 1 permission', async function () {
       const permission = {
         user: 'john',
         host: 'debian'
@@ -409,8 +409,8 @@ describe('REST Test account', function() {
     });
   });
 
-  describe('delete 1 permission to an account', function() {
-    it('should return an account object with no key and no permissions', async function() {
+  describe('delete 1 permission to an account', function () {
+    it('should return an account object with no key and no permissions', async function () {
       const res = await fetch(base_url + '/accounts/1/permissions/1', {
         method: 'DELETE',
         headers: {
@@ -434,12 +434,12 @@ describe('REST Test account', function() {
   });
 });
 
-describe('REST Test group', function() {
+describe('REST Test group', function () {
   this.timeout(10000);
   let group_id;
   let account_id;
 
-  before(function() {
+  before(function () {
     return new Promise((resolve, reject) => {
       fetch(base_url + '/flushdb', {
         method: 'POST',
@@ -463,8 +463,8 @@ describe('REST Test group', function() {
     });
   });
 
-  describe('with name', function() {
-    it('should return a group object with no accounts nor permissions', async function() {
+  describe('with name', function () {
+    it('should return a group object with no accounts nor permissions', async function () {
       const reqGroup = {
         name: 'developers'
       };
@@ -493,8 +493,8 @@ describe('REST Test group', function() {
     });
   });
 
-  describe('without name', function() {
-    it('should return an error', async function() {
+  describe('without name', function () {
+    it('should return an error', async function () {
       const reqGroup = {
         namex: 'developers'
       };
@@ -512,8 +512,8 @@ describe('REST Test group', function() {
     });
   });
 
-  describe('disable group', function() {
-    it('should return a group object with active = false and no accounts nor permissions', async function() {
+  describe('disable group', function () {
+    it('should return a group object with active = false and no accounts nor permissions', async function () {
       const res = await fetch(base_url + '/groups/' + group_id, {
         method: 'PUT',
         headers: {
@@ -539,8 +539,8 @@ describe('REST Test group', function() {
     });
   });
 
-  describe('enable group', function() {
-    it('should return a group object with active = true and no accounts nor permissions', async function() {
+  describe('enable group', function () {
+    it('should return a group object with active = true and no accounts nor permissions', async function () {
       const res = await fetch(base_url + '/groups/' + group_id, {
         method: 'PUT',
         headers: {
@@ -566,8 +566,8 @@ describe('REST Test group', function() {
     });
   });
 
-  describe('add account to group', function() {
-    it('should return a group object with active = false and 1 accounts and no permissions', async function() {
+  describe('add account to group', function () {
+    it('should return a group object with active = false and 1 accounts and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
@@ -632,8 +632,8 @@ describe('REST Test group', function() {
     });
   });
 
-  describe('add another account to group', function() {
-    it('should return a group object with active = false and 2 accounts and no permissions', async function() {
+  describe('add another account to group', function () {
+    it('should return a group object with active = false and 2 accounts and no permissions', async function () {
       const reqAccount = {
         name: 'john doe 3',
         email: 'john.doe.3@example.com',
@@ -697,8 +697,8 @@ describe('REST Test group', function() {
     });
   });
 
-  describe('add 3 more accounts to group', function() {
-    it('should return a group object with active = false and 5 accounts and no permissions', async function() {
+  describe('add 3 more accounts to group', function () {
+    it('should return a group object with active = false and 5 accounts and no permissions', async function () {
       const reqAccounts = [
         {
           name: 'john doe 4',
@@ -780,8 +780,8 @@ describe('REST Test group', function() {
     });
   });
 
-  describe('remove account from group', function() {
-    it('should return a group object with active = false and 1 accounts and no permissions', async function() {
+  describe('remove account from group', function () {
+    it('should return a group object with active = false and 1 accounts and no permissions', async function () {
       const res = await fetch(base_url + '/accounts/john.doe.3@example.com', {
         method: 'GET',
         headers: {

@@ -26,7 +26,7 @@ let last_check = 0;
 
 const CHECK_INTERVAL = 604800000; // 7days: 7 * 24 * 60 * 60 * 1000;
 
-const doURLneedDb = function(path) {
+const doURLneedDb = function (path) {
   for (let i = 0; i < noDbUrls.length; i++) {
     if (noDbUrls[i].partial) {
       if (path.indexOf(noDbUrls[i].path) === 0) {

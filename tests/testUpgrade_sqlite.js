@@ -14,6 +14,7 @@
 
 import assert from 'assert';
 import SqliteManager from '../src/lib/rdbms/sqlite';
+import { describe, it } from 'mocha';
 
 describe('Testing sqlite upgrade', () => {
   it('Should return the correct version ', async () => {

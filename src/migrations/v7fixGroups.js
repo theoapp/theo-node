@@ -22,7 +22,7 @@ export const runV7migrationMariaDb = async client => {
     const account_id = accountsToFix[i].account_id;
     const account = await client.get(sqlAccount, [account_id]);
     const group_id = await adminCreateGroup(client, { name: account.email }, 'internal_db_upgrade', true);
-    await adminCreateGroupAccount(db, group_id, account_id);
+    await adminCreateGroupAccount(client, group_id, account_id);
     const updateSql = 'update permissions set group_id = ? where account_id = ? ';
     await client.run(updateSql, [group_id, account_id]);
   }

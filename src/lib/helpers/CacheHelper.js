@@ -49,7 +49,7 @@ const getInstance = settings => {
   return _instance;
 };
 
-export const loadCacheManager = function() {
+export const loadCacheManager = function () {
   const ch = getInstance();
   const cm = ch.getManager();
   if (!cm) {

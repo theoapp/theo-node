@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import dotenv from 'dotenv';
-
+import { describe, it } from 'mocha';
 import assert from 'assert';
 import fetch from 'node-fetch';
 
@@ -42,12 +42,12 @@ const tokensTwo = {
   }
 };
 
-describe('Core', function() {
-  describe('Check environment', function() {
+describe('Core', function () {
+  describe('Check environment', function () {
     assert.strictEqual(baseURLs.length >= 2, true);
   });
-  describe('Send tokens', function() {
-    it('should return 204 from ' + baseURLs[0], async function() {
+  describe('Send tokens', function () {
+    it('should return 204 from ' + baseURLs[0], async function () {
       const res = await fetch(baseURLs[0] + '/tokens', {
         method: 'POST',
         headers: {
@@ -59,10 +59,10 @@ describe('Core', function() {
       assert.strictEqual(res.status, 204);
     });
   });
-  describe('Check tokens', function() {
+  describe('Check tokens', function () {
     for (let i = 0; i < baseURLs.length; i++) {
       const base_url = baseURLs[i];
-      it('should return 401 for server ' + base_url, async function() {
+      it('should return 401 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/tokens', {
           method: 'POST',
           headers: {
@@ -74,7 +74,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 200 for server ' + base_url, function(done) {
+      it('should return 200 for server ' + base_url, function (done) {
         setTimeout(async () => {
           const res = await fetch(base_url + '/accounts', {
             method: 'GET',
@@ -91,7 +91,7 @@ describe('Core', function() {
         }, 200);
       });
 
-      it('should return 401 for server ' + base_url, async function() {
+      it('should return 401 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/accounts', {
           method: 'GET',
           headers: {
@@ -101,7 +101,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 200 for server ' + base_url, async function() {
+      it('should return 200 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -111,7 +111,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 200);
       });
 
-      it('should return 200 for server ' + base_url, async function() {
+      it('should return 200 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -121,7 +121,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 200);
       });
 
-      it('should return 200 for server ' + base_url, async function() {
+      it('should return 200 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -133,8 +133,8 @@ describe('Core', function() {
     }
   });
 
-  describe('Resend tokens', function() {
-    it('should return 204', async function() {
+  describe('Resend tokens', function () {
+    it('should return 204', async function () {
       const res = await fetch(baseURLs[1] + '/tokens', {
         method: 'POST',
         headers: {
@@ -146,10 +146,10 @@ describe('Core', function() {
       assert.strictEqual(res.status, 204);
     });
   });
-  describe('Recheck tokens', function() {
+  describe('Recheck tokens', function () {
     for (let i = 0; i < baseURLs.length; i++) {
       const base_url = baseURLs[i];
-      it('should return 401 for server ' + base_url, async function() {
+      it('should return 401 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/tokens', {
           method: 'POST',
           headers: {
@@ -161,7 +161,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 401 for server ' + base_url, function(done) {
+      it('should return 401 for server ' + base_url, function (done) {
         setTimeout(async () => {
           const res = await fetch(base_url + '/accounts', {
             method: 'GET',
@@ -178,7 +178,7 @@ describe('Core', function() {
         }, 200);
       });
 
-      it('should return 401 for server ' + base_url, async function() {
+      it('should return 401 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/accounts', {
           method: 'GET',
           headers: {
@@ -188,7 +188,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 401 for server ' + base_url, async function() {
+      it('should return 401 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -198,7 +198,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 200 for server ' + base_url, async function() {
+      it('should return 200 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -208,7 +208,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 200);
       });
 
-      it('should return 200 for server ' + base_url, async function() {
+      it('should return 200 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {
@@ -218,7 +218,7 @@ describe('Core', function() {
         assert.strictEqual(res.status, 200);
       });
 
-      it('should return 200 for server ' + base_url, async function() {
+      it('should return 200 for server ' + base_url, async function () {
         const res = await fetch(base_url + '/authorized_keys/host/user', {
           method: 'GET',
           headers: {

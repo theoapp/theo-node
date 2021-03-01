@@ -1,4 +1,4 @@
-export const parseSSHOptions = function(row) {
+export const parseSSHOptions = function (row) {
   if (row.ssh_options) {
     row.ssh_options = JSON.parse(row.ssh_options);
   } else {
@@ -7,7 +7,7 @@ export const parseSSHOptions = function(row) {
   return row;
 };
 
-export const parseKeySSHOptions = function(row) {
+export const parseKeySSHOptions = function (row) {
   if (row.key_ssh_options) {
     row.key_ssh_options = JSON.parse(row.key_ssh_options);
   } else {
@@ -16,13 +16,13 @@ export const parseKeySSHOptions = function(row) {
   return row;
 };
 
-export const calculateDistance = function(matchLen, r) {
+export const calculateDistance = function (matchLen, r) {
   const permissionLen = r.host.length + r.user.length;
   const distance = matchLen - permissionLen;
   r.distance = distance <= 0 ? 0 : distance;
 };
 
-export const mergeSSHOptions = function(a, b) {
+export const mergeSSHOptions = function (a, b) {
   if (!a) {
     return b;
   }
@@ -42,8 +42,8 @@ export const mergeSSHOptions = function(a, b) {
   if (a.command || b.command) {
     ret.command = a.command || b.command;
   }
-  if (a['restrict'] || b['restrict']) {
-    ret['restrict'] = true;
+  if (a.restrict || b.restrict) {
+    ret.restrict = true;
   }
   if (a['no-agent-forwarding'] || b['no-agent-forwarding']) {
     ret['no-agent-forwarding'] = true;
@@ -60,8 +60,8 @@ export const mergeSSHOptions = function(a, b) {
   if (a['no-pty'] || b['no-pty']) {
     ret['no-pty'] = true;
   }
-  if (a['pty'] || b['pty']) {
-    ret['pty'] = true;
+  if (a.pty || b.pty) {
+    ret.pty = true;
   }
   if (a['no-user-rc'] || b['no-user-rc']) {
     ret['no-user-rc'] = true;
@@ -78,7 +78,7 @@ export const mergeSSHOptions = function(a, b) {
   return ret;
 };
 
-export const renderSSHOptions = function(ssh_options) {
+export const renderSSHOptions = function (ssh_options) {
   const ret = [];
   if (ssh_options.from?.length > 0) {
     ret.push(`from="${ssh_options.from.join(',')}"`);
@@ -92,7 +92,7 @@ export const renderSSHOptions = function(ssh_options) {
   if (ssh_options.command) {
     ret.push(`command="${ssh_options.command}"`);
   }
-  if (ssh_options['restrict']) {
+  if (ssh_options.restrict) {
     ret.push('restrict');
     if (ssh_options['agent-forwarding']) {
       ret.push('agent-forwarding');
@@ -100,7 +100,7 @@ export const renderSSHOptions = function(ssh_options) {
     if (ssh_options['port-forwarding']) {
       ret.push('port-forwarding');
     }
-    if (ssh_options['pty']) {
+    if (ssh_options.pty) {
       ret.push('pty');
     }
     if (ssh_options['user-rc']) {

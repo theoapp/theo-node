@@ -15,7 +15,7 @@
 import './appenv';
 import packageJson from '../package';
 import AppHelper from './lib/helpers/AppHelper';
-
+import util from 'util';
 import DbHelper from './lib/helpers/DbHelper';
 import { loadPlugins } from './lib/helpers/PluginHelper';
 import { common_debug, common_error, common_info, common_warn, initLogger } from './lib/utils/logUtils';
@@ -184,7 +184,7 @@ const startTestDb = async retry => {
 if (settings.cluster_mode === '1') {
   const timeout = Math.round(Math.random() * 2000);
   common_debug('CLUSTER_MODE: waiting %s ms to start node', timeout);
-  setTimeout(function() {
+  setTimeout(function () {
     startTestDb(0).finally();
   }, timeout);
 } else {

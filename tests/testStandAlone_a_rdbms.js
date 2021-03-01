@@ -16,6 +16,7 @@ import assert from 'assert';
 import { getRdbmsModule } from '../src/lib/rdbms/modules';
 import SqliteManager from '../src/lib/rdbms/sqlite';
 import MariadbManager from '../src/lib/rdbms/mariadb';
+import { describe, it } from 'mocha';
 
 describe('Testing rdbms', () => {
   describe('Testing getRdbmsModule', () => {

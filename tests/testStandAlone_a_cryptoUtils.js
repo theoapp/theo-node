@@ -14,6 +14,7 @@
 
 import assert from 'assert';
 import { md5, sha256 } from '../src/lib/utils/cryptoUtils';
+import { describe, it } from 'mocha';
 
 const hashes = {
   md5: [

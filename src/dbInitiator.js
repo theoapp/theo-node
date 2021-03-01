@@ -16,12 +16,12 @@ let loadDbEnvSettings;
 try {
   loadDbEnvSettings = require('@authkeys/mysql-connman').loadDbEnvSettings;
 } catch (e) {
-  loadDbEnvSettings = function(settings) {
+  loadDbEnvSettings = function (settings) {
     throw new Error(
       'loadDbEnvSettings not loaded. Are you using a specialized version of theo-node without mysql support?'
     );
   };
 }
-export const getLoadDbEnvSettings = function() {
+export const getLoadDbEnvSettings = function () {
   return loadDbEnvSettings;
 };
