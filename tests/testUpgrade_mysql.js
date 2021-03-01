@@ -14,6 +14,7 @@
 
 import assert from 'assert';
 import MariadbManager from '../src/lib/rdbms/mariadb';
+import { describe, it } from 'mocha';
 
 describe('Testing mysql upgrade', () => {
   it('Should return the correct version ', async () => {

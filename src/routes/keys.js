@@ -19,7 +19,7 @@ import AppHelper from '../lib/helpers/AppHelper';
 import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
 import { common_debug, common_error } from '../lib/utils/logUtils';
 
-const checkFingerPrint = async function(user, host, fingerprint, keys) {
+const checkFingerPrint = async function (user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
     if (keys[i].fingerprint === fingerprint) {
       const data = {

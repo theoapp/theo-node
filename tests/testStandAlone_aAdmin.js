@@ -35,8 +35,8 @@ import {
   adminUpdateGroupPermission
 } from '../src/lib/helpers/AdminHelper';
 import DbHelper from '../src/lib/helpers/DbHelper';
-
 import AppHelper from '../src/lib/helpers/AppHelper';
+import { describe, it, before, after } from 'mocha';
 
 const publicKeySample =
   'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCoUQGPAFUl3xBX+1vxm/o1v4G1KHqXlvg/pVAHrs89isBTcXwNoo4C1YWjF0TCRjhltfvNMNYF8Q1fzEw1anjL+9X26GlXEXr4Nx9MIFFiEiTpUSPGlT13TOIIKW9eEQc9vHydgK1NdpEgz23kcPARWvXbcVtwoLDwfsE1Msvg1qWIN4UiDau/FTetFaq8fcXd3Cun0V+v5DLEfhSB3gNSxWwhdAEaQIpPSJk8VSHKiaOtQ6Besgw8+mjA5u0Mvm4Z9luZ8b7Ky2gUn49HwM/ez7KC9BhoiTsoE8iXjF11J3ttqju0wADZ4P8OQ7y6l7rgNqXyHejhLutvdI3ka3X/ jolly1@newsvine.com';
@@ -83,9 +83,9 @@ if (!dm) {
   process.exit(99);
 }
 
-const loadDb = async function() {
+const loadDb = async function () {
   return new Promise((resolve, reject) => {
-    dm.getClient(false, function(db) {
+    dm.getClient(false, function (db) {
       dh.init(db)
         .then(() => {
           resolve(db);
@@ -95,10 +95,10 @@ const loadDb = async function() {
   });
 };
 
-describe('Test account', function() {
+describe('Test account', function () {
   this.timeout(10000);
   let db;
-  before(async function() {
+  before(async function () {
     const ah = AppHelper(settings);
     try {
       db = await loadDb(ah);
@@ -107,15 +107,15 @@ describe('Test account', function() {
     }
   });
 
-  after(function(done) {
+  after(function (done) {
     dm.flushDb()
       .then(() => dm.close())
       .then(() => done())
-      .catch(e => done(err));
+      .catch(e => done(e));
   });
 
-  describe('with name and email', function() {
-    it('should return an account object with no keys nor permissions', async function() {
+  describe('with name and email', function () {
+    it('should return an account object with no keys nor permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe@example.com'
@@ -132,8 +132,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('retrieve account by email', function() {
-    it('should return an account object with no keys nor permissions', async function() {
+  describe('retrieve account by email', function () {
+    it('should return an account object with no keys nor permissions', async function () {
       const email = 'john.doe@example.com';
       const resAccount = await adminGetAccount(db, email);
       assert.strictEqual(typeof resAccount.id, 'number');
@@ -144,8 +144,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('without name', function() {
-    it('should return an error', async function() {
+  describe('without name', function () {
+    it('should return an error', async function () {
       const reqAccount = {
         email: 'john.doe@example.com'
       };
@@ -162,8 +162,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('without email', function() {
-    it('should return an error', async function() {
+  describe('without email', function () {
+    it('should return an error', async function () {
       const reqAccount = {
         name: 'john.doe'
       };
@@ -180,8 +180,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('with name and email and 1 key', function() {
-    it('should return an account object with 1 key and no permissions', async function() {
+  describe('with name and email and 1 key', function () {
+    it('should return an account object with 1 key and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
@@ -200,8 +200,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('with name and email and 2 keys', function() {
-    it('should return an account object with 2 keys and no permissions', async function() {
+  describe('with name and email and 2 keys', function () {
+    it('should return an account object with 2 keys and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
@@ -221,24 +221,24 @@ describe('Test account', function() {
     });
   });
 
-  describe('disable account', function() {
-    it('should return an account object with active set to 0', async function() {
+  describe('disable account', function () {
+    it('should return an account object with active set to 0', async function () {
       await adminEditAccount(db, 1, false);
       const account = await adminGetAccount(db, 1);
       assert.strictEqual(account.active, 0);
     });
   });
 
-  describe('enable account', function() {
-    it('should return an account object with active set to 1', async function() {
+  describe('enable account', function () {
+    it('should return an account object with active set to 1', async function () {
       await adminEditAccount(db, 1, true);
       const account = await adminGetAccount(db, 1);
       assert.strictEqual(account.active, 1);
     });
   });
 
-  describe('delete account', function() {
-    it('should return 404', async function() {
+  describe('delete account', function () {
+    it('should return 404', async function () {
       await adminDeleteAccount(db, 2);
       try {
         await adminGetAccount(db, 2);
@@ -249,8 +249,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('add 1 key to an account', function() {
-    it('should return an account object with 1 key and no permissions', async function() {
+  describe('add 1 key to an account', function () {
+    it('should return an account object with 1 key and no permissions', async function () {
       const keys = [publicKeySample];
 
       const retKeys = await adminAddAccountKeys(db, 1, keys);
@@ -264,8 +264,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('delete 1 key to an account', function() {
-    it('should return an account object with no key and no permissions', async function() {
+  describe('delete 1 key to an account', function () {
+    it('should return an account object with no key and no permissions', async function () {
       try {
         await adminDeleteAccountKey(db, 1, 4);
       } catch (err) {
@@ -276,8 +276,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('add 1 permission to an account', function() {
-    it('should return an account object with no key and 1 permission', async function() {
+  describe('add 1 permission to an account', function () {
+    it('should return an account object with no key and 1 permission', async function () {
       const permission = {
         user: 'john',
         host: 'debian'
@@ -294,8 +294,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('delete 1 permission to an account', function() {
-    it('should return an account object with no key and no permissions', async function() {
+  describe('delete 1 permission to an account', function () {
+    it('should return an account object with no key and no permissions', async function () {
       try {
         await adminDeleteAccountPermission(db, 1, 1);
       } catch (err) {
@@ -307,8 +307,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('add 1 permission with options to an account', function() {
-    it('should return an account object with no key and 1 permission', async function() {
+  describe('add 1 permission with options to an account', function () {
+    it('should return an account object with no key and 1 permission', async function () {
       const permission = {
         user: 'mark',
         host: 'debian',
@@ -340,14 +340,14 @@ describe('Test account', function() {
     });
   });
 
-  describe('add 1 permission with other options to an account', function() {
+  describe('add 1 permission with other options to an account', function () {
     let account_id;
     let permission_id;
-    after(async function() {
+    after(async function () {
       await adminDeleteAccount(db, account_id);
     });
 
-    it('should return an account object with no key and 1 permission', async function() {
+    it('should return an account object with no key and 1 permission', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.4@example.com'
@@ -391,7 +391,7 @@ describe('Test account', function() {
       permission_id = resAccount.permissions[0].id;
     });
 
-    it('should return an account object with no key and 1 permission', async function() {
+    it('should return an account object with no key and 1 permission', async function () {
       await adminUpdateAccountPermission(db, account_id, permission_id, { from: [] });
 
       const resAccount2 = await adminGetAccount(db, account_id);
@@ -399,14 +399,14 @@ describe('Test account', function() {
     });
   });
 
-  describe('add 1 permission with other options to a group', function() {
+  describe('add 1 permission with other options to a group', function () {
     let permission_id;
     let group_id;
-    after(async function() {
+    after(async function () {
       await adminDeleteGroup(db, group_id);
     });
 
-    it('should return an account object with no key and 1 permission', async function() {
+    it('should return an account object with no key and 1 permission', async function () {
       const reqGroup = {
         name: 'developersx'
       };
@@ -447,7 +447,7 @@ describe('Test account', function() {
       permission_id = resGroup.permissions[0].id;
     });
 
-    it('should return a group object with no key and 1 permission', async function() {
+    it('should return a group object with no key and 1 permission', async function () {
       await adminUpdateGroupPermission(db, group_id, permission_id, { from: [] });
 
       const resGroup = await adminGetGroup(db, group_id);
@@ -455,8 +455,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('Add 1 account with expired date', function() {
-    it('should return an account object with expired date', async function() {
+  describe('Add 1 account with expired date', function () {
+    it('should return an account object with expired date', async function () {
       const account = {
         email: 'expired@example.com',
         name: 'Expired',
@@ -473,8 +473,8 @@ describe('Test account', function() {
     });
   });
 
-  describe('with name and email and 1 SSH2 keys', function() {
-    it('should return an account object with 1 key and no permissions', async function() {
+  describe('with name and email and 1 SSH2 keys', function () {
+    it('should return an account object with 1 key and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe.ssh2',
         email: 'john.doe.ssh2@example.com',
@@ -494,10 +494,10 @@ describe('Test account', function() {
   });
 });
 
-describe('Test group', function() {
+describe('Test group', function () {
   this.timeout(10000);
   let db;
-  before(async function() {
+  before(async function () {
     const ah = AppHelper(settings);
     try {
       db = await loadDb(ah);
@@ -506,19 +506,19 @@ describe('Test group', function() {
     }
   });
 
-  after(function(done) {
+  after(function (done) {
     dm.flushDb()
       .then(() => dm.close())
       .then(() => done())
-      .catch(e => done(err));
+      .catch(e => done(e));
   });
 
   let group_id;
   let account_id;
   let permission_id;
 
-  describe('with name', function() {
-    it('should return a group object with no accounts nor permissions', async function() {
+  describe('with name', function () {
+    it('should return a group object with no accounts nor permissions', async function () {
       const reqGroup = {
         name: 'developers'
       };
@@ -535,8 +535,8 @@ describe('Test group', function() {
     });
   });
 
-  describe('without name', function() {
-    it('should return an error', async function() {
+  describe('without name', function () {
+    it('should return an error', async function () {
       const reqGroup = {
         namex: 'developers'
       };
@@ -553,8 +553,8 @@ describe('Test group', function() {
     });
   });
 
-  describe('edit group status', function() {
-    it('should return a group object with active = false and no accounts nor permissions', async function() {
+  describe('edit group status', function () {
+    it('should return a group object with active = false and no accounts nor permissions', async function () {
       const res = await adminEditGroup(db, group_id, false);
       assert.strictEqual(res, true);
       const resGroup = await adminGetGroup(db, group_id);
@@ -562,8 +562,8 @@ describe('Test group', function() {
     });
   });
 
-  describe('add account to group', function() {
-    it('should return a group object with active = false and 1 accounts and no permissions', async function() {
+  describe('add account to group', function () {
+    it('should return a group object with active = false and 1 accounts and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
@@ -588,8 +588,8 @@ describe('Test group', function() {
     });
   });
 
-  describe('remove account from group', function() {
-    it('should return a group object with active = false and 0 accounts and no permissions', async function() {
+  describe('remove account from group', function () {
+    it('should return a group object with active = false and 0 accounts and no permissions', async function () {
       const res = await adminDeleteGroupAccount(db, group_id, account_id);
       assert.strictEqual(res, 1);
       const resGroup = await adminGetGroup(db, group_id);
@@ -599,8 +599,8 @@ describe('Test group', function() {
     });
   });
 
-  describe('add permission to group', function() {
-    it('should return a group object with active = false and 0 accounts and 1 permission', async function() {
+  describe('add permission to group', function () {
+    it('should return a group object with active = false and 0 accounts and 1 permission', async function () {
       const permission = {
         user: 'john',
         host: 'debian'
@@ -617,8 +617,8 @@ describe('Test group', function() {
     });
   });
 
-  describe('add another permission to group', function() {
-    it('should return a group object with active = false and 0 accounts and 2 permission', async function() {
+  describe('add another permission to group', function () {
+    it('should return a group object with active = false and 0 accounts and 2 permission', async function () {
       const permission = {
         user: 'core',
         host: 'coreos'
@@ -636,8 +636,8 @@ describe('Test group', function() {
     });
   });
 
-  describe('delete permission from group', function() {
-    it('should return a group object with active = false and 0 accounts and 1 permission', async function() {
+  describe('delete permission from group', function () {
+    it('should return a group object with active = false and 0 accounts and 1 permission', async function () {
       const res = await adminDeleteGroupPermission(db, group_id, permission_id);
       assert.strictEqual(res, true);
       const resGroup = await adminGetGroup(db, group_id);

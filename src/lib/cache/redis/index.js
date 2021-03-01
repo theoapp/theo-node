@@ -41,9 +41,7 @@ class RedisManager extends CachedManager {
       url: settings.uri,
       password: _options.password
     };
-    this.testConn()
-      .then()
-      .catch();
+    this.testConn().then().catch();
   }
 
   async testConn() {
@@ -96,7 +94,7 @@ class RedisManager extends CachedManager {
     return new Promise((resolve, reject) => {
       this.open()
         .then(redis => {
-          redis.del(key, value, err => {
+          redis.del(key, err => {
             this.close(redis);
             if (err) {
               return reject(err);

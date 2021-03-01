@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import dotenv from 'dotenv';
-
+import { describe, it, before } from 'mocha';
 import assert from 'assert';
 import fetch from 'node-fetch';
 import accountsJson from './accounts';
@@ -110,7 +110,7 @@ const createGroup = async group => {
   }
 };
 
-const loadData = async function() {
+const loadData = async function () {
   for (let i = 0; i < accountsJson.length; i++) {
     await createAccount(accountsJson[i]);
   }
@@ -119,10 +119,10 @@ const loadData = async function() {
   }
 };
 
-describe('REST Check keys', function() {
+describe('REST Check keys', function () {
   this.timeout(10000);
 
-  before(function(done) {
+  before(function (done) {
     fetch(base_url + '/flushdb', {
       method: 'POST',
       headers: {
@@ -150,16 +150,16 @@ describe('REST Check keys', function() {
       });
   });
 
-  describe('check accounts creation', function() {
-    it('should return an account object with right number of keys and permissions', async function() {
+  describe('check accounts creation', function () {
+    it('should return an account object with right number of keys and permissions', async function () {
       const resAccount = await getAccountByEmail('tevery0@newsvine.com');
       assert.strictEqual(resAccount.permissions.length, 5);
       assert.strictEqual(resAccount.public_keys.length, 5);
     });
   });
 
-  describe('check authorized_keys with no Authorization header', function() {
-    it('should return en error 401', async function() {
+  describe('check authorized_keys with no Authorization header', function () {
+    it('should return en error 401', async function () {
       const res = await fetch(base_url + '/authorized_keys/mil/mil', {
         method: 'GET'
       });
@@ -170,8 +170,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('check authorized_keys with wrong Authorization header', function() {
-    it('should return en error 401', async function() {
+  describe('check authorized_keys with wrong Authorization header', function () {
+    it('should return en error 401', async function () {
       const res = await fetch(base_url + '/authorized_keys/mil/mil', {
         method: 'GET',
         headers: {
@@ -185,8 +185,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('check authorized_keys for user=mil and host=mil', function() {
-    it('should return 14 rows', async function() {
+  describe('check authorized_keys for user=mil and host=mil', function () {
+    it('should return 14 rows', async function () {
       const res = await fetch(base_url + '/authorized_keys/mil/mil', {
         method: 'GET',
         headers: {
@@ -200,8 +200,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('check authorized_keys for user=biz and host=com', function() {
-    it('should return 13 rows', async function() {
+  describe('check authorized_keys for user=biz and host=com', function () {
+    it('should return 13 rows', async function () {
       const res = await fetch(base_url + '/authorized_keys/biz/com', {
         method: 'GET',
         headers: {
@@ -215,8 +215,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('check authorized_keys for user=unkown and host=unkown', function() {
-    it('should return 1 rows (only Jolly user 3)', async function() {
+  describe('check authorized_keys for user=unkown and host=unkown', function () {
+    it('should return 1 rows (only Jolly user 3)', async function () {
       const res = await fetch(base_url + '/authorized_keys/unkown/unkown', {
         method: 'GET',
         headers: {
@@ -230,8 +230,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('check authorized_keys for user=name and host=edu', function() {
-    it('should return 10 rows per 4 users (5 + 2 + 2 + 1)', async function() {
+  describe('check authorized_keys for user=name and host=edu', function () {
+    it('should return 10 rows per 4 users (5 + 2 + 2 + 1)', async function () {
       const res = await fetch(base_url + '/authorized_keys/edu/name', {
         method: 'GET',
         headers: {
@@ -245,8 +245,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('add new account and check authorized_keys for user=name and host=edu', function() {
-    it('should return 12 rows per 5 users (5 + 2 + 2 + 1 + 2)', async function() {
+  describe('add new account and check authorized_keys for user=name and host=edu', function () {
+    it('should return 12 rows per 5 users (5 + 2 + 2 + 1 + 2)', async function () {
       const account = {
         name: 'John Doe',
         email: 'john.doe@example.com',
@@ -275,8 +275,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('add 2 accounts and add them to group, check authorized_keys for user=name and host=edu', function() {
-    it('should return 16 rows per 7 users (5 + 2 + 2 + 1 + 2 + 2 + 2)', async function() {
+  describe('add 2 accounts and add them to group, check authorized_keys for user=name and host=edu', function () {
+    it('should return 16 rows per 7 users (5 + 2 + 2 + 1 + 2 + 2 + 2)', async function () {
       const account = {
         name: 'John Doe 2',
         email: 'john.doe2@example.com',
@@ -312,8 +312,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('disable 1 account from group, check authorized_keys for user=name and host=edu', function() {
-    it('should return 14 rows per 6 users (5 + 2 + 2 + 1 + 2 + 2)', async function() {
+  describe('disable 1 account from group, check authorized_keys for user=name and host=edu', function () {
+    it('should return 14 rows per 6 users (5 + 2 + 2 + 1 + 2 + 2)', async function () {
       const resAccount = await getAccountByEmail('john.doe2@example.com');
       await fetch(base_url + '/accounts/' + resAccount.id, {
         method: 'PUT',
@@ -337,8 +337,8 @@ describe('REST Check keys', function() {
     });
   });
 
-  describe('remove 1 account from group, check authorized_keys for user=name and host=edu', function() {
-    it('should return 12 rows per 5 users (5 + 2 + 2 + 1 + 2)', async function() {
+  describe('remove 1 account from group, check authorized_keys for user=name and host=edu', function () {
+    it('should return 12 rows per 5 users (5 + 2 + 2 + 1 + 2)', async function () {
       const resAccount = await getAccountByEmail('asiemantel1c@redcross.org');
       const res2 = await fetch(base_url + '/groups/' + groupsJson[0].name + '/' + resAccount.id, {
         method: 'DELETE',
@@ -363,7 +363,7 @@ describe('REST Check keys', function() {
       assert.strictEqual(text.split('\n').length, 12);
     });
     if (process.env.THEO_USE_CACHE === '1') {
-      it('should return 12 rows per 5 users (5 + 2 + 2 + 1 + 2) with X-From-Cache', async function() {
+      it('should return 12 rows per 5 users (5 + 2 + 2 + 1 + 2) with X-From-Cache', async function () {
         const res = await fetch(base_url + '/authorized_keys/edu/name', {
           method: 'GET',
           headers: {
@@ -380,8 +380,8 @@ describe('REST Check keys', function() {
     }
   });
 
-  describe('remove group, check authorized_keys for user=name and host=edu', function() {
-    it('should return 10 rows per 4 users (5 + 2 + 1 + 2)', async function() {
+  describe('remove group, check authorized_keys for user=name and host=edu', function () {
+    it('should return 10 rows per 4 users (5 + 2 + 1 + 2)', async function () {
       const res2 = await fetch(base_url + '/groups/' + groupsJson[0].name, {
         method: 'DELETE',
         headers: {

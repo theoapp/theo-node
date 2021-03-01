@@ -15,18 +15,19 @@
 import assert from 'assert';
 import ServerMock from 'mock-http-server';
 import { http_get, http_post } from '../src/lib/utils/httpUtils';
+import { describe, it, beforeEach, afterEach } from 'mocha';
 
 describe('Testing HTTPUtils', () => {
   let httpPort;
   const server = new ServerMock({ host: 'localhost', port: 0 });
-  beforeEach(function(done) {
+  beforeEach(function (done) {
     server.start(() => {
       httpPort = server.getHttpPort();
       done();
     });
   });
 
-  afterEach(function(done) {
+  afterEach(function (done) {
     server.stop(done);
   });
 

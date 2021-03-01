@@ -59,7 +59,7 @@ class SqliteClient extends BaseClient {
 
   insert(sql, params) {
     return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function(err) {
+      this.db.run(sql, params, function (err) {
         if (err) {
           reject(err);
           return;
@@ -71,7 +71,7 @@ class SqliteClient extends BaseClient {
 
   update(sql, params) {
     return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function(err) {
+      this.db.run(sql, params, function (err) {
         if (err) {
           reject(err);
           return;
@@ -83,7 +83,7 @@ class SqliteClient extends BaseClient {
 
   delete(sql, params) {
     return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function(err) {
+      this.db.run(sql, params, function (err) {
         if (err) {
           return reject(err);
         }

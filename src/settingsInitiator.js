@@ -16,7 +16,7 @@ import { common_error, common_warn } from './lib/utils/logUtils';
 import { md5 } from './lib/utils/cryptoUtils';
 import { getLoadDbEnvSettings } from './dbInitiator';
 
-const initSettings = function() {
+const initSettings = function () {
   let settings = {
     admin: {
       token: undefined,

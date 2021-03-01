@@ -18,12 +18,12 @@ import { common_debug } from './logUtils';
 /**
  * @return {string}
  */
-export const SSHFingerprint = function(keyPub) {
+export const SSHFingerprint = function (keyPub) {
   const key = sshpk.parseKey(keyPub, 'ssh');
   return key.fingerprint().toString();
 };
 
-export const getSSH2Comment = function(keyPub) {
+export const getSSH2Comment = function (keyPub) {
   let comment = '';
   keyPub.split('\n').forEach(line => {
     if (line.toLowerCase().indexOf('comment:') === 0) {
@@ -38,7 +38,7 @@ export const getSSH2Comment = function(keyPub) {
   return comment;
 };
 
-export const getOpenSSHPublicKey = function(keyPub, signRequired) {
+export const getOpenSSHPublicKey = function (keyPub, signRequired) {
   keyPub = keyPub.trim();
   const key = sshpk.parseKey(keyPub);
   let openssh = key.toString('ssh');

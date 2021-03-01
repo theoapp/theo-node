@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import dotenv from 'dotenv';
-
+import { describe, it } from 'mocha';
 import assert from 'assert';
 import fetch from 'node-fetch';
 
@@ -22,9 +22,9 @@ import { tokensOne, tokensTwo, tokensThree } from './testCoreTokensNoAssignee';
 dotenv.config();
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 
-describe('Core', function() {
-  describe('Recheck tokens after restart', function() {
-    it('should return 401', async function() {
+describe('Core', function () {
+  describe('Recheck tokens after restart', function () {
+    it('should return 401', async function () {
       const res = await fetch(base_url + '/tokens', {
         method: 'POST',
         headers: {
@@ -36,7 +36,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 401);
     });
 
-    it('should return 401', async function() {
+    it('should return 401', async function () {
       const res = await fetch(base_url + '/accounts', {
         method: 'GET',
         headers: {
@@ -46,7 +46,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 401);
     });
 
-    it('should return 401', async function() {
+    it('should return 401', async function () {
       const res = await fetch(base_url + '/accounts', {
         method: 'GET',
         headers: {
@@ -56,7 +56,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 401);
     });
 
-    it('should return 401', async function() {
+    it('should return 401', async function () {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
@@ -66,7 +66,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 401);
     });
 
-    it('should return 401', async function() {
+    it('should return 401', async function () {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
@@ -76,7 +76,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 401);
     });
 
-    it('should return 401', async function() {
+    it('should return 401', async function () {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
@@ -86,7 +86,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 401);
     });
 
-    it('should return 401', async function() {
+    it('should return 401', async function () {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
@@ -96,7 +96,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 401);
     });
 
-    it('should return 200', async function() {
+    it('should return 200', async function () {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
@@ -106,7 +106,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 200);
     });
 
-    it('should return 200', async function() {
+    it('should return 200', async function () {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
@@ -116,7 +116,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 200);
     });
 
-    it('should return 200', async function() {
+    it('should return 200', async function () {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {
@@ -126,7 +126,7 @@ describe('Core', function() {
       assert.strictEqual(res.status, 200);
     });
 
-    it('should return 200', async function() {
+    it('should return 200', async function () {
       const res = await fetch(base_url + '/authorized_keys/host/user', {
         method: 'GET',
         headers: {

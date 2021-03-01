@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const setTimeoutPromise = function(timeout) {
+export const setTimeoutPromise = function (timeout) {
   return new Promise((resolve, reject) => {
-    setTimeout(function() {
+    setTimeout(function () {
       resolve();
     }, timeout);
   });

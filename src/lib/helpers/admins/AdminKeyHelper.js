@@ -127,7 +127,7 @@ export const adminAddAccountKeys = async (db, account_id, keys, req) => {
   }
 };
 
-export const adminUpdateAccountKey = async function(db, account_id, key_id, ssh_options, req) {
+export const adminUpdateAccountKey = async function (db, account_id, key_id, ssh_options, req) {
   const am = new AccountManager(db);
   let account;
   try {

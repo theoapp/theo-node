@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import dotenv from 'dotenv';
-
+import { describe, it, before } from 'mocha';
 import assert from 'assert';
 import fetch from 'node-fetch';
 
@@ -42,13 +42,10 @@ CHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65W
 gzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ==
 ---- END SSH2 PUBLIC KEY ----`;
 
-const publicSSH2KeyOpenSSH =
-  'ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAqIr9zeWOhGmL6kPmo5pqInlbR41NW/R9cfCRb3PvasmOIJCZ5BBjlqmok3sBDVkwMvkOqYGkqhOceRzGoh9sTZsEMCgXs7LsRhA7jjTxkqolwunn7OQ1DDHYdDFG61g0Mjs1WjvEd9lYeUwGF5ARGALxV+OEDTD/zi4QIKp5TjGKBoSGBLcU+KSfPcN4+vKMUBdoHMVBFIeXLTBeTzmtbGkg+q7bspPso4KtCHN0d7TQ7rBSgPSXgdkzXDcH0cfz3UV6fOG8wpfpxj3PVNXoF7sGFOARcEhYt65WgzOsqCDwx8aS8MqO6JxWBvWRTRp1+tvoawMCYeksryiWfJT/JQ== usern@hostrc';
-
-describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
+describe('REST Test account with REQUIRE_SIGNED_KEY=1', function () {
   this.timeout(10000);
 
-  before(function() {
+  before(function () {
     return new Promise((resolve, reject) => {
       fetch(base_url + '/flushdb', {
         method: 'POST',
@@ -72,8 +69,8 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
     });
   });
 
-  describe('with name and email and 1 key', function() {
-    it('should return an error because key is not signed', async function() {
+  describe('with name and email and 1 key', function () {
+    it('should return an error because key is not signed', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.2@example.com',
@@ -93,12 +90,15 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
     });
   });
 
-  describe('with name and email and 2 keys', function() {
-    it('should return an account object with 2 keys and no permissions', async function() {
+  describe('with name and email and 2 keys', function () {
+    it('should return an account object with 2 keys and no permissions', async function () {
       const reqAccount = {
         name: 'john.doe',
         email: 'john.doe.3@example.com',
-        keys: [{ key: publicKeySample2, signature: 'xxxx' }, { key: publicKeySample3, signature: 'xxxxx' }]
+        keys: [
+          { key: publicKeySample2, signature: 'xxxx' },
+          { key: publicKeySample3, signature: 'xxxxx' }
+        ]
       };
 
       const res = await fetch(base_url + '/accounts', {
@@ -127,8 +127,8 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
     });
   });
 
-  describe('add 1 key to an account', function() {
-    it('should return an error because key is not signed', async function() {
+  describe('add 1 key to an account', function () {
+    it('should return an error because key is not signed', async function () {
       const keys = [publicKeySample4];
 
       const res = await fetch(base_url + '/accounts/1/keys', {
@@ -143,7 +143,7 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
       assert.strictEqual(res.status, 400);
     });
 
-    it('should return success', async function() {
+    it('should return success', async function () {
       const keys = [{ key: publicKeySample5, signature: 'xxxxxx' }];
 
       const res = await fetch(base_url + '/accounts/1/keys', {
@@ -159,8 +159,8 @@ describe('REST Test account with REQUIRE_SIGNED_KEY=1', function() {
     });
   });
 
-  describe('add 1 SSH2 key to an account', function() {
-    it('should return success', async function() {
+  describe('add 1 SSH2 key to an account', function () {
+    it('should return success', async function () {
       const keys = [{ key: publicSSH2Key, signature: 'xxxxxx' }];
 
       const res = await fetch(base_url + '/accounts/1/keys', {

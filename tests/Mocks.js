@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const mockDateNow = function() {
+export const mockDateNow = function () {
   // mock now = 1462361249717ms = 4th May 2016 11:27:29,717
   return 1462361249717;
 };
 
-export const mockDateToISOString = function() {
+export const mockDateToISOString = function () {
   return '2016-05-04T11:27:29.717Z';
 };
 
-export const uuidMock = function() {
+export const uuidMock = function () {
   return 'a0812c69-07c1-46ea-95b8-3027698b6f30';
 };
 
@@ -34,7 +34,7 @@ class RedisClientMock {
 
   on(event, cb) {
     if (event === 'message') {
-      // eslint-disable-next-line standard/no-callback-literal
+      // eslint-disable-next-line node/no-callback-literal
       return cb('test_config_messages', 'flush_tokens');
     }
   }

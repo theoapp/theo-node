@@ -15,7 +15,7 @@
 import AppHelper from '../helpers/AppHelper';
 import EventHelper from '../helpers/EventHelper';
 
-const checkForBearer = function(req, header) {
+const checkForBearer = function (req, header) {
   const authorization = req.header('Authorization');
   if (authorization) {
     const m = /^[Bb]earer\s+(\S+)$/.exec(authorization);

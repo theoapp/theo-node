@@ -20,7 +20,7 @@ const { LOG_AUDIT_CONSOLE, LOG_AUDIT_URL, LOG_AUDIT_TOKEN } = process.env;
 
 const auditEnable = (LOG_AUDIT_CONSOLE && LOG_AUDIT_CONSOLE === 'true') || LOG_AUDIT_URL;
 
-const getHTTPHeaders = function() {
+const getHTTPHeaders = function () {
   if (!LOG_AUDIT_URL) return;
   const headers = {
     'User-Agent': packageJson.name + '/' + packageJson.version,
