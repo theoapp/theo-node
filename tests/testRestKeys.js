@@ -215,6 +215,37 @@ describe('REST Check keys', function () {
     });
   });
 
+  describe('check authorized_keys for user=biz and host=biz with fingerprint', function () {
+    it('should return 5 rows and update last_used_at', async function () {
+      const fingerprint = 'SHA256:E3D5or7tw9vPr7gXTZXbzsL25gYd2ocJlDC3IeJk1Ec';
+      const res = await fetch(base_url + '/authorized_keys/biz/biz?f=' + fingerprint, {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0],
+          Accept: 'application/json'
+        }
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
+      const json = await res.json();
+      assert.strictEqual(json.length, 5);
+      const resAdmin = await fetch(base_url + '/accounts/hiacopettim@123-reg.co.uk', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+        }
+      });
+      const data = await resAdmin.json();
+      data.public_keys.forEach(public_key => {
+        if (public_key.fingerprint === fingerprint) {
+          assert.strictEqual(typeof public_key.last_used_at, 'number');
+        } else {
+          assert.strictEqual(public_key.last_used_at, null);
+        }
+      });
+    });
+  });
+
   describe('check authorized_keys for user=unkown and host=unkown', function () {
     it('should return 1 rows (only Jolly user 3)', async function () {
       const res = await fetch(base_url + '/authorized_keys/unkown/unkown', {
