@@ -54,7 +54,7 @@ class KeyManager {
 
   async update(account_id, id, ssh_options = '') {
     const sql = 'update public_keys set key_ssh_options = ? where id = ? and account_id = ?';
-    const changes = await this.db.delete(sql, [ssh_options, id, account_id]);
+    const changes = await this.db.update(sql, [ssh_options, id, account_id]);
     await this.am.setUpdatedAt(account_id);
     return changes;
   }
