@@ -26,7 +26,7 @@ class KeyManager {
 
   async getAll(account_id, limit, offset) {
     let sql =
-      'select id, public_key, fingerprint, public_key_sig, key_ssh_options, created_at from public_keys where account_id = ? order by created_at ';
+      'select id, public_key, fingerprint, public_key_sig, key_ssh_options, last_used_at, created_at from public_keys where account_id = ? order by created_at ';
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -69,6 +69,11 @@ class KeyManager {
   async checkFingerprint(fingerprint) {
     const sql = 'select id, account_id from public_keys where fingerprint = ?';
     return this.db.get(sql, [fingerprint]);
+  }
+
+  static setLastUsed(dbConn, fingerprint) {
+    const sql = 'update public_keys set last_used_at = ? where fingerprint = ? ';
+    return dbConn.update(sql, [Date.now(), fingerprint]);
   }
 }
 
