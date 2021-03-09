@@ -18,6 +18,7 @@ import { dnsReverse } from '../lib/utils/dnsUtils';
 import AppHelper from '../lib/helpers/AppHelper';
 import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
 import { common_debug, common_error } from '../lib/utils/logUtils';
+import KeyManager from '../lib/managers/KeyManager';
 
 const checkFingerPrint = async function (user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
@@ -29,19 +30,39 @@ const checkFingerPrint = async function (user, host, fingerprint, keys) {
         ts: Date.now()
       };
       RemoteLoggerHelper.log(data);
-      return;
+      return keys[i];
     }
   }
   common_debug('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
 };
 
-const checkUserHost = async function(dm, accept, user, host, res, fingerprint) {
+const checkUserHost = async function (dm, accept, user, host, res, fingerprint) {
   if (accept && accept.indexOf('application/json') >= 0) {
     const { keys, cache } = await getAuthorizedKeysAsJson(dm, user, host);
     res.header('X-From-Cache', cache);
     res.json(keys);
     if (fingerprint) {
-      checkFingerPrint(user, host, fingerprint, keys).finally();
+      try {
+        const key = await checkFingerPrint(user, host, fingerprint, keys);
+        if (key) {
+          setImmediate(() => {
+            const db = dm.getClient('rw');
+            db.open()
+              .then(() => {
+                return KeyManager.setLastUsed(db, fingerprint);
+              })
+              .catch(e => {
+                console.error('Failed to update last_used_at', e);
+              })
+              .finally(() => {
+                const ret = db.close();
+                if (ret && ret instanceof Promise) {
+                  ret.catch(err => console.error(err));
+                }
+              });
+          });
+        }
+      } catch (e) {}
     }
   } else {
     const ah = AppHelper();

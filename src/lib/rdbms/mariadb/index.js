@@ -20,7 +20,7 @@ import { common_debug, common_error } from '../../utils/logUtils';
 import ConnectionManager from '@authkeys/mysql-connman';
 
 class MariadbManager extends DbManager {
-  dbVersion = 16;
+  dbVersion = 17;
 
   CREATE_TABLE_AUTH_TOKENS =
     'create table auth_tokens (token varchar(128) binary PRIMARY KEY, assignee varchar(64) NOT NULL, type varchar(5) NOT NULL, created_at BIGINT UNSIGNED)';
@@ -50,6 +50,7 @@ class MariadbManager extends DbManager {
     'public_key_sig varchar(1024), ' +
     'fingerprint varchar(128), ' +
     'key_ssh_options TEXT not null, ' +
+    'last_used_at BIGINT UNSIGNED, ' +
     'created_at BIGINT UNSIGNED, ' +
     'unique (fingerprint), ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
@@ -241,6 +242,9 @@ alter table public_keys add unique(fingerprint);
     }
     if (fromVersion < 16) {
       await dbConn.run('alter table public_keys add key_ssh_options TEXT not null after fingerprint');
+    }
+    if (fromVersion < 17) {
+      await dbConn.run('alter table public_keys add last_used_at BIGINT UNSIGNED after key_ssh_options');
     }
     if (process.env.CLUSTER_MODE === '1') {
       dbConn.close();

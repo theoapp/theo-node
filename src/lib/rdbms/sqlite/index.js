@@ -31,7 +31,7 @@ try {
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 16;
+  dbVersion = 17;
 
   CREATE_TABLE_AUTH_TOKENS =
     'create table auth_tokens (token text PRIMARY KEY, assignee text, type varchar(5), created_at INTEGER)';
@@ -62,6 +62,7 @@ class SqliteManager extends DbManager {
     'public_key_sig varchar(1024), ' +
     'fingerprint varchar(1024), ' +
     'key_ssh_options TEXT, ' +
+    'last_used_at INTEGER, ' +
     'created_at INTEGER, ' +
     'UNIQUE (fingerprint), ' +
     'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
@@ -289,6 +290,9 @@ class SqliteManager extends DbManager {
     }
     if (fromVersion < 16) {
       await this.client.run("alter table public_keys add key_ssh_options TEXT not null default ''");
+    }
+    if (fromVersion < 17) {
+      await this.client.run('alter table public_keys add last_used_at INTEGER');
     }
     await this.updateVersion();
   }
