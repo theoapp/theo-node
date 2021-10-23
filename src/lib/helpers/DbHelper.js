@@ -136,7 +136,7 @@ class DbHelper {
   }
 
   async _flush(client) {
-    const done = await this.manager.flushDb();
+    const done = await this.manager.flushDb(client);
     if (done) {
       EventHelper.emit('theo:flushdb');
       try {
