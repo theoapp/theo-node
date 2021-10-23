@@ -280,6 +280,82 @@ test_mariadb_redis_core () {
     fi
 }
 
+test_postgres () {
+    # postgres
+    print_test_header postgres
+    docker-compose -p theotests -f docker-compose/docker-compose-test-postgres.yml up -d
+    echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
+    sleep $WAIT_FOR_DB_SEC
+    docker run --network theotests_default --rm --link theo \
+        -e "THEO_URL=http://theo:9100" \
+        -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
+        -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
+        theo-tester npm run test:api
+    RETVAL=$?
+    if [[ ${RETVAL} -gt 0 ]]; then
+        docker logs --tail 30 theo
+    fi
+    docker-compose -p theotests -f docker-compose/docker-compose-test-postgres.yml down
+    if [[ ${RETVAL} -gt 0 ]]; then
+        echo "ERR docker-compose-test-postgres FAILED"
+        exit ${RETVAL}
+    fi
+}
+
+test_postgres_redis () {
+    # postgres + redis
+    print_test_header "postgres + redis"
+    docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis.yml up -d
+    echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
+    sleep $WAIT_FOR_DB_SEC
+    docker run --network theotests_default --rm --link theo \
+        -e "THEO_URL=http://theo:9100" \
+        -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
+        -e "CLIENT_TOKENS=${CLIENT_TOKENS}" \
+        -e "THEO_USE_CACHE=1" \
+        theo-tester npm run test:api
+    RETVAL=$?
+    if [[ ${RETVAL} -gt 0 ]]; then
+        docker logs theo | tail -n 20
+    fi
+    docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis.yml down
+    if [[ ${RETVAL} -gt 0 ]]; then
+        echo "ERR docker-compose-test-postgres-redis FAILED"
+        exit ${RETVAL}
+    fi
+}
+
+test_postgres_redis_core () {
+    # postgres + redis CORE
+    print_test_header "postgres + redis CORE"
+    docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core.yml up -d
+    echo ${WAIT_FOR_DB_SEC}s Waiting for db to start..
+    sleep $WAIT_FOR_DB_SEC
+    docker run --network theotests_default --rm --link theo \
+        -e "CORE_TOKEN=${CORE_TOKEN}" \
+        -e "THEO_URL=http://theo:9100" \
+        theo-tester npm run test:core
+    RETVAL=$?
+    if [[ ${RETVAL} -gt 0 ]]; then
+        docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core.yml down
+        echo "ERR docker-compose-test-postgres-redis-core FAILED"
+        exit ${RETVAL}
+    fi
+
+    print_test_header "postgres + redis CORE AFTER RESTART"
+    docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core.yml restart theo
+    docker run --network theotests_default --rm --link theo \
+        -e "THEO_URL=http://theo:9100" \
+        -e "CORE_TOKEN=${CORE_TOKEN}" \
+        theo-tester npm run test:core:restart
+    RETVAL=$?
+    docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core.yml down
+    if [[ ${RETVAL} -gt 0 ]]; then
+        echo "ERR docker-compose-test-postgres-redis-core restart FAILED "
+        exit ${RETVAL}
+    fi
+}
+
 if [[ "$1" = "" ]]; then
     test_standalone
     test_sqlite
@@ -291,6 +367,9 @@ if [[ "$1" = "" ]]; then
     test_mariadb_redis
     test_mysql
     test_mariadb_redis_core
+    test_postgres
+    test_postgres_redis
+    test_postgres_redis_core
 else
     test_${1}
 fi
