@@ -14,7 +14,7 @@
 
 import { common_error, common_warn } from './lib/utils/logUtils';
 import { md5 } from './lib/utils/cryptoUtils';
-import { getLoadDbEnvSettings } from './dbInitiator';
+import { getLoadDbEnvSettings, loadPostgresEnvSettings } from './dbInitiator';
 
 const initSettings = function () {
   let settings = {
@@ -65,6 +65,8 @@ const initSettings = function () {
           settings.db.storage = sqlite_path;
         }
       }
+    } else if (settings.db.engine === 'postgres') {
+      loadPostgresEnvSettings(settings.db);
     } else {
       const loadDbEnvSettings = getLoadDbEnvSettings();
       loadDbEnvSettings(settings.db);

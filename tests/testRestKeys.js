@@ -120,7 +120,7 @@ const loadData = async function () {
 };
 
 describe('REST Check keys', function () {
-  this.timeout(10000);
+  this.timeout(30000);
 
   before(function (done) {
     fetch(base_url + '/flushdb', {
@@ -238,7 +238,7 @@ describe('REST Check keys', function () {
       const data = await resAdmin.json();
       data.public_keys.forEach(public_key => {
         if (public_key.fingerprint === fingerprint) {
-          assert.strictEqual(typeof public_key.last_used_at, 'number');
+          assert.notStrictEqual(public_key.last_used_at, null);
         } else {
           assert.strictEqual(public_key.last_used_at, null);
         }

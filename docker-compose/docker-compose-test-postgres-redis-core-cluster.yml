@@ -1,0 +1,68 @@
+version: '3.1'
+
+services:
+  db:
+    image: ${POSTGRES_IMAGE}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  cache:
+    image: ${REDIS_IMAGE}
+  theo1:
+    image: theo:test
+    container_name: theo1
+    environment:
+      MODE: test
+      DB_ENGINE: postgres
+      DB_HOST: db
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      CORE_TOKEN: ${CORE_TOKEN}
+      CACHE_ENABLED: redis
+      CACHE_URI: redis://cache:6379
+      CLUSTER_MODE: 1
+      DB_CONN_MAX_RETRY: 30
+      SKIP_UPDATECHECK: 1
+    depends_on:
+      - cache
+      - db
+  theo2:
+    image: theo:test
+    container_name: theo2
+    environment:
+      MODE: test
+      DB_ENGINE: postgres
+      DB_HOST: db
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      CORE_TOKEN: ${CORE_TOKEN}
+      CACHE_ENABLED: redis
+      CACHE_URI: redis://cache:6379
+      CLUSTER_MODE: 1
+      DB_CONN_MAX_RETRY: 30
+      SKIP_UPDATECHECK: 1
+    depends_on:
+      - cache
+      - db
+  theo3:
+    image: theo:test
+    container_name: theo3
+    environment:
+      MODE: test
+      DB_ENGINE: postgres
+      DB_HOST: db
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      CORE_TOKEN: ${CORE_TOKEN}
+      CACHE_ENABLED: redis
+      CACHE_URI: redis://cache:6379
+      CLUSTER_MODE: 1
+      DB_CONN_MAX_RETRY: 30
+      SKIP_UPDATECHECK: 1
+    depends_on:
+      - cache
+      - db

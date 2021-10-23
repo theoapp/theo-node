@@ -24,7 +24,7 @@ is_valid_tag () {
 }
 
 is_latest_tag () {
-  LATEST_GIT_TAG=$(git tag | grep -E '^[0-9]*\.[0-9]*\.[0-9]*$' | sort -V | tail -n 1)
+  LATEST_GIT_TAG=$(git tag | grep -E '^[0-9]*\.[0-9]*\.[0-9]*$' | sort --version-sort | tail -n 1)
   if [ "$LATEST_GIT_TAG" = "$DOCKER_TAG" ]; then
     return 0
   else
@@ -68,7 +68,7 @@ build_full () {
 build_sqlite () {
   TAG_NAME=${DOCKER_TAG}-sqlite
 
-  npm uninstall @authkeys/mysql-connman redis memcached
+  npm uninstall @authkeys/mysql-connman redis memcached pg
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -82,7 +82,7 @@ build_sqlite () {
 build_sqlite_redis () {
   TAG_NAME=${DOCKER_TAG}-sqlite-redis
 
-  npm uninstall @authkeys/mysql-connman memcached
+  npm uninstall @authkeys/mysql-connman memcached pg
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -96,7 +96,7 @@ build_sqlite_memcached () {
 
   TAG_NAME=${DOCKER_TAG}-sqlite-memcached
 
-  npm uninstall @authkeys/mysql-connman redis
+  npm uninstall @authkeys/mysql-connman redis pg
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -111,7 +111,7 @@ build_mysql () {
 
   TAG_NAME=${DOCKER_TAG}-mysql
 
-  npm uninstall sqlite3 redis memcached
+  npm uninstall sqlite3 redis memcached pg
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -125,7 +125,7 @@ build_mysql () {
 build_mysql_redis () {
   TAG_NAME=${DOCKER_TAG}-mysql-redis
 
-  npm uninstall sqlite3 memcached
+  npm uninstall sqlite3 memcached pg
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -139,7 +139,36 @@ build_mysql_redis () {
 build_mysql_memcached () {
   TAG_NAME=${DOCKER_TAG}-mysql-memcached
 
-  npm uninstall sqlite3 redis
+  npm uninstall sqlite3 redis pg
+  docker_build "${TAG_NAME}"
+
+  if [ "$1" = "push" ]; then
+      docker_push "${TAG_NAME}"
+  fi
+
+  git checkout package.json package-lock.json
+
+}
+
+build_postgres () {
+
+  TAG_NAME=${DOCKER_TAG}-postgres
+
+  npm uninstall @authkeys/mysql-connman sqlite3 redis memcached
+  docker_build "${TAG_NAME}"
+
+  if [ "$1" = "push" ]; then
+      docker_push "${TAG_NAME}"
+  fi
+
+  git checkout package.json package-lock.json
+
+}
+
+build_postgres_redis () {
+  TAG_NAME=${DOCKER_TAG}-postgres-redis
+
+  npm uninstall @authkeys/mysql-connman sqlite3 memcached
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -159,6 +188,9 @@ if [ "$1" = "all" ]; then
   build_mysql "$2"
   build_mysql_redis "$2"
   build_mysql_memcached "$2"
+
+  build_postgres "$2"
+  build_postgres_redis "$2"
 
   build_full "$2"
 

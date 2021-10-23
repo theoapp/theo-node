@@ -1,0 +1,25 @@
+version: '3.1'
+
+services:
+  db:
+    image: ${POSTGRES_IMAGE}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  theo:
+    image: theo:test
+    container_name: theo
+    environment:
+      MODE: test
+      DB_ENGINE: postgres
+      DB_HOST: db
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      CLIENT_TOKENS: ${CLIENT_TOKENS}
+      DB_CONN_MAX_RETRY: 30
+      SKIP_UPDATECHECK: 1
+    depends_on:
+      - db

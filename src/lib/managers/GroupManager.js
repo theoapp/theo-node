@@ -132,7 +132,8 @@ class GroupManager extends BaseCacheManager {
 
   create(name, active = 1) {
     const sql = 'insert into tgroups (name, active, is_internal, created_at) values (?, ?, ?, ?) ';
-    return this.db.insert(sql, [name, active, name.indexOf('@') > 0, Date.now()]);
+    const phs = [name, active ? 1 : 0, name.indexOf('@') > 0 ? 1 : 0, Date.now()];
+    return this.db.insert(sql, phs);
   }
 
   async delete(id) {
@@ -152,7 +153,7 @@ class GroupManager extends BaseCacheManager {
   async changeStatus(id, active) {
     const sql = 'update tgroups set active = ?, updated_at = ? where id = ? ';
     active = !!active;
-    const changes = await this.db.update(sql, [active, new Date().getTime(), id]);
+    const changes = await this.db.update(sql, [active ? 1 : 0, new Date().getTime(), id]);
     this.invalidateCache();
     return changes;
   }

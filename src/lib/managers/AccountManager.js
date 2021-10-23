@@ -169,7 +169,7 @@ class AccountManager extends BaseCacheManager {
     const lastId = await this.db.insert(sql, [
       account.email,
       account.name,
-      account.active || 1,
+      account.active === undefined ? 1 : account.active ? 1 : 0,
       expire_at,
       new Date().getTime()
     ]);
@@ -180,7 +180,7 @@ class AccountManager extends BaseCacheManager {
   async changeStatus(id, active) {
     const sql = 'update accounts set active = ?, updated_at = ? where id = ? ';
     active = !!active;
-    const changes = await this.db.update(sql, [active, new Date().getTime(), id]);
+    const changes = await this.db.update(sql, [active ? 1 : 0, new Date().getTime(), id]);
     this.invalidateCache();
     return changes;
   }
@@ -196,7 +196,7 @@ class AccountManager extends BaseCacheManager {
   async update(id, active, expire_at) {
     expire_at = getTimestampFromISO8601(expire_at);
     const sql = 'update accounts set active = ?, expire_at = ?, updated_at = ? where id = ? ';
-    const changes = await this.db.update(sql, [active, expire_at, new Date().getTime(), id]);
+    const changes = await this.db.update(sql, [active ? 1 : 0, expire_at, new Date().getTime(), id]);
     this.invalidateCache();
     return changes;
   }
