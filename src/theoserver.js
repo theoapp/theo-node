@@ -61,6 +61,10 @@ class TheoServer extends Microservice {
 
   setupRoutes(app, express) {
     app.disable('x-powered-by');
+    app.use((req, res, next) => {
+      req.app = this;
+      next();
+    });
     app.use(authMiddleware);
     app.use(auditMiddleware);
     app.use(async (req, res, next) => {

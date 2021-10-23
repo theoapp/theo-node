@@ -16,7 +16,7 @@ import AppHelper from '../helpers/AppHelper';
 import EventHelper from '../helpers/EventHelper';
 
 const checkForBearer = function (req, header) {
-  const authorization = req.header('Authorization');
+  const authorization = req.header(header);
   if (authorization) {
     const m = /^[Bb]earer\s+(\S+)$/.exec(authorization);
     if (m === null) {
@@ -87,6 +87,10 @@ export const authMiddleware = (req, res, next) => {
       }
     } catch (e) {
       next();
+    } finally {
+      if (!req.app.envBool(process.env, 'DEBUG_AUTH', false)) {
+        req.headers.authorization = 'Bearer [***]';
+      }
     }
     return;
   }
