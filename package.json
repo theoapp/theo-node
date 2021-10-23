@@ -25,7 +25,8 @@
     "test:upgrade:mysql": "mocha tests/testUpgrade_mysql.js",
     "test:upgrade:sqlite": "mocha tests/testUpgrade_sqlite.js",
     "preversion": "npm run lint",
-    "version": "./scripts/updateVersion.sh"
+    "version": "./scripts/updateVersion.sh",
+    "ver": "echo $npm_package_version"
   },
   "nodemonConfig": {
     "delay": 2000
