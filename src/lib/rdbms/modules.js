@@ -29,6 +29,12 @@ try {
 } catch (e) {
   common_info('sqlite driver not loaded');
 }
+try {
+  const Postgres = require('./postgres');
+  modules.postgres = Postgres.default;
+} catch (e) {
+  common_info('postgres driver not loaded');
+}
 
 export const getRdbmsModule = name => {
   return modules[name];
