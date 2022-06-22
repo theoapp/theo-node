@@ -40,7 +40,7 @@
     "node-fetch": "^2.6.1",
     "redis": "^3.0.0",
     "semver": "^7.3.4",
-    "sqlite3": "^5.0.0",
+    "sqlite3": "^5.0.3",
     "sshpk": "^1.16.1"
   },
   "devDependencies": {
