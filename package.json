@@ -37,7 +37,7 @@
     "@authkeys/mysql-connman": "^0.6.0",
     "dotenv": "^8.2.0",
     "memcached": "^2.2.2",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "redis": "^3.0.0",
     "semver": "^7.3.4",
     "sqlite3": "^5.0.0",
