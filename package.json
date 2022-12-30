@@ -54,7 +54,7 @@
     "@istanbuljs/nyc-config-babel": "^2.1.1",
     "babel-plugin-istanbul": "^5.1.4",
     "cross-env": "^5.2.0",
-    "mocha": "^6.2.3",
+    "mocha": "^10.2.0",
     "mock-http-server": "^1.4.2",
     "nyc": "^14.1.1",
     "sinon": "^7.5.0"
