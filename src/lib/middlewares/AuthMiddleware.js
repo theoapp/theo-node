@@ -14,6 +14,9 @@
 
 import AppHelper from '../helpers/AppHelper';
 import EventHelper from '../helpers/EventHelper';
+import { getInstance } from '../utils/instanceUtils';
+import { common_error } from '../utils/logUtils';
+import { md5 } from '../utils/cryptoUtils';
 
 const checkForBearer = function (req, header) {
   const authorization = req.header(header);
@@ -67,28 +70,46 @@ export const authMiddleware = (req, res, next) => {
           } else {
             req.auth_token = 'core';
           }
-        } else if (token === _settings.admin.token) {
-          req.is_authorized = true;
-          req.is_admin = true;
-          req.auth_token = 'admin';
-        } else if (_settings.admin.tokens && _settings.admin.tokens[token]) {
-          req.is_authorized = true;
-          req.is_admin = true;
-          req.auth_token = _settings.admin.tokens[token];
         } else {
-          if (_settings.client.tokens) {
-            if (_settings.client.tokens.includes(token)) {
+          const instance = getInstance();
+          const _token = md5(`${instance}:${token}`);
+          /*
+          console.log(JSON.stringify(_settings.instances));
+          console.log(instance);
+          console.log(JSON.stringify(_settings.instances[instance]));
+          console.log(token);
+           */
+          if (_settings.instances?.[instance]?.core === _token) {
+            req.is_authorized = true;
+            req.is_admin = true;
+            req.is_core = true;
+            const onBehalfOfToken = req.header('X-On-Behalf-Of');
+            if (onBehalfOfToken) {
+              req.auth_token = onBehalfOfToken;
+            } else {
+              req.auth_token = 'core';
+            }
+          } else if (_settings.instances?.[instance]?.admin && _settings.instances[instance].admin.tokens?.[_token]) {
+            req.is_authorized = true;
+            req.is_admin = true;
+            req.auth_token = _settings.instances[instance].admin.tokens[_token];
+          } else {
+            if (
+              _settings.instances?.[instance]?.client?.tokens &&
+              _settings.instances[instance].client.tokens.includes(_token)
+            ) {
               req.is_authorized = true;
-              req.auth_token = token;
+              req.auth_token = _token;
             }
           }
         }
         next();
       }
     } catch (e) {
+      common_error('Failed to check token', e);
       next();
     } finally {
-      if (!req.app.envBool(process.env, 'DEBUG_AUTH', false)) {
+      if (!req.debugAuth) {
         req.headers.authorization = 'Bearer [***]';
       }
     }

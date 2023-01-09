@@ -20,6 +20,7 @@ import {
   calculateDistance,
   parseKeySSHOptions
 } from '../utils/sshOptionsUtils';
+import { getInstance } from '../utils/instanceUtils';
 
 class PermissionManager {
   constructor(db, gm) {
@@ -39,7 +40,8 @@ class PermissionManager {
       and a.id = ga.account_id 
       and a.active = 1
       and g.active = 1
-      and (a.expire_at = 0 or a.expire_at > ?) `;
+      and (a.expire_at = 0 or a.expire_at > ?)
+      ${excludeKeys ? 'and a.instance = g.instance and a.instance = ?' : 'and k.instance = ?'}`;
   }
 
   async match(user, host) {
@@ -50,7 +52,8 @@ class PermissionManager {
     ${PermissionManager._getMatchSqlWhere(false)}
     order by k.fingerprint
     `;
-    const rows = await this.db.all(sql, [host, user, Date.now()]);
+    const instance = getInstance();
+    const rows = await this.db.all(sql, [host, user, Date.now(), instance]);
     const keys = {};
     rows.forEach(r => {
       parseKeySSHOptions(r);
@@ -96,32 +99,34 @@ class PermissionManager {
     const sql = `select distinct a.id, a.email, p.host, p.user, p.ssh_options
        from accounts a, tgroups g, groups_accounts ga, permissions p 
     ${PermissionManager._getMatchSqlWhere(true)}`;
-    const rows = await this.db.all(sql, [host, user, Date.now()]);
+    const instance = getInstance();
+    const rows = await this.db.all(sql, [host, user, Date.now(), instance]);
     return rows.map(parseSSHOptions);
   }
 
   async getAll(account_id, limit, offset) {
     let sql =
-      'select id, user, host, ssh_options, created_at from permissions where account_id = ? order by created_at ';
+      'select id, user, host, ssh_options, created_at from permissions where instance = ? and account_id = ? order by created_at ';
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    const rows = await this.db.all(sql, [account_id]);
+    const rows = await this.db.all(sql, [getInstance(), account_id]);
     return rows.map(parseSSHOptions);
   }
 
   async getAllGroup(group_id, limit, offset) {
-    let sql = 'select id, user, host, ssh_options, created_at from permissions where group_id = ? order by created_at ';
+    let sql =
+      'select id, user, host, ssh_options, created_at from permissions where instance = ? and group_id = ? order by created_at ';
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    const rows = await this.db.all(sql, [group_id]);
+    const rows = await this.db.all(sql, [getInstance(), group_id]);
     return rows.map(parseSSHOptions);
   }
 
@@ -134,21 +139,22 @@ class PermissionManager {
       }
       ssh_options = JSON.stringify(ssh_options);
     }
-    const sql = 'insert into permissions (group_id, user, host, ssh_options, created_at) values (?, ?, ?, ?, ?) ';
-    const lastId = await this.db.insert(sql, [group_id, user, host, ssh_options, new Date().getTime()]);
+    const sql =
+      'insert into permissions (instance, group_id, user, host, ssh_options, created_at) values (?, ?, ?, ?, ?, ?) ';
+    const lastId = await this.db.insert(sql, [getInstance(), group_id, user, host, ssh_options, new Date().getTime()]);
     await this.gm.setUpdatedAt(group_id);
     return lastId;
   }
 
   async get(group_id, id) {
-    const sql = 'select host, user, ssh_options from permissions where id = ? and group_id = ?';
-    const row = await this.db.get(sql, [id, group_id]);
+    const sql = 'select host, user, ssh_options from permissions where instance = ? and id = ? and group_id = ?';
+    const row = await this.db.get(sql, [getInstance(), id, group_id]);
     return parseSSHOptions(row);
   }
 
   async delete(group_id, id) {
-    const sql = 'delete from permissions where id = ? and group_id = ?';
-    const changes = await this.db.delete(sql, [id, group_id]);
+    const sql = 'delete from permissions where instance = ? and id = ? and group_id = ?';
+    const changes = await this.db.delete(sql, [getInstance(), id, group_id]);
     await this.gm.setUpdatedAt(group_id);
     return changes;
   }
@@ -162,8 +168,8 @@ class PermissionManager {
       }
       ssh_options = JSON.stringify(ssh_options);
     }
-    const sql = 'update permissions set ssh_options = ? where id = ? and group_id = ?';
-    const changes = await this.db.update(sql, [ssh_options, id, group_id]);
+    const sql = 'update permissions set ssh_options = ? where instance = ? and id = ? and group_id = ?';
+    const changes = await this.db.update(sql, [ssh_options, getInstance(), id, group_id]);
     await this.gm.setUpdatedAt(group_id);
     return changes;
   }

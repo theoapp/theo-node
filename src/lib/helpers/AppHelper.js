@@ -25,21 +25,20 @@ class AppHelper {
     return root ? this.settings[root] : this.settings;
   }
 
-  async loadAuthTokens(db) {
+  async loadAuthTokens(db, all = false) {
     const atm = new AuthTokenManager(db);
-    const tokens = await atm.getAll();
-    this.reloadAuthToken(tokens);
+    const instances = await atm.getAll(all);
+    if (all) {
+      this.settings.instances = {};
+    }
+    this.reloadAuthToken(instances);
     return true;
   }
 
-  reloadAuthToken(tokens) {
-    this.settings.admin.token = undefined;
-    this.settings.admin.tokens = tokens.admins || {};
-    if (tokens.admin) {
-      const { token, assignee } = AuthTokenManager.getTokenAssignee(tokens.admin, true);
-      this.settings.admin.tokens[token] = assignee;
+  reloadAuthToken(instances) {
+    for (const instance in instances) {
+      this.settings.instances[instance] = instances[instance];
     }
-    this.settings.client.tokens = tokens.clients;
   }
 }
 

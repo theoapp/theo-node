@@ -16,22 +16,13 @@ import GroupAccountManager from '../../managers/GroupAccountManager';
 import GroupManager from '../../managers/GroupManager';
 import AccountManager from '../../managers/AccountManager';
 
-export const adminCreateGroupAccount = async (db, group_id, account_id, req) => {
-  if (!account_id) {
-    const error = new Error('Malformed object, id is required');
-    error.t_code = 400;
-    throw error;
-  }
+async function getGroup(db, group_id) {
   let group;
-  let account;
-  const gam = new GroupAccountManager(db);
   try {
     const gm = new GroupManager(db);
     if (isNaN(group_id)) {
       group = await gm.getByName(group_id);
-      group_id = group.id;
     } else {
-      // Check group id...
       group = await gm.get(group_id);
     }
   } catch (err) {
@@ -43,11 +34,15 @@ export const adminCreateGroupAccount = async (db, group_id, account_id, req) => 
     err.t_code = 404;
     throw err;
   }
+  return group;
+}
+
+async function getAccount(db, account_id) {
+  let account;
   try {
     const am = new AccountManager(db);
     if (isNaN(account_id)) {
       account = await am.getByEmail(account_id);
-      account_id = account.id;
     } else {
       account = await am.get(account_id);
     }
@@ -60,7 +55,20 @@ export const adminCreateGroupAccount = async (db, group_id, account_id, req) => 
     err.t_code = 404;
     throw err;
   }
-  const ret = await gam.create(group_id, account_id);
+  return account;
+}
+
+export const adminCreateGroupAccount = async (db, group_id, account_id, req) => {
+  if (!account_id) {
+    const error = new Error('Malformed object, id is required');
+    error.t_code = 400;
+    throw error;
+  }
+
+  const group = await getGroup(db, group_id);
+  const account = await getAccount(db, account_id);
+  const gam = new GroupAccountManager(db);
+  const ret = await gam.create(group.id, account.id);
   if (req && req.auditHelper) {
     if (account.email !== group.name) {
       req.auditHelper.log('accounts', 'add_to_group', account.email, group.name);
@@ -150,34 +158,10 @@ export const adminDeleteGroupAccount = async (db, group_id, account_id, req) => 
     error.t_code = 400;
     throw error;
   }
-  let group;
-  let account;
+  const group = await getGroup(db, group_id);
+  const account = await getAccount(db, account_id);
   const gam = new GroupAccountManager(db);
-  try {
-    const gm = new GroupManager(db);
-    if (isNaN(group_id)) {
-      group = await gm.getByName(group_id);
-      group_id = group.id;
-    } else {
-      group = await gm.get(group_id); // I need it to check if group exists!
-    }
-  } catch (err) {
-    if (!err.t_code) err.t_code = 500;
-    throw err;
-  }
-  try {
-    const am = new AccountManager(db);
-    if (isNaN(account_id)) {
-      account = await am.getIdByEmail(account_id);
-      account_id = account.id;
-    } else {
-      account = await am.get(account_id); // I need it to check if account exists!
-    }
-  } catch (err) {
-    if (!err.t_code) err.t_code = 500;
-    throw err;
-  }
-  const ret = await gam.delete(group_id, account_id);
+  const ret = await gam.delete(group.id, account.id);
   if (req && req.auditHelper) {
     if (account.email !== group.name) {
       req.auditHelper.log('accounts', 'remove_from_group', account.email, group.name);

@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.8'
 
 services:
   db:
@@ -7,6 +7,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: pg_isready -d ${POSTGRES_DB}
+      interval: 10s
+      timeout: 60s
+      retries: 10
+      start_period: 80s
   theo:
     image: theo:test
     container_name: theo
@@ -22,4 +28,5 @@ services:
       DB_CONN_MAX_RETRY: 30
       SKIP_UPDATECHECK: 1
     depends_on:
-      - db
+      db:
+        condition: service_healthy

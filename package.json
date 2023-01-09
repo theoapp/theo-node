@@ -24,6 +24,7 @@
     "test:standalone": "mocha tests/testStandAlone*.js",
     "test:upgrade:mysql": "mocha tests/testUpgrade_mysql.js",
     "test:upgrade:sqlite": "mocha tests/testUpgrade_sqlite.js",
+    "test:multiinstances": "mocha tests/testMultiInstances.js",
     "preversion": "npm run lint",
     "version": "./scripts/updateVersion.sh",
     "ver": "echo $npm_package_version"
@@ -34,20 +35,20 @@
   "author": "Michele Azzolari <macno@authkeys.io> (macno)",
   "license": "Apache-2.0",
   "dependencies": {
-    "@authkeys/microservice": "^2.5.0",
+    "@authkeys/microservice": "^2.6.0",
     "@authkeys/mysql-connman": "^0.8.2",
-    "dotenv": "^8.2.0",
+    "dotenv": "^16.0.3",
     "memcached": "^2.2.2",
-    "node-fetch": "^2.6.1",
-    "pg": "^8.7.1",
-    "redis": "^3.0.0",
-    "semver": "^7.3.4",
-    "sqlite3": "^5.0.0",
-    "sshpk": "^1.16.1"
+    "node-fetch": "^2.6.7",
+    "pg": "^8.8.0",
+    "redis": "^4.5.1",
+    "semver": "^7.3.8",
+    "sqlite3": "^5.1.4",
+    "sshpk": "^1.17.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.0",
-    "@babel/core": "^7.13.8",
+    "@babel/core": "7.13",
     "@babel/eslint-parser": "^7.13.4",
     "@babel/node": "^7.13.0",
     "@babel/plugin-proposal-class-properties": "^7.13.0",
@@ -56,7 +57,7 @@
     "@istanbuljs/nyc-config-babel": "^2.1.1",
     "babel-plugin-istanbul": "^5.1.4",
     "cross-env": "^5.2.0",
-    "mocha": "^6.2.3",
+    "mocha": "^10.2.0",
     "mock-http-server": "^1.4.2",
     "nyc": "^14.1.1",
     "sinon": "^7.5.0"
@@ -72,5 +73,8 @@
   "nyc": {
     "include": "src",
     "exclude": "test"
+  },
+  "engines": {
+    "node": "^18.14"
   }
 }

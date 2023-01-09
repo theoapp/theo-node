@@ -18,52 +18,79 @@ import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { common_debug, common_error } from '../../utils/logUtils';
 import ConnectionManager from '@authkeys/mysql-connman';
+import { runV18migration } from '../../../migrations/v18fixInstance';
 
 class MariadbManager extends DbManager {
-  dbVersion = 17;
+  dbVersion = 18;
 
-  CREATE_TABLE_AUTH_TOKENS =
-    'create table auth_tokens (token varchar(128) binary PRIMARY KEY, assignee varchar(64) NOT NULL, type varchar(5) NOT NULL, created_at BIGINT UNSIGNED)';
+  CREATE_TABLE_AUTH_TOKENS = `create table auth_tokens (
+    instance varchar(256) NOT NULL,
+    token varchar(128) binary NOT NULL,
+    assignee varchar(64) NOT NULL,
+    type varchar(5) NOT NULL,
+    created_at BIGINT UNSIGNED,
+    primary key (instance, token)
+  )`;
 
-  CREATE_TABLE_ACCOUNTS =
-    'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128) not null, name varchar(128) not null, ' +
-    'active INTEGER not null default 1, expire_at BIGINT UNSIGNED not null default 0, updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (email))';
+  CREATE_TABLE_ACCOUNTS = `create table accounts (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    instance varchar(256) NOT NULL,
+    email varchar(128) not null,
+    name varchar(128) not null,
+    active INTEGER not null default 1,
+    expire_at BIGINT UNSIGNED not null default 0,
+    updated_at BIGINT UNSIGNED,
+    created_at BIGINT UNSIGNED,
+    UNIQUE (instance, email)
+  )`;
 
-  CREATE_TABLE_GROUPS =
-    'create table tgroups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128) not null, is_internal tinyint(1) not null default 0, active INTEGER not null default 1, ' +
-    'updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (name))';
+  CREATE_TABLE_GROUPS = `create table tgroups (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    instance varchar(256) NOT NULL,
+    name varchar(128) not null,
+    is_internal tinyint(1) not null default 0,
+    active INTEGER not null default 1,
+    updated_at BIGINT UNSIGNED,
+    created_at BIGINT UNSIGNED,
+    UNIQUE (instance, name)
+  )`;
 
-  CREATE_TABLE_GROUPS_ACCOUNTS =
-    'create table groups_accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
-    'account_id INTEGER  not null, ' +
-    'group_id INTEGER not null, ' +
-    'updated_at BIGINT UNSIGNED, ' +
-    'created_at BIGINT UNSIGNED, ' +
-    'UNIQUE (account_id, group_id), ' +
-    'CONSTRAINT groups_accounts_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE, ' +
-    'CONSTRAINT groups_accounts_account_id FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
+  CREATE_TABLE_GROUPS_ACCOUNTS = `create table groups_accounts (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    account_id INTEGER not null,
+    group_id INTEGER not null,
+    updated_at BIGINT UNSIGNED,
+    created_at BIGINT UNSIGNED,
+    UNIQUE (account_id, group_id),
+    CONSTRAINT groups_accounts_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE,
+    CONSTRAINT groups_accounts_account_id FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE
+  )`;
 
-  CREATE_TABLE_PUBLIC_KEYS =
-    'create table public_keys (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
-    'account_id INTEGER NOT NULL, ' +
-    'public_key varchar(1024) not null, ' +
-    'public_key_sig varchar(1024), ' +
-    'fingerprint varchar(128), ' +
-    'key_ssh_options TEXT not null, ' +
-    'last_used_at BIGINT UNSIGNED, ' +
-    'created_at BIGINT UNSIGNED, ' +
-    'unique (fingerprint), ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+  CREATE_TABLE_PUBLIC_KEYS = `create table public_keys (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    instance varchar(256) NOT NULL,
+    account_id INTEGER NOT NULL,
+    public_key varchar(1024) not null,
+    public_key_sig varchar(1024),
+    fingerprint varchar(128),
+    key_ssh_options TEXT not null,
+    last_used_at BIGINT UNSIGNED,
+    created_at BIGINT UNSIGNED,
+    unique (instance, fingerprint),
+    FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
+  )`;
 
-  CREATE_TABLE_PERMISSIONS =
-    'create table permissions (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
-    'group_id INTEGER, ' +
-    'user varchar(256) binary not null, ' +
-    'host varchar(256) binary not null, ' +
-    'ssh_options TEXT not null, ' +
-    'created_at BIGINT UNSIGNED, ' +
-    'INDEX k_permissions_host_user (host, user),' +
-    'CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE)';
+  CREATE_TABLE_PERMISSIONS = `create table permissions (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    instance varchar(256) NOT NULL,
+    group_id INTEGER,
+    user varchar(256) binary not null,
+    host varchar(256) binary not null,
+    ssh_options TEXT not null,
+    created_at BIGINT UNSIGNED,
+    INDEX k_permissions_instance_host_user (instance, host, user),
+    CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE
+  )`;
 
   connectionManager;
 
@@ -245,6 +272,9 @@ alter table public_keys add unique(fingerprint);
     }
     if (fromVersion < 17) {
       await dbConn.run('alter table public_keys add last_used_at BIGINT UNSIGNED after key_ssh_options');
+    }
+    if (fromVersion < 18) {
+      await runV18migration(this);
     }
     if (process.env.CLUSTER_MODE === '1') {
       dbConn.close();

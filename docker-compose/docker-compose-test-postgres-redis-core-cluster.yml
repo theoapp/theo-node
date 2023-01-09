@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.8'
 
 services:
   db:
@@ -7,8 +7,19 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: pg_isready -d ${POSTGRES_DB}
+      interval: 10s
+      timeout: 60s
+      retries: 10
+      start_period: 80s
   cache:
     image: ${REDIS_IMAGE}
+    healthcheck:
+      test: redis-cli ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
   theo1:
     image: theo:test
     container_name: theo1
@@ -26,8 +37,10 @@ services:
       DB_CONN_MAX_RETRY: 30
       SKIP_UPDATECHECK: 1
     depends_on:
-      - cache
-      - db
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
   theo2:
     image: theo:test
     container_name: theo2
@@ -45,8 +58,10 @@ services:
       DB_CONN_MAX_RETRY: 30
       SKIP_UPDATECHECK: 1
     depends_on:
-      - cache
-      - db
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
   theo3:
     image: theo:test
     container_name: theo3
@@ -64,5 +79,7 @@ services:
       DB_CONN_MAX_RETRY: 30
       SKIP_UPDATECHECK: 1
     depends_on:
-      - cache
-      - db
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy

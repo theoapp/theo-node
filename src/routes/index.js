@@ -25,14 +25,15 @@ import handleImpExp from './impexp';
 import AuthTokenManager from '../lib/managers/AuthTokenManager';
 import { loadCacheManager } from '../lib/helpers/CacheHelper';
 import { millisecondsToStr } from '../lib/utils/dateUtils';
+import { getInstance } from '../lib/utils/instanceUtils';
 
 const notifyReloadTokens = function () {
   setImmediate(async () => {
     const cm = loadCacheManager();
     try {
       const client = await cm.open();
-      client.publish('core_tokens', 'flush_tokens');
-      cm.close(client);
+      const instance = getInstance();
+      await client.publish('core_tokens', 'flush_tokens:' + instance);
     } catch (e) {
       console.error('Error while flushing cache tokens', e);
     }
@@ -46,6 +47,10 @@ export const initRoutes = express => {
   router.get('/', (req, res) => {
     const { name, description } = packageJson;
     res.json({ name, description });
+  });
+
+  router.get('/healthz', (req, res) => {
+    res.set('Content-Type', 'text/plain').send('OK');
   });
 
   router.get('/uptime', requireAdminAuthMiddleware, (req, res) => {
@@ -102,16 +107,33 @@ export const initRoutes = express => {
   });
 
   // Reload tokens, called using CORE token
-  router.post('/tokens', requireCoreAuthMiddleware, async (req, res, next) => {
+  router.delete('/tokens', requireCoreAuthMiddleware, async (req, res, next) => {
+    const atm = new AuthTokenManager(req.db);
+    await atm.delete();
+    if (process.env.CLUSTER_MODE === '1') {
+      notifyReloadTokens();
+      res.sendStatus(204);
+    } else {
+      const ah = AppHelper();
+      await ah.loadAuthTokens(true);
+      res.sendStatus(204);
+    }
+  });
+
+  // Reload tokens, called using CORE token
+  router.post('/tokens', requireCoreAuthMiddleware, async (req, res) => {
     try {
       const { tokens } = req.body;
-      if (!tokens.admin && !tokens.admins && !tokens.clients) {
+      if (!tokens || (!tokens.core && !tokens.admin && !tokens.admins && !tokens.clients)) {
         res.status(400);
         res.json({ code: 400, reason: 'Invalid payload' });
         return;
       }
       const atm = new AuthTokenManager(req.db);
       await atm.delete();
+      if (tokens.core) {
+        await atm.create(tokens.core, 'core', 'core');
+      }
       if (tokens.admin) {
         const { token, assignee } = AuthTokenManager.getTokenAssignee(tokens.admin, true);
         await atm.create(token, 'admin', assignee);
@@ -127,12 +149,12 @@ export const initRoutes = express => {
           await atm.create(tokens.clients[i], 'agent');
         }
       }
-      if (process.env.CLUSTER_MODE && process.env.CLUSTER_MODE === '1') {
+      if (process.env.CLUSTER_MODE === '1') {
         notifyReloadTokens();
         res.sendStatus(204);
       } else {
         const ah = AppHelper();
-        const tokens = await atm.getAll();
+        const tokens = await atm.getAll(false);
         ah.reloadAuthToken(tokens);
         res.sendStatus(204);
       }

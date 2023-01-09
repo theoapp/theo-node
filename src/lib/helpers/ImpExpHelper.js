@@ -23,7 +23,7 @@ const getAllGroups = async db => {
   const gm = new GroupManager(db);
   const gam = new GroupAccountManager(db);
   const pm = new PermissionManager(db);
-  const total = await gm.getAllCount('where is_internal = ? ', [0]);
+  const total = await gm.getAllCount('and is_internal = ? ', [0]);
   const items = [];
   while (items.length < total) {
     const itemIds = await gm.getAll(MAX_ROWS, items.length, false, 'id', 'asc');
@@ -50,7 +50,9 @@ const getAllAccounts = async db => {
 };
 
 export const exp = async db => {
+  console.log('Getting groups');
   const groups = await getAllGroups(db);
+  console.log('Getting accounts');
   const accounts = await getAllAccounts(db);
   return {
     accounts,

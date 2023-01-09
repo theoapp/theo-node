@@ -13,8 +13,9 @@ services:
       - "127.0.0.1:5432:5432"
     profiles:
       - postgres
+      - postgres-cache
   mariadb:
-    image: mariadb:10.6
+    image: mariadb:10.10.2
     environment:
       MYSQL_ROOT_PASSWORD: secretRootPassword
       MYSQL_DATABASE: ${DB_NAME}
@@ -26,3 +27,12 @@ services:
       - "127.0.0.1:3306:3306"
     profiles:
       - mariadb
+      - mariadb-cache
+  cache:
+    image: redis:7
+    ports:
+      - "127.0.0.1:6379:6379"
+    profiles:
+      - cache
+      - mariadb-cache
+      - postgres-cache

@@ -19,6 +19,8 @@ import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import { auditMiddleware } from './lib/middlewares/AuditMiddleware';
 import { common_error, common_warn } from './lib/utils/logUtils';
 import UpdateHelper from './lib/helpers/UpdateHelper';
+import { getAsyncLocalStorage, isMultiInstances } from './lib/utils/instanceUtils';
+import os from 'os';
 
 const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
 
@@ -61,9 +63,18 @@ class TheoServer extends Microservice {
 
   setupRoutes(app, express) {
     app.disable('x-powered-by');
+    const hostname = os.hostname();
+    const asyncLocalStorage = getAsyncLocalStorage();
+    const isMultiInstaces = isMultiInstances();
     app.use((req, res, next) => {
-      req.app = this;
-      next();
+      res.set('x-served-by', hostname);
+      req.debugAuth = this.envBool(process.env, 'DEBUG_AUTH', false);
+      asyncLocalStorage.run({}, () => {
+        const store = asyncLocalStorage.getStore();
+        store.instance = isMultiInstaces ? req.hostname : 'theo';
+        store.reqId = req.id;
+        next();
+      });
     });
     app.use(authMiddleware);
     app.use(auditMiddleware);

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import CachedManager from '../../managers/CacheManager';
+import { getInstance } from '../../utils/instanceUtils';
 
 const cache = {};
 
@@ -23,21 +24,27 @@ class InMemoryCacheManager extends CachedManager {
 
   set(key, value) {
     return new Promise(resolve => {
-      cache[key] = value;
+      const instance = getInstance();
+      if (!cache[instance]) {
+        cache[instance] = {};
+      }
+      cache[instance][key] = value;
       resolve(true);
     });
   }
 
   get(key) {
     return new Promise(resolve => {
-      resolve(cache[key]);
+      const instance = getInstance();
+      resolve(cache[instance]?.[key]);
     });
   }
 
   del(key) {
     return new Promise(resolve => {
-      if (key in cache) {
-        delete cache[key];
+      const instance = getInstance();
+      if (cache[instance]?.[cache]) {
+        delete cache[instance][key];
         resolve(true);
       } else {
         resolve(false);
@@ -47,9 +54,8 @@ class InMemoryCacheManager extends CachedManager {
 
   flush() {
     return new Promise((resolve, reject) => {
-      Object.keys(cache).forEach(k => {
-        delete cache[k];
-      });
+      const instance = getInstance();
+      delete cache[instance];
       resolve(true);
     });
   }

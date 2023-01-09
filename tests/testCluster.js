@@ -44,7 +44,7 @@ const tokensTwo = {
 
 describe('Core', function () {
   describe('Check environment', function () {
-    assert.strictEqual(baseURLs.length >= 2, true);
+    assert.strictEqual(baseURLs.length >= 2, true, 'Test must be run with at least 2 nodes');
   });
   describe('Send tokens', function () {
     it('should return 204 from ' + baseURLs[0], async function () {

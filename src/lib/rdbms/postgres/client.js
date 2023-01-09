@@ -32,6 +32,7 @@ const cleanUserRow = function (row) {
   delete row.osuser;
   return row;
 };
+
 export default class PostgresClient extends BaseClient {
   constructor(config) {
     super();

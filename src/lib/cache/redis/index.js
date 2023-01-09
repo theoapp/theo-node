@@ -14,10 +14,16 @@
 
 import CachedManager from '../../managers/CacheManager';
 import { common_error, common_info } from '../../utils/logUtils';
+import { getInstance } from '../../utils/instanceUtils';
 
-let redis;
+const MAX_RETRIES = Number(process.env.REDIS_MAX_CONNECTION_RETRIES) || 10;
+const MAX_RETRY_TIMEOUT = Number(process.env.REDIS_CONNECTION_RETRY_INTERVAL) * 1000 || 5000;
+
+let redisConn;
+let createClient;
+
 try {
-  redis = require('redis');
+  createClient = require('redis').createClient;
 } catch (e) {
   // not loaded
 }
@@ -25,7 +31,7 @@ try {
 class RedisManager extends CachedManager {
   constructor(settings) {
     super(settings.options);
-    if (!redis) {
+    if (!createClient) {
       throw new Error('module redis not installed!');
     }
     // parse options..
@@ -39,115 +45,83 @@ class RedisManager extends CachedManager {
     }
     this.options = {
       url: settings.uri,
-      password: _options.password
+      password: _options.password,
+      socket: {
+        reconnectStrategy(retriesCount) {
+          if (retriesCount > MAX_RETRIES) {
+            process.exit(1);
+          }
+          return Math.min(retriesCount * 250, MAX_RETRY_TIMEOUT);
+        }
+      }
     };
-    this.testConn().then().catch();
+    this.testConn()
+      .then()
+      .catch(e => {
+        process.exit(1);
+      });
   }
 
   async testConn() {
     try {
-      const conn = await this.open();
-      common_info('Redis server: ', conn.server_info.redis_version);
-      this.close(conn);
+      await this.open();
+      common_info('Redis server OK ');
+      this.close();
     } catch (e) {
       common_error('Failed to test redis connection', e);
     }
   }
 
-  set(key, value) {
-    return new Promise((resolve, reject) => {
-      this.open()
-        .then(redis => {
-          redis.set(key, value, err => {
-            this.close(redis);
-            if (err) {
-              return reject(err);
-            }
-            resolve(true);
-          });
-        })
-        .catch(e => {
-          reject(e);
-        });
-    });
+  async set(key, value) {
+    const conn = await this.open();
+    const instance = getInstance();
+    return conn.hSet(instance, key, value);
   }
 
-  get(key) {
-    return new Promise((resolve, reject) => {
-      this.open()
-        .then(redis => {
-          redis.get(key, (err, data) => {
-            this.close(redis);
-            if (err) {
-              return reject(err);
-            }
-            resolve(data);
-          });
-        })
-        .catch(e => {
-          reject(e);
-        });
-    });
+  async get(key) {
+    const conn = await this.open();
+    const instance = getInstance();
+    return conn.hGet(instance, key);
   }
 
-  del(key) {
-    return new Promise((resolve, reject) => {
-      this.open()
-        .then(redis => {
-          redis.del(key, err => {
-            this.close(redis);
-            if (err) {
-              return reject(err);
-            }
-            resolve(true);
-          });
-        })
-        .catch(e => {
-          reject(e);
-        });
-    });
+  async del(key) {
+    const conn = await this.open();
+    const instance = getInstance();
+    return conn.hDel(instance, key);
   }
 
-  flush() {
-    return new Promise((resolve, reject) => {
-      this.open()
-        .then(redis => {
-          redis.flushdb(err => {
-            this.close(redis);
-            if (err) {
-              return reject(err);
-            }
-            resolve(true);
-          });
-        })
-        .catch(e => {
-          reject(e);
-        });
-    });
+  async flush() {
+    const conn = await this.open();
+    const instance = getInstance();
+    return conn.del(instance);
   }
 
   close(conn) {
     try {
-      conn.quit();
+      if (conn) {
+        conn.quit();
+      } else {
+        redisConn.quit();
+        redisConn = undefined;
+      }
     } catch (e) {
       common_error(e.message);
     }
   }
 
-  open() {
-    return new Promise((resolve, reject) => {
-      const conn = redis.createClient(this.options);
-      conn.on('error', e => {
-        reject(e);
+  async open() {
+    if (!redisConn) {
+      redisConn = createClient(this.options);
+      redisConn.on('error', e => {
+        console.log('Redis Client Error', e);
       });
-      conn.on('ready', () => {
-        resolve(conn);
-      });
-    });
+      await redisConn.connect();
+    }
+    return redisConn;
   }
 
   getClient() {
-    return redis.createClient(this.options);
+    return createClient(this.options);
   }
 }
 

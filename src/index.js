@@ -18,7 +18,7 @@ import AppHelper from './lib/helpers/AppHelper';
 import util from 'util';
 import DbHelper from './lib/helpers/DbHelper';
 import { loadPlugins } from './lib/helpers/PluginHelper';
-import { common_debug, common_error, common_info, common_warn, initLogger } from './lib/utils/logUtils';
+import { common_debug, common_error, common_info, initLogger } from './lib/utils/logUtils';
 
 import TheoServer from './theoserver';
 import initCache from './cacheInitiator';
@@ -62,10 +62,6 @@ if (settings.core) {
       subscribe_core_token = true;
     }
   }
-} else if (!settings.admin.token && settings.admin.tokens.length === 0 && settings.client.tokens.length === 0) {
-  common_warn(' !!! WARNING !!!');
-  common_warn(' No admin token nor client tokens found ');
-  common_warn(' !!! WARNING !!!');
 }
 
 if (process.env.MODE !== 'test') {
@@ -109,7 +105,7 @@ const initDb = async () => {
       try {
         client = dm.getClient();
         await client.open();
-        await ah.loadAuthTokens(client);
+        await ah.loadAuthTokens(client, true);
       } catch (e) {
         common_error('Unable to load auth tokens... bye bye %s', e.message);
         console.error(e);

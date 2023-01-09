@@ -15,6 +15,7 @@
 import packageJson from '../../../package';
 import { http_post } from '../utils/httpUtils';
 import { common_error, common_info } from '../utils/logUtils';
+import { getInstance } from '../utils/instanceUtils';
 
 const { LOG_AUDIT_CONSOLE, LOG_AUDIT_URL, LOG_AUDIT_TOKEN } = process.env;
 
@@ -66,7 +67,7 @@ class AuditHelper {
     }
     if (LOG_AUDIT_URL) {
       setImmediate(() => {
-        http_post(LOG_AUDIT_URL, obj, auditHTTPHeaders).catch(e => {
+        http_post(LOG_AUDIT_URL, obj, { ...auditHTTPHeaders, 'x-instance-code': getInstance() }).catch(e => {
           common_error('Unable to send audit log', JSON.stringify(obj), e.message);
         });
       });

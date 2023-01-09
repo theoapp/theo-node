@@ -15,46 +15,48 @@
 import CacheHelper from './lib/helpers/CacheHelper';
 import { common_error, common_info, common_warn } from './lib/utils/logUtils';
 import RedisManager from './lib/cache/redis';
+import { getAsyncLocalStorage } from './lib/utils/instanceUtils';
 
-const MAX_RETRY_TIMEOUT = 5000;
-let retriesCount = 0;
-
-const redisSubscribe = (cm, dm, ah) => {
+const redisSubscribe = async (cm, dm, ah) => {
   const conn = cm.getClient();
-  conn.on('error', e => {
-    retriesCount++;
-    const nextRetry = Math.min(retriesCount * retriesCount * 50, MAX_RETRY_TIMEOUT);
-    common_error('%s. Retrying in %d ms', e.message, nextRetry);
-    // Close connection and try again...
-    cm.close(conn);
-    setTimeout(function () {
-      redisSubscribe(cm, dm, ah);
-    }, nextRetry);
-  });
+  const subscriber = conn.duplicate();
+  subscriber
+    .on('connect', () => console.log('connect', new Date().toJSON()))
+    .on('ready', () => console.log('ready', new Date().toJSON()))
+    .on('error', err => console.error('error', err, new Date().toJSON()));
+  try {
+    await subscriber.connect();
+  } catch (e) {
+    console.error('redis.connect thrown an error', e.message);
+  }
 
-  conn.on('ready', () => {
-    common_info('Connected to redis attempt #', retriesCount);
-    conn.subscribe('core_tokens');
-    retriesCount = 0;
-  });
-
-  conn.on('message', async (channel, message) => {
-    if (channel === 'core_tokens' && message === 'flush_tokens') {
-      common_warn('Flushing tokens!');
-      let dbClient;
-      try {
-        dbClient = dm.getClient();
-        await dbClient.open();
-        await ah.loadAuthTokens(dbClient);
-      } catch (e) {
-        common_error('Failed to reload tokens!!!', e.message);
-      } finally {
-        if (dbClient) {
-          dbClient.close();
+  try {
+    await subscriber.subscribe('core_tokens', async message => {
+      if (message.startsWith('flush_tokens')) {
+        common_warn('Flushing tokens!');
+        let dbClient;
+        try {
+          dbClient = dm.getClient();
+          await dbClient.open();
+          const asyncLocalStorage = getAsyncLocalStorage();
+          await asyncLocalStorage.run({}, () => {
+            const store = asyncLocalStorage.getStore();
+            store.instance = message.split(':')[1];
+            common_warn(`Loading tokens for ${store.instance}`);
+            return ah.loadAuthTokens(dbClient);
+          });
+        } catch (e) {
+          common_error('Failed to reload tokens!!!', e.message);
+        } finally {
+          if (dbClient) {
+            dbClient.close();
+          }
         }
       }
-    }
-  });
+    });
+  } catch (e) {
+    console.error('redis.subscribe thrown an error', e.message);
+  }
 };
 
 const initCache = function (subscribe_core_token, dm, ah) {
@@ -75,7 +77,7 @@ const initCache = function (subscribe_core_token, dm, ah) {
         });
       } else {
         if (cm instanceof RedisManager) {
-          redisSubscribe(cm, dm, ah);
+          redisSubscribe(cm, dm, ah).catch(console.error);
         }
       }
     }

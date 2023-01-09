@@ -1,31 +1,33 @@
 # builder image
-FROM node:14-alpine AS builder
+FROM node:18.14-alpine3.17 AS builder
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY .npmrc package*.json ./
 
-RUN npm i -g npm && npm ci --no-optional
+RUN npm ci --omit-optional
 
 COPY . .
 
 RUN npm run build
 
 # production image
-FROM node:14-alpine
+FROM node:18.14-alpine3.17
 
 ENV NODE_ENV=production
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY .npmrc package*.json ./
 
-RUN npm i -g npm && npm ci --no-optional &&\
+RUN npm ci --omit=optional &&\
     npm cache clean --force
 
 COPY --from=builder /usr/src/app/build ./build/
 
 EXPOSE 9100
+
+HEALTHCHECK --interval=1m --timeout=1s CMD ["node", "build/healthcheck.js"]
 
 CMD [ "node", "build/index.js" ]
 

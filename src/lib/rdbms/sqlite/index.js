@@ -20,6 +20,7 @@ import fs from 'fs';
 import { dirname } from 'path';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { md5 } from '../../utils/cryptoUtils';
+import { runV18migration } from '../../../migrations/v18fixInstance';
 
 let sqlite3;
 try {
@@ -31,52 +32,77 @@ try {
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 17;
+  dbVersion = 18;
 
-  CREATE_TABLE_AUTH_TOKENS =
-    'create table auth_tokens (token text PRIMARY KEY, assignee text, type varchar(5), created_at INTEGER)';
+  CREATE_TABLE_AUTH_TOKENS = `create table auth_tokens (
+    instance varchar(256),
+    token text,
+    assignee text,
+    type varchar(5),
+    created_at INTEGER,
+    PRIMARY KEY (instance, token)
+  )`;
 
-  CREATE_TABLE_ACCOUNTS =
-    'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), ' +
-    'active INTEGER, ' +
-    'expire_at INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
+  CREATE_TABLE_ACCOUNTS = `create table accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance varchar(256),
+    email varchar(128),
+    name varchar(128),
+    active INTEGER,
+    expire_at INTEGER,
+    updated_at INTEGER,
+    created_at INTEGER,
+    UNIQUE (instance, email)
+  )`;
 
-  CREATE_TABLE_GROUPS =
-    'create table tgroups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, is_internal INTEGER, ' +
-    'updated_at INTEGER, created_at INTEGER, UNIQUE (name))';
+  CREATE_TABLE_GROUPS = `create table tgroups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance varchar(256),
+    name varchar(128),
+    active INTEGER,
+    is_internal INTEGER,
+    updated_at INTEGER,
+    created_at INTEGER,
+    UNIQUE (instance, name)
+  )`;
 
-  CREATE_TABLE_GROUPS_ACCOUNTS =
-    'create table groups_accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-    'account_id INTEGER, ' +
-    'group_id INTEGER, ' +
-    'updated_at INTEGER, ' +
-    'created_at INTEGER, ' +
-    'UNIQUE (account_id, group_id), ' +
-    'FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE, ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
+  CREATE_TABLE_GROUPS_ACCOUNTS = `create table groups_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER,
+    group_id INTEGER,
+    updated_at INTEGER,
+    created_at INTEGER,
+    UNIQUE (account_id, group_id),
+    FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE,
+    FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE
+  )`;
 
-  CREATE_TABLE_PUBLIC_KEYS =
-    'create table public_keys (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-    'account_id INTEGER, ' +
-    'public_key varchar(1024), ' +
-    'public_key_sig varchar(1024), ' +
-    'fingerprint varchar(1024), ' +
-    'key_ssh_options TEXT, ' +
-    'last_used_at INTEGER, ' +
-    'created_at INTEGER, ' +
-    'UNIQUE (fingerprint), ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+  CREATE_TABLE_PUBLIC_KEYS = `create table public_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance varchar(256),
+    account_id INTEGER,
+    public_key varchar(1024),
+    public_key_sig varchar(1024),
+    fingerprint varchar(1024),
+    key_ssh_options TEXT,
+    last_used_at INTEGER,
+    created_at INTEGER,
+    UNIQUE (instance, fingerprint),
+    FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
+  )`;
 
-  CREATE_TABLE_PERMISSIONS =
-    'create table permissions (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-    'group_id INTEGER, ' +
-    'user varchar(512), ' +
-    'host varchar(512), ' +
-    'ssh_options TEXT, ' +
-    'created_at INTEGER, ' +
-    'FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE)';
+  CREATE_TABLE_PERMISSIONS = `create table permissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance varchar(256),
+    group_id INTEGER,
+    user varchar(512),
+    host varchar(512),
+    ssh_options TEXT,
+    created_at INTEGER,
+    FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE
+  )`;
 
-  CREATE_INDEX_PERMISSIONS = 'create index k_permissions_host_user on permissions (host, user)';
+  CREATE_INDEX_PERMISSIONS = 'create index k_permissions_host_user on permissions (instance, host, user)';
 
   constructor(options) {
     super(options);
@@ -293,6 +319,9 @@ class SqliteManager extends DbManager {
     }
     if (fromVersion < 17) {
       await this.client.run('alter table public_keys add last_used_at INTEGER');
+    }
+    if (fromVersion < 18) {
+      await runV18migration(this);
     }
     await this.updateVersion();
   }

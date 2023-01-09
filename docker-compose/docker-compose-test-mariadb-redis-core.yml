@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.8'
 
 services:
   db:
@@ -8,8 +8,18 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    healthcheck:
+      test: mysqladmin -u root -p${MYSQL_ROOT_PASSWORD} status
+      interval: 30s
+      timeout: 30s
+      retries: 3
   cache:
     image: ${REDIS_IMAGE}
+    healthcheck:
+      test: redis-cli ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
   theo:
     image: theo:test
     container_name: theo
@@ -26,5 +36,7 @@ services:
       DB_CONN_MAX_RETRY: 30
       SKIP_UPDATECHECK: 1
     depends_on:
-      - cache
-      - db
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy

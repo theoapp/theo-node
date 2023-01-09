@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
+set -e
 ./runTestsDocker.sh
-RETVAL=$?
-if [[ ${RETVAL} -gt 0 ]]; then
-    exit ${RETVAL}
-fi
 ./runTestsCluster.sh skip_build
-RETVAL=$?
-if [[ ${RETVAL} -gt 0 ]]; then
-    exit ${RETVAL}
-fi
 ./runTestsUpgrade.sh skip_build
-RETVAL=$?
-exit ${RETVAL}
+./runTestsMultiInstances.sh skip_build
