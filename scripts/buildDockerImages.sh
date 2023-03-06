@@ -75,7 +75,7 @@ build_sqlite () {
       docker_push "${TAG_NAME}"
   fi
 
-  git checkout package.json package-lock.json
+  git restore package.json package-lock.json
 
 }
 
@@ -89,7 +89,7 @@ build_sqlite_redis () {
       docker_push "${TAG_NAME}"
   fi
 
-  git checkout package.json package-lock.json
+  git restore package.json package-lock.json
 }
 
 build_sqlite_memcached () {
@@ -103,7 +103,7 @@ build_sqlite_memcached () {
       docker_push "${TAG_NAME}"
   fi
 
-  git checkout package.json package-lock.json
+  git restore package.json package-lock.json
 
 }
 
@@ -118,7 +118,7 @@ build_mysql () {
       docker_push "${TAG_NAME}"
   fi
 
-  git checkout package.json package-lock.json
+  git restore package.json package-lock.json
 
 }
 
@@ -132,7 +132,7 @@ build_mysql_redis () {
       docker_push "${TAG_NAME}"
   fi
 
-  git checkout package.json package-lock.json
+  git restore package.json package-lock.json
 
 }
 
@@ -146,7 +146,7 @@ build_mysql_memcached () {
       docker_push "${TAG_NAME}"
   fi
 
-  git checkout package.json package-lock.json
+  git restore package.json package-lock.json
 
 }
 
@@ -161,7 +161,7 @@ build_postgres () {
       docker_push "${TAG_NAME}"
   fi
 
-  git checkout package.json package-lock.json
+  git restore package.json package-lock.json
 
 }
 
@@ -175,7 +175,7 @@ build_postgres_redis () {
       docker_push "${TAG_NAME}"
   fi
 
-  git checkout package.json package-lock.json
+  git restore package.json package-lock.json
 
 }
 
