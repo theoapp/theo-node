@@ -33,7 +33,7 @@ is_latest_tag () {
 }
 
 docker_build () {
-  docker build -t ${DOCKER_IMAGE}:"${1}" .
+  docker build --platform amd64 -t ${DOCKER_IMAGE}:"${1}" .
 }
 
 docker_push () {
