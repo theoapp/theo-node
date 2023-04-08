@@ -17,9 +17,10 @@ import { getInstance } from '../utils/instanceUtils';
 
 class GroupManager extends BaseCacheManager {
   async getAllCount(where = '', whereArgs = []) {
-    whereArgs.splice(0, 0, getInstance());
+    const _whereArgs = [...whereArgs];
+    _whereArgs.splice(0, 0, getInstance());
     const sql = 'select count(*) total from tgroups where instance = ? ' + (where || '');
-    const row = await this.db.get(sql, whereArgs);
+    const row = await this.db.get(sql, _whereArgs);
     return row.total;
   }
 

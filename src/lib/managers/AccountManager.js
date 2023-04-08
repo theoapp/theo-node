@@ -23,9 +23,10 @@ const SELECT_ACCOUNT_MIN = 'id, name, email, active, expire_at, created_at';
 
 class AccountManager extends BaseCacheManager {
   async getAllCount(where = false, whereArgs = []) {
-    whereArgs.splice(0, 0, getInstance());
+    const _whereArgs = [...whereArgs];
+    _whereArgs.splice(0, 0, getInstance());
     const sql = 'select count(*) total from accounts where instance = ? ' + (where || '');
-    const row = await this.db.get(sql, whereArgs);
+    const row = await this.db.get(sql, _whereArgs);
     return row.total;
   }
 
@@ -85,7 +86,7 @@ class AccountManager extends BaseCacheManager {
       where = 'and email like ?';
       whereArgs.push(`%${email}%`);
     }
-    const total = await this.getAllCount(where, [...whereArgs]);
+    const total = await this.getAllCount(where, whereArgs);
     order_by = order_by || 'name';
     sort = sort || 'asc';
     let sql = `select ${SELECT_ACCOUNT_MIN} from accounts where instance = ? ${where} order by ${order_by} ${sort}`;
