@@ -24,7 +24,7 @@ const SELECT_ACCOUNT_MIN = 'id, name, email, active, expire_at, created_at';
 class AccountManager extends BaseCacheManager {
   async getAllCount(where = false, whereArgs = []) {
     whereArgs.splice(0, 0, getInstance());
-    const sql = 'select count(*) total from accounts where instance = ?' + (where || '');
+    const sql = 'select count(*) total from accounts where instance = ? ' + (where || '');
     const row = await this.db.get(sql, whereArgs);
     return row.total;
   }
