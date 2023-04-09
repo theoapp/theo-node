@@ -77,7 +77,9 @@ const initCache = function (subscribe_core_token, dm, ah) {
         });
       } else {
         if (cm instanceof RedisManager) {
-          redisSubscribe(cm, dm, ah).catch(console.error);
+          redisSubscribe(cm, dm, ah)
+            .then(() => common_info('Subscribed RedisManager'))
+            .catch(console.error);
         }
       }
     }
