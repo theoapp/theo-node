@@ -25,7 +25,7 @@ import handleImpExp from './impexp';
 import AuthTokenManager from '../lib/managers/AuthTokenManager';
 import { loadCacheManager } from '../lib/helpers/CacheHelper';
 import { millisecondsToStr } from '../lib/utils/dateUtils';
-import { getInstance } from '../lib/utils/instanceUtils';
+import { getInstance, isMultiInstances } from '../lib/utils/instanceUtils';
 
 const notifyReloadTokens = function () {
   setImmediate(async () => {
@@ -160,8 +160,40 @@ export const initRoutes = express => {
       }
     } catch (err) {
       console.error('Error while pushing tokens', err);
-      res.status(500);
-      res.json({ code: 500, reason: 'Fail to update tokens' });
+      res.status(500).json({ code: 500, reason: 'Fail to update tokens' });
+    }
+  });
+
+  router.delete('/all', requireCoreAuthMiddleware, async (req, res) => {
+    if (!isMultiInstances) {
+      return res.status(409).json({ code: 409, reason: 'Not available' });
+    }
+    const instance = getInstance();
+    const sql = 'delete from XXX where instance = ?';
+    const tables = ['auth_tokens', 'accounts', 'tgroups'];
+    let deleted = 0;
+    for (const table of tables) {
+      try {
+        const rows = await req.db.delete(sql.replace('XXX', table), [instance]);
+        req.log.info(`delete ${rows} rows from ${table}`);
+        deleted += rows;
+      } catch (e) {
+        req.log.warn({ error_message: e.message }, `failed to delete instance rows from ${table}`);
+      }
+    }
+    const cm = loadCacheManager();
+    if (cm) {
+      try {
+        const client = await cm.open();
+        await client.del(instance);
+      } catch (e) {
+        console.error('Error while flushing cache', e);
+      }
+    }
+    if (deleted > 0) {
+      res.json({ status: 200, message: 'instance deleted' });
+    } else {
+      res.status(404).json({ status: 404, reason: 'not found' });
     }
   });
   return router;
