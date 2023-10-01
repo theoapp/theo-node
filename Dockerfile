@@ -27,8 +27,6 @@ COPY --from=builder /usr/src/app/build ./build/
 
 EXPOSE 9100
 
-HEALTHCHECK --interval=1m --timeout=1s CMD ["node", "build/healthcheck.js"]
-
 CMD [ "node", "build/index.js" ]
 
 # Metadata
