@@ -177,7 +177,7 @@ class AccountManager extends BaseCacheManager {
       account.name,
       account.active === undefined ? 1 : account.active ? 1 : 0,
       expire_at,
-      new Date().getTime()
+      account.created_at || new Date().getTime()
     ]);
     this.invalidateCache();
     return lastId;

@@ -41,9 +41,9 @@ class KeyManager {
     return rows.map(parseKeySSHOptions);
   }
 
-  async create(account_id, key, fingerprint, signature = null, ssh_options = '') {
-    const sql = `insert into public_keys (instance, account_id, public_key, fingerprint, public_key_sig, key_ssh_options, created_at)
-        values (?, ?, ?, ?, ?, ?, ?)`;
+  async create(account_id, key, fingerprint, signature = null, ssh_options = '', created_at = 0, last_used_at = 0) {
+    const sql = `insert into public_keys (instance, account_id, public_key, fingerprint, public_key_sig, key_ssh_options, last_used_at, created_at)
+        values (?, ?, ?, ?, ?, ?, ?, ?)`;
     const id = await this.db.insert(sql, [
       getInstance(),
       account_id,
@@ -51,7 +51,8 @@ class KeyManager {
       fingerprint,
       signature,
       ssh_options,
-      new Date().getTime()
+      last_used_at || null,
+      created_at || new Date().getTime()
     ]);
     await this.am.setUpdatedAt(account_id);
     return id;

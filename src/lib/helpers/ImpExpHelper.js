@@ -90,11 +90,20 @@ export const imp = async (db, dump) => {
           if (!public_key.fingerprint) {
             // TODO get fingerprint!
           }
-          await km.create(id, public_key.public_key, public_key.fingerprint, public_key.public_key_sig);
+          await km.create(
+            id,
+            public_key.public_key,
+            public_key.fingerprint,
+            public_key.public_key_sig,
+            public_key.key_ssh_options,
+            public_key.created_at,
+            public_key.last_used_at
+          );
         }
         const group_id = await gm.create(account.email);
         for (let ii = 0; ii < account.groups.length; ii++) {
           const group = account.groups[ii];
+          if (group.is_internal) continue;
           const group_id = await gm.getIdByName(group.name);
           await gam.create(group_id, id);
         }
