@@ -60,7 +60,7 @@ export const authMiddleware = (req, res, next) => {
       if (!done) {
         const _sm = AppHelper();
         const _settings = _sm.getSettings();
-        if (_settings.core && token === _settings.core.token) {
+        if (token === _settings.core?.token || md5(token) === _settings.core?.token) {
           req.is_authorized = true;
           req.is_admin = true;
           req.is_core = true;
