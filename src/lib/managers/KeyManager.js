@@ -44,6 +44,18 @@ class KeyManager {
   async create(account_id, key, fingerprint, signature = null, ssh_options = '', created_at = 0, last_used_at = 0) {
     const sql = `insert into public_keys (instance, account_id, public_key, fingerprint, public_key_sig, key_ssh_options, last_used_at, created_at)
         values (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    if (!ssh_options && ssh_options !== '') {
+      ssh_options = '';
+    } else {
+      if (typeof ssh_options !== 'string') {
+        if (typeof ssh_options !== 'object') {
+          throw new Error('ssh_options is not a string nor object: ' + typeof ssh_options);
+        }
+        ssh_options = JSON.stringify(ssh_options);
+      }
+    }
+
     const id = await this.db.insert(sql, [
       getInstance(),
       account_id,
