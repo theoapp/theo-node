@@ -1,5 +1,5 @@
 # builder image
-FROM node:18.14-alpine3.17 AS builder
+FROM node:18.18.0-alpine3.18 AS builder
 
 WORKDIR /usr/src/app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # production image
-FROM node:18.14-alpine3.17
+FROM node:18.18.0-alpine3.18
 
 ENV NODE_ENV=production
 
