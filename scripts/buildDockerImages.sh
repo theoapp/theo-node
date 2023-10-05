@@ -7,12 +7,7 @@ if [ -z "$DOCKER_IMAGE" ]; then
 fi
 
 if [ -z "$DOCKER_TAG" ]; then
-  DOCKER_TAG=$(cat package.json \
-    | grep version \
-    | head -1 \
-    | awk -F: '{ print $2 }' \
-    | sed 's/[",]//g' \
-    | tr -d '[[:space:]]')
+  DOCKER_TAG=$(npm run -s ver)
 fi
 
 is_valid_tag () {
