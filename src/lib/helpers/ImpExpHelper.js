@@ -103,7 +103,6 @@ export const imp = async (db, dump) => {
         const group_id = await gm.create(account.email);
         for (let ii = 0; ii < account.groups.length; ii++) {
           const group = account.groups[ii];
-          if (group.is_internal) continue;
           const group_id = await gm.getIdByName(group.name);
           await gam.create(group_id, id);
         }
