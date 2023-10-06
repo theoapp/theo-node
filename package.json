@@ -1,6 +1,6 @@
 {
   "name": "theo",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "Theo is your AuthorizedKeys manager",
   "main": "index.js",
   "repository": "theoapp/theo-node",
