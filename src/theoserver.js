@@ -63,6 +63,9 @@ class TheoServer extends Microservice {
 
   setupRoutes(app, express) {
     app.disable('x-powered-by');
+    if (process.env.TRUST_PROXY === '1') {
+      app.set('trust proxy', process.env.TRUST_PROXY_LIST);
+    }
     const hostname = os.hostname();
     const asyncLocalStorage = getAsyncLocalStorage();
     const isMultiInstaces = isMultiInstances();
