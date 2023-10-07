@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,9 +45,7 @@ class AuditHelper {
     if (!auditEnable) {
       return;
     }
-    const source_ip = this.req.headers['x-forwarded-for']
-      ? this.req.headers['x-forwarded-for'].split(',')[0].trim()
-      : this.req.connection.remoteAddress;
+    const source_ip = this.req.ip;
     const user_agent = this.req.headers['user-agent'] || 'unknown';
     const { auth_token: author } = this.req;
     const obj = {
