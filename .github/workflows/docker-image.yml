@@ -9,33 +9,28 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js 18.x
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18.15'
-    - name: Log into registry
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-    - name: build image and push
-      run: ./scripts/buildDockerImages.sh all push
-      env:
-        DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE_NAME }}
-    - name: call AK webhook
-      run: |
-        # Strip git ref prefix from version
-        VERSION=$(./scripts/getVersion.sh)
-        LATEST_TAG=$(git tag | grep -E '^[0-9]*\.[0-9]*\.[0-9]*$' | sort --version-sort | tail -n 1)
-        if [ "$LATEST_TAG" = "$DOCKER_TAG" ]; then
-          LATEST=true
-        else
-          LATEST=false
-        fi
-        if [ -n "${{ secrets.THEO_UPDATE_TOKEN }}" ]; then
-          curl --fail -s -H "Content-Type: application/json" -H "Authorization: Bearer ${{ secrets.THEO_UPDATE_TOKEN }}" \
-            -d '{"code": "'$VERSION'", "latest": '${LATEST}' }' https://update.theo.authkeys.io/version
-        fi
-    - name: call microbadger webhook
-      run: |
-        if [ -n "${{ secrets.MICROBADGE_TOKEN }}" ]; then
-          curl -XPOST https://hooks.microbadger.com/images/theoapp/theo/${{ secrets.MICROBADGE_TOKEN }}
-        fi
+      - uses: actions/checkout@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22.16'
+      - name: Log into registry
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      - name: build image and push
+        run: ./scripts/buildDockerImages.sh all push
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE_NAME }}
+      - name: call AK webhook
+        run: |
+          # Strip git ref prefix from version
+          VERSION=$(./scripts/getVersion.sh)
+          LATEST_TAG=$(git tag | grep -E '^[0-9]*\.[0-9]*\.[0-9]*$' | sort --version-sort | tail -n 1)
+          if [ "$LATEST_TAG" = "$DOCKER_TAG" ]; then
+            LATEST=true
+          else
+            LATEST=false
+          fi
+          if [ -n "${{ secrets.THEO_UPDATE_TOKEN }}" ]; then
+            curl --fail -s -H "Content-Type: application/json" -H "Authorization: Bearer ${{ secrets.THEO_UPDATE_TOKEN }}" \
+              -d '{"code": "'$VERSION'", "latest": '${LATEST}' }' https://update.theo.authkeys.io/version
+          fi
