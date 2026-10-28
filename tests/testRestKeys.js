@@ -15,7 +15,6 @@
 import dotenv from 'dotenv';
 import { describe, it, before } from 'mocha';
 import assert from 'assert';
-import fetch from 'node-fetch';
 import accountsJson from './accounts';
 import groupsJson from './groups';
 

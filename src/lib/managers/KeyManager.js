@@ -31,7 +31,7 @@ class KeyManager {
         from public_keys pk
         where pk.instance = ? and
           pk.account_id = ?
-        order by pk.created_at`;
+        order by pk.id asc`;
     if (limit) {
       sql += ' limit ' + limit;
     }

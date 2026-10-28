@@ -69,13 +69,13 @@ class TheoServer extends Microservice {
     }
     const hostname = os.hostname();
     const asyncLocalStorage = getAsyncLocalStorage();
-    const isMultiInstaces = isMultiInstances();
+    const _isMultiInstances = isMultiInstances();
     app.use((req, res, next) => {
       res.set('x-served-by', hostname);
       req.debugAuth = this.envBool(process.env, 'DEBUG_AUTH', false);
       asyncLocalStorage.run({}, () => {
         const store = asyncLocalStorage.getStore();
-        store.instance = isMultiInstaces ? req.hostname : 'theo';
+        store.instance = _isMultiInstances ? req.hostname : 'theo';
         store.reqId = req.id;
         next();
       });
@@ -100,7 +100,7 @@ class TheoServer extends Microservice {
             return;
           }
           req.db = client;
-          res.on('finish', () => {
+          res.on('close', () => {
             try {
               client.close();
             } catch (e) {
@@ -110,7 +110,7 @@ class TheoServer extends Microservice {
         }
       }
       if (!this.skip_updatecheck) {
-        res.on('finish', () => {
+        res.on('close', () => {
           if (Date.now() - last_check > CHECK_INTERVAL) {
             last_check = Date.now();
             UpdateHelper.checkUpdate();

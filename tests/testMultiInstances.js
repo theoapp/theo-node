@@ -15,11 +15,12 @@
 import dotenv from 'dotenv';
 import { describe, it, before } from 'mocha';
 import assert from 'assert';
-import fetch from 'node-fetch';
+import { request } from 'undici';
 
 import { tokensOne, tokensTwo, tokensThree } from './testCoreTokens';
 
 dotenv.config();
+
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 
 const replicas = 3;
@@ -28,7 +29,7 @@ async function addPermission(instance, token, account_id, user, host) {
   if (!account_id) {
     throw new Error('account_id is undefined!!!');
   }
-  await fetch(base_url + '/accounts/' + account_id + '/permissions', {
+  await request(base_url + '/accounts/' + account_id + '/permissions', {
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + token,
@@ -40,7 +41,7 @@ async function addPermission(instance, token, account_id, user, host) {
 }
 
 async function createAccount(instance, token, account) {
-  const res = await fetch(base_url + '/accounts', {
+  const { statusCode, body } = await request(base_url + '/accounts', {
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + token,
@@ -49,16 +50,16 @@ async function createAccount(instance, token, account) {
     },
     body: JSON.stringify(account)
   });
-  if (res.status > 299) {
+  if (statusCode > 299) {
     let error;
     try {
-      error = await res.json();
+      error = await body.json();
     } catch (e) {
       throw new Error('Failed to create account');
     }
     throw new Error(error.reason || 'Failed to create account');
   }
-  const resAccount = await res.json();
+  const resAccount = await body.json();
   for (let ii = 0; ii < account.permissions.length; ii++) {
     await addPermission(instance, token, resAccount.id, account.permissions[ii].user, account.permissions[ii].host);
   }
@@ -67,7 +68,7 @@ async function createAccount(instance, token, account) {
 
 describe('Core', function () {
   before(async () => {
-    await fetch(base_url + '/flushdb', {
+    await request(base_url + '/flushdb', {
       method: 'POST',
       headers: {
         Authorization: 'Bearer ' + process.env.CORE_TOKEN,
@@ -77,7 +78,7 @@ describe('Core', function () {
   });
   describe('Send tokens to instance 1', function () {
     it('should return 204', async function () {
-      const res = await fetch(base_url + '/tokens', {
+      const { statusCode } = await request(base_url + '/tokens', {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.CORE_TOKEN,
@@ -86,12 +87,12 @@ describe('Core', function () {
         },
         body: JSON.stringify(tokensOne)
       });
-      assert.strictEqual(res.status, 204);
+      assert.strictEqual(statusCode, 204);
     });
   });
   describe('Send tokens to instance 2', function () {
     it('should return 204', async function () {
-      const res = await fetch(base_url + '/tokens', {
+      const { statusCode } = await request(base_url + '/tokens', {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.CORE_TOKEN,
@@ -100,12 +101,12 @@ describe('Core', function () {
         },
         body: JSON.stringify(tokensTwo)
       });
-      assert.strictEqual(res.status, 204);
+      assert.strictEqual(statusCode, 204);
     });
   });
   describe('Send tokens to instance 3', function () {
     it('should return 204', async function () {
-      const res = await fetch(base_url + '/tokens', {
+      const { statusCode } = await request(base_url + '/tokens', {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + process.env.CORE_TOKEN,
@@ -114,12 +115,12 @@ describe('Core', function () {
         },
         body: JSON.stringify(tokensThree)
       });
-      assert.strictEqual(res.status, 204);
+      assert.strictEqual(statusCode, 204);
     });
   });
   describe('Check agent tokens', function () {
     it('should return 401 for token1 -> instance2', async function () {
-      const res = await fetch(base_url + '/authorized_keys/test/tset', {
+      const { statusCode } = await request(base_url + '/authorized_keys/test/tset', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensOne.tokens.clients[0],
@@ -127,10 +128,10 @@ describe('Core', function () {
           Host: 'instance2'
         }
       });
-      assert.strictEqual(res.status, 401);
+      assert.strictEqual(statusCode, 401);
     });
     it('should return 401 for token1 -> instance3', async function () {
-      const res = await fetch(base_url + '/authorized_keys/test/tset', {
+      const { statusCode } = await request(base_url + '/authorized_keys/test/tset', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensOne.tokens.clients[0],
@@ -138,10 +139,10 @@ describe('Core', function () {
           Host: 'instance3'
         }
       });
-      assert.strictEqual(res.status, 401);
+      assert.strictEqual(statusCode, 401);
     });
     it('should return 200 for token1 -> instance1', async function () {
-      const res = await fetch(base_url + '/authorized_keys/test/tset', {
+      const { statusCode } = await request(base_url + '/authorized_keys/test/tset', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensOne.tokens.clients[0],
@@ -149,10 +150,10 @@ describe('Core', function () {
           Host: 'instance1'
         }
       });
-      assert.strictEqual(res.status, 200);
+      assert.strictEqual(statusCode, 200);
     });
     it('should return 200 for token2 -> instance2', async function () {
-      const res = await fetch(base_url + '/authorized_keys/test/tset', {
+      const { statusCode } = await request(base_url + '/authorized_keys/test/tset', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensTwo.tokens.clients[0],
@@ -160,10 +161,10 @@ describe('Core', function () {
           Host: 'instance2'
         }
       });
-      assert.strictEqual(res.status, 200);
+      assert.strictEqual(statusCode, 200);
     });
     it('should return 200 for token3 -> instance3', async function () {
-      const res = await fetch(base_url + '/authorized_keys/test/tset', {
+      const { statusCode } = await request(base_url + '/authorized_keys/test/tset', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensThree.tokens.clients[0],
@@ -171,12 +172,12 @@ describe('Core', function () {
           Host: 'instance3'
         }
       });
-      assert.strictEqual(res.status, 200);
+      assert.strictEqual(statusCode, 200);
     });
   });
   describe('Check admin tokens', function () {
     it('should return 200 for token1 -> instance1', async function () {
-      const res = await fetch(base_url + '/accounts', {
+      const { statusCode } = await request(base_url + '/accounts', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
@@ -184,10 +185,10 @@ describe('Core', function () {
           Host: 'instance1'
         }
       });
-      assert.strictEqual(res.status, 200);
+      assert.strictEqual(statusCode, 200);
     });
     it('should return 200 for token2 -> instance2', async function () {
-      const res = await fetch(base_url + '/accounts', {
+      const { statusCode } = await request(base_url + '/accounts', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensTwo.tokens.admins[0].token,
@@ -195,10 +196,10 @@ describe('Core', function () {
           Host: 'instance2'
         }
       });
-      assert.strictEqual(res.status, 200);
+      assert.strictEqual(statusCode, 200);
     });
     it('should return 200 for token3 -> instance3', async function () {
-      const res = await fetch(base_url + '/accounts', {
+      const { statusCode } = await request(base_url + '/accounts', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensThree.tokens.admins[0].token,
@@ -206,10 +207,10 @@ describe('Core', function () {
           Host: 'instance3'
         }
       });
-      assert.strictEqual(res.status, 200);
+      assert.strictEqual(statusCode, 200);
     });
     it('should return 401 for token1 -> instance2', async function () {
-      const res = await fetch(base_url + '/accounts', {
+      const { statusCode } = await request(base_url + '/accounts', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
@@ -217,10 +218,10 @@ describe('Core', function () {
           Host: 'instance2'
         }
       });
-      assert.strictEqual(res.status, 401);
+      assert.strictEqual(statusCode, 401);
     });
     it('should return 401 for token1 -> instance3', async function () {
-      const res = await fetch(base_url + '/accounts', {
+      const { statusCode } = await request(base_url + '/accounts', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token,
@@ -228,7 +229,7 @@ describe('Core', function () {
           Host: 'instance3'
         }
       });
-      assert.strictEqual(res.status, 401);
+      assert.strictEqual(statusCode, 401);
     });
   });
   describe('create accounts on instance1', function () {
@@ -266,7 +267,7 @@ describe('Core', function () {
       let replicaChecker = 0;
       const replicasSeen = [];
       while (replicasSeen.length < replicas) {
-        const res = await fetch(base_url + '/authorized_keys/node-a-1/account-1-a', {
+        const { statusCode, headers, body } = await request(base_url + '/authorized_keys/node-a-1/account-1-a', {
           method: 'GET',
           headers: {
             Authorization: 'Bearer ' + tokensOne.tokens.clients[0],
@@ -274,12 +275,12 @@ describe('Core', function () {
             Host: 'instance1'
           }
         });
-        const replica = res.headers.get('x-served-by');
+        const replica = headers['x-served-by'];
         if (!replicasSeen.includes(replica)) {
           replicasSeen.push(replica);
         }
-        assert.strictEqual(res.status, 200);
-        const data = await res.json();
+        assert.strictEqual(statusCode, 200);
+        const data = await body.json();
         assert.strictEqual(data.length, 2);
         const emails = data.reduce((emails, key) => {
           if (!emails.includes(key.email)) {
@@ -300,7 +301,7 @@ describe('Core', function () {
       let replicaChecker = 0;
       const replicasSeen = [];
       while (replicasSeen.length < replicas) {
-        const res = await fetch(base_url + '/authorized_keys/node-a-1/account-1-a', {
+        const { statusCode, headers, body } = await request(base_url + '/authorized_keys/node-a-1/account-1-a', {
           method: 'GET',
           headers: {
             Authorization: 'Bearer ' + tokensTwo.tokens.clients[0],
@@ -308,12 +309,12 @@ describe('Core', function () {
             Host: 'instance2'
           }
         });
-        const replica = res.headers.get('x-served-by');
+        const replica = headers['x-served-by'];
         if (!replicasSeen.includes(replica)) {
           replicasSeen.push(replica);
         }
-        assert.strictEqual(res.status, 200);
-        const data = await res.json();
+        assert.strictEqual(statusCode, 200);
+        const data = await body.json();
         assert.strictEqual(data.length, 0);
         replicaChecker++;
         assert.strictEqual(
@@ -354,7 +355,7 @@ describe('Core', function () {
       let replicaChecker = 0;
       const replicasSeen = [];
       while (replicasSeen.length < replicas) {
-        const res = await fetch(base_url + '/authorized_keys/test-n-2/account-2-a', {
+        const { statusCode, headers, body } = await request(base_url + '/authorized_keys/test-n-2/account-2-a', {
           method: 'GET',
           headers: {
             Authorization: 'Bearer ' + tokensTwo.tokens.clients[0],
@@ -362,12 +363,12 @@ describe('Core', function () {
             Host: 'instance2'
           }
         });
-        const replica = res.headers.get('x-served-by');
+        const replica = headers['x-served-by'];
         if (!replicasSeen.includes(replica)) {
           replicasSeen.push(replica);
         }
-        assert.strictEqual(res.status, 200);
-        const data = await res.json();
+        assert.strictEqual(statusCode, 200);
+        const data = await body.json();
         assert.strictEqual(data.length, 1);
 
         assert.strictEqual(data[0].email, account.email);
@@ -383,7 +384,7 @@ describe('Core', function () {
       let replicaChecker = 0;
       const replicasSeen = [];
       while (replicasSeen.length < replicas) {
-        const res = await fetch(base_url + '/authorized_keys/test-n-2/account-2-a', {
+        const { statusCode, headers, body } = await request(base_url + '/authorized_keys/test-n-2/account-2-a', {
           method: 'GET',
           headers: {
             Authorization: 'Bearer ' + tokensThree.tokens.clients[0],
@@ -391,12 +392,12 @@ describe('Core', function () {
             Host: 'instance3'
           }
         });
-        const replica = res.headers.get('x-served-by');
+        const replica = headers['x-served-by'];
         if (!replicasSeen.includes(replica)) {
           replicasSeen.push(replica);
         }
-        assert.strictEqual(res.status, 200);
-        const data = await res.json();
+        assert.strictEqual(statusCode, 200);
+        const data = await body.json();
         assert.strictEqual(data.length, 0);
         replicaChecker++;
         assert.strictEqual(

@@ -19,6 +19,7 @@ fi
 # Build theo server image
 docker build -t theo:test .
 RETVAL=$?
+
 if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker build FAILED"
     exit ${RETVAL}

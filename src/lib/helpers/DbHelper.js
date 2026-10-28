@@ -16,7 +16,7 @@
 import EventHelper from './EventHelper';
 import { getRdbmsModule } from '../rdbms/modules';
 import { common_debug, common_error, common_info } from '../utils/logUtils';
-import { setTimeoutPromise } from '../utils/processUtils';
+import { setTimeout } from 'node:timers/promises';
 
 let _instance;
 
@@ -94,7 +94,7 @@ class DbHelper {
         currentVersion = await this.manager.createVersionTable();
       } catch (e) {
         if (e.code === 'ER_TABLE_EXISTS_ERROR') {
-          await setTimeoutPromise(2000);
+          await setTimeout(2000);
           return this.checkDb(client);
         } else {
           common_error('Unable to create _version table: [%s] %s', e.code, e.message);

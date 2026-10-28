@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import dotenv from 'dotenv';
-import { describe, it } from 'mocha';
+import { describe, it, before } from 'mocha';
 import assert from 'assert';
-import fetch from 'node-fetch';
+import { setTimeout } from 'node:timers/promises';
 
 const baseURLs = [];
 dotenv.config();
@@ -43,6 +43,9 @@ const tokensTwo = {
 };
 
 describe('Core', function () {
+  before(async () => {
+    await setTimeout(1000);
+  });
   describe('Check environment', function () {
     assert.strictEqual(baseURLs.length >= 2, true, 'Test must be run with at least 2 nodes');
   });
@@ -74,21 +77,14 @@ describe('Core', function () {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 200 for server ' + base_url, function (done) {
-        setTimeout(async () => {
-          const res = await fetch(base_url + '/accounts', {
-            method: 'GET',
-            headers: {
-              Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
-            }
-          });
-          try {
-            assert.strictEqual(res.status, 200);
-            done();
-          } catch (e) {
-            done(e);
+      it('should return 200 for server ' + base_url, async function () {
+        const res = await fetch(base_url + '/accounts', {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
           }
-        }, 200);
+        });
+        assert.strictEqual(res.status, 200);
       });
 
       it('should return 401 for server ' + base_url, async function () {
@@ -161,21 +157,14 @@ describe('Core', function () {
         assert.strictEqual(res.status, 401);
       });
 
-      it('should return 401 for server ' + base_url, function (done) {
-        setTimeout(async () => {
-          const res = await fetch(base_url + '/accounts', {
-            method: 'GET',
-            headers: {
-              Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
-            }
-          });
-          try {
-            assert.strictEqual(res.status, 401);
-            done();
-          } catch (e) {
-            done(e);
+      it('should return 401 for server ' + base_url, async function () {
+        const res = await fetch(base_url + '/accounts', {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer ' + tokensOne.tokens.admins[0].token
           }
-        }, 200);
+        });
+        assert.strictEqual(res.status, 401);
       });
 
       it('should return 401 for server ' + base_url, async function () {

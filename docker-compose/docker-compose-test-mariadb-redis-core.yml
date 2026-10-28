@@ -1,15 +1,14 @@
-version: '3.8'
-
+---
 services:
   db:
     image: ${MARIADB_IMAGE}
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     healthcheck:
-      test: mysqladmin -u root -p${MYSQL_ROOT_PASSWORD} status
+      test: mariadb-admin -u root -p${MARIADB_ROOT_PASSWORD} status
       interval: 30s
       timeout: 30s
       retries: 3
@@ -27,9 +26,9 @@ services:
       MODE: test
       DB_ENGINE: mariadb
       DB_HOST: db
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MARIADB_USER}
+      DB_PASSWORD: ${MARIADB_PASSWORD}
+      DB_NAME: ${MARIADB_DATABASE}
       CORE_TOKEN: ${CORE_TOKEN}
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379

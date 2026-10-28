@@ -152,7 +152,10 @@ const startServer = () => {
     .then(() => {
       common_info('Theo Server started, listening on :%s', settings.server.http_port);
     })
-    .catch(err => console.error('Uops...', err.message));
+    .catch(err => {
+      console.error('Failed to start server', err);
+      process.exit(1);
+    });
 };
 
 const startTestDb = async retry => {

@@ -6,7 +6,7 @@ services:
     container_name: theo
     environment:
       - MODE=test
-      - DB_STORAGE=":memory:"
+      - "DB_STORAGE=:memory:"
       - ADMIN_TOKENS=${ADMIN_TOKENS_AUDIT}
       - CLIENT_TOKENS=${CLIENT_TOKENS}
       - LOG_AUDIT_CONSOLE=true

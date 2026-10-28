@@ -1,5 +1,4 @@
-version: '3.1'
-
+---
 services:
   cache:
     image: ${MEMCACHED_IMAGE}
@@ -8,7 +7,7 @@ services:
     container_name: theo
     environment:
       - MODE=test
-      - DB_STORAGE=":memory:"
+      - "DB_STORAGE=:memory:"
       - ADMIN_TOKEN=${ADMIN_TOKEN}
       - CLIENT_TOKENS=${CLIENT_TOKENS}
       - CACHE_ENABLED=memcached

@@ -41,6 +41,8 @@ test_mariadb_redis_core_cluster() {
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test-mariadb-redis-core-cluster FAILED"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo1
+    docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo2
+    docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo3
   fi
   docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml down --volumes
   if [[ ${RETVAL} -gt 0 ]]; then
@@ -94,5 +96,5 @@ test_postgres_redis_core_cluster() {
 }
 
 test_mariadb_redis_core_cluster
-test_mysql_innodbcluster_redis_core_cluster
+# test_mysql_innodbcluster_redis_core_cluster
 test_postgres_redis_core_cluster

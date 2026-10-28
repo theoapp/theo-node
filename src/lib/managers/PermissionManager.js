@@ -107,7 +107,7 @@ class PermissionManager {
 
   async getAll(account_id, limit, offset) {
     let sql =
-      'select id, user, host, ssh_options, created_at from permissions where instance = ? and account_id = ? order by created_at ';
+      'select id, user, host, ssh_options, created_at from permissions where instance = ? and account_id = ? order by id asc';
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -120,7 +120,7 @@ class PermissionManager {
 
   async getAllGroup(group_id, limit, offset) {
     let sql =
-      'select id, user, host, ssh_options, created_at from permissions where instance = ? and group_id = ? order by created_at ';
+      'select id, user, host, ssh_options, created_at from permissions where instance = ? and group_id = ? order by id asc';
     if (limit) {
       sql += ' limit ' + limit;
     }

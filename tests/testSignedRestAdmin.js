@@ -15,7 +15,6 @@
 import dotenv from 'dotenv';
 import { describe, it, before } from 'mocha';
 import assert from 'assert';
-import fetch from 'node-fetch';
 
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 dotenv.config();
