@@ -36,6 +36,9 @@ EXPOSE 9100
 
 USER nodeapp
 
+HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --start-interval=1s --retries=3 \
+        CMD [ "node", "build/healthcheck.js" ]
+
 CMD [ "node", "build/index.js" ]
 
 # Metadata

@@ -31,13 +31,18 @@ source ./docker-compose/test_env
 test_mariadb_redis_core_cluster() {
   print_test_header mariadb_redis_core_cluster
   docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml up -d --wait
-  docker run --network theotests_default --rm --link theo \
-    -e "CORE_TOKEN=${CORE_TOKEN}" \
-    -e "THEO_URL_1=http://theo1:9100" \
-    -e "THEO_URL_2=http://theo2:9100" \
-    -e "THEO_URL_3=http://theo3:9100" \
-    theo-tester npm run test:cluster
   RETVAL=$?
+  if [[ ${RETVAL} -gt 0 ]]; then
+    echo "ERR docker-compose up FAILED"
+  else
+    docker run --network theotests_default --rm --link theo \
+      -e "CORE_TOKEN=${CORE_TOKEN}" \
+      -e "THEO_URL_1=http://theo1:9100" \
+      -e "THEO_URL_2=http://theo2:9100" \
+      -e "THEO_URL_3=http://theo3:9100" \
+      theo-tester npm run test:cluster
+    RETVAL=$?
+  fi
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test-mariadb-redis-core-cluster FAILED"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo1
@@ -53,15 +58,20 @@ test_mariadb_redis_core_cluster() {
 test_mysql_innodbcluster_redis_core_cluster() {
   print_test_header mysql_innodbcluster_redis_core_cluster
   docker-compose -p theotests -f docker-compose/docker-compose-test-mysql-innodbcluster-redis-core-cluster.yml up -d --wait
-  docker run --network theotests_default --rm --link theo \
-    -e "THEO_HOST=theo1" \
-    -e "THEO_PORT=9100" \
-    -e "CORE_TOKEN=${CORE_TOKEN}" \
-    -e "THEO_URL_1=http://theo1:9100" \
-    -e "THEO_URL_2=http://theo2:9100" \
-    -e "THEO_URL_3=http://theo3:9100" \
-    theo-tester npm run test:cluster
   RETVAL=$?
+  if [[ ${RETVAL} -gt 0 ]]; then
+    echo "ERR docker-compose up FAILED"
+  else
+    docker run --network theotests_default --rm --link theo \
+      -e "THEO_HOST=theo1" \
+      -e "THEO_PORT=9100" \
+      -e "CORE_TOKEN=${CORE_TOKEN}" \
+      -e "THEO_URL_1=http://theo1:9100" \
+      -e "THEO_URL_2=http://theo2:9100" \
+      -e "THEO_URL_3=http://theo3:9100" \
+      theo-tester npm run test:cluster
+    RETVAL=$?
+  fi
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR test_mysql_innodbcluster_redis_core_cluster FAILED"
     docker-compose -p theotests -f docker-compose/docker-compose-test-mysql-innodbcluster-redis-core-cluster.yml logs mysql-shell
@@ -78,13 +88,18 @@ test_mysql_innodbcluster_redis_core_cluster() {
 test_postgres_redis_core_cluster() {
   print_test_header postgres_redis_core_cluster
   docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core-cluster.yml up -d --wait
-  docker run --network theotests_default --rm --link theo \
-    -e "CORE_TOKEN=${CORE_TOKEN}" \
-    -e "THEO_URL_1=http://theo1:9100" \
-    -e "THEO_URL_2=http://theo2:9100" \
-    -e "THEO_URL_3=http://theo3:9100" \
-    theo-tester npm run test:cluster
   RETVAL=$?
+  if [[ ${RETVAL} -gt 0 ]]; then
+    echo "ERR docker-compose up FAILED"
+  else
+    docker run --network theotests_default --rm --link theo \
+      -e "CORE_TOKEN=${CORE_TOKEN}" \
+      -e "THEO_URL_1=http://theo1:9100" \
+      -e "THEO_URL_2=http://theo2:9100" \
+      -e "THEO_URL_3=http://theo3:9100" \
+      theo-tester npm run test:cluster
+    RETVAL=$?
+  fi
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test-postgres-redis-core-cluster FAILED"
     docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core-cluster.yml logs --tail 50 theo1

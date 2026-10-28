@@ -13,8 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Same bind address resolution as @authkeys/microservice (ADDRESSES, ADDRESS, then HOSTNAME):
+// inside Docker HOSTNAME is set, so the server does not listen on 127.0.0.1
+const { ADDRESSES, ADDRESS, HOSTNAME, PORT } = process.env;
+const host = (ADDRESSES && ADDRESSES.split(',')[0]) || ADDRESS || HOSTNAME || '127.0.0.1';
+
 globalThis
-  .fetch(`http://127.0.0.1:${process.env.PORT || 9100}/healthz`, { method: 'GET' })
+  .fetch(`http://${host}:${PORT || 9100}/healthz`, { method: 'GET' })
   .then(res => {
     if (res.ok) {
       process.exit(0);
