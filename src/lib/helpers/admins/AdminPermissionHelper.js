@@ -21,12 +21,12 @@ import EventHelper from '../EventHelper';
 export const adminAddAccountPermission = async (db, account_id, user, host, ssh_options, req) => {
   if (!user) {
     const error = new Error('Malformed object, user is required');
-    error.code = 400;
+    error.t_code = 400;
     throw error;
   }
   if (!host) {
     const error = new Error('Malformed object, host is required');
-    error.code = 400;
+    error.t_code = 400;
     throw error;
   }
   const am = new AccountManager(db);
@@ -47,7 +47,7 @@ export const adminAddAccountPermission = async (db, account_id, user, host, ssh_
   if (!group_id) {
     console.error('Unable to get default group for %s', account.email);
     const error = new Error('Unable to get default group for ' + account.email);
-    error.code = 500;
+    error.t_code = 500;
     throw error;
   }
   const pm = new PermissionManager(db);
@@ -69,7 +69,7 @@ export const adminAddAccountPermission = async (db, account_id, user, host, ssh_
     return { account_id, permission_id };
   } catch (err) {
     console.error(err);
-    err.t_code = 500;
+    if (!err.t_code) err.t_code = 500;
     throw err;
   }
 };

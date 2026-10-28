@@ -19,12 +19,12 @@ import PermissionManager from '../../managers/PermissionManager';
 export const adminAddGroupPermission = async (db, group_id, user, host, ssh_options, req) => {
   if (!user) {
     const error = new Error('Malformed object, user is required');
-    error.code = 400;
+    error.t_code = 400;
     throw error;
   }
   if (!host) {
     const error = new Error('Malformed object, host is required');
-    error.code = 400;
+    error.t_code = 400;
     throw error;
   }
   const gm = new GroupManager(db);
@@ -49,7 +49,7 @@ export const adminAddGroupPermission = async (db, group_id, user, host, ssh_opti
     }
     return { group_id, permission_id };
   } catch (err) {
-    err.t_code = 500;
+    if (!err.t_code) err.t_code = 500;
     throw err;
   }
 };

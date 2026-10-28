@@ -16,11 +16,13 @@
 import KeyManager from './KeyManager';
 import PermissionManager from './PermissionManager';
 import GroupAccountManager from './GroupAccountManager';
-import BaseCacheManager, { MAX_ROWS } from './BaseCacheManager';
+import BaseCacheManager, { buildOrderBy, MAX_ROWS } from './BaseCacheManager';
 import { getTimestampFromISO8601 } from '../utils/dateUtils';
 import { getInstance } from '../utils/instanceUtils';
 
 const SELECT_ACCOUNT_MIN = 'id, name, email, active, expire_at, created_at';
+
+export const ACCOUNT_ORDER_COLUMNS = ['id', 'name', 'email', 'active', 'expire_at', 'created_at'];
 
 class AccountManager extends BaseCacheManager {
   async getAllCount(where = false, whereArgs = []) {
@@ -41,13 +43,12 @@ class AccountManager extends BaseCacheManager {
     if (!offset || offset < 0) {
       offset = 0;
     }
+    const orderBy = buildOrderBy(order_by, sort, ACCOUNT_ORDER_COLUMNS, 'name');
     let total = -1;
     if (!skipCount) {
       total = await this.getAllCount();
     }
-    order_by = order_by || 'name';
-    sort = sort || 'asc';
-    let sql = `select ${SELECT_ACCOUNT_MIN} from accounts where instance = ? order by ${order_by} ${sort}`;
+    let sql = `select ${SELECT_ACCOUNT_MIN} from accounts where instance = ? ${orderBy}`;
 
     if (limit) {
       sql += ' limit ' + limit;
@@ -74,6 +75,7 @@ class AccountManager extends BaseCacheManager {
     if (!offset || offset < 0) {
       offset = 0;
     }
+    const orderBy = buildOrderBy(order_by, sort, ACCOUNT_ORDER_COLUMNS, 'name');
     let where = '';
     const whereArgs = [];
     if (name && email) {
@@ -88,9 +90,7 @@ class AccountManager extends BaseCacheManager {
       whereArgs.push(`%${email}%`);
     }
     const total = await this.getAllCount(where, whereArgs);
-    order_by = order_by || 'name';
-    sort = sort || 'asc';
-    let sql = `select ${SELECT_ACCOUNT_MIN} from accounts where instance = ? ${where} order by ${order_by} ${sort}`;
+    let sql = `select ${SELECT_ACCOUNT_MIN} from accounts where instance = ? ${where} ${orderBy}`;
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -163,6 +163,12 @@ class AccountManager extends BaseCacheManager {
       throw err;
     }
     return row.id;
+  }
+
+  async checkEmail(email) {
+    const sql = 'select id from accounts where instance = ? and email = ? ';
+    const row = await this.db.get(sql, [getInstance(), email]);
+    return row ? row.id : false;
   }
 
   async create(account) {

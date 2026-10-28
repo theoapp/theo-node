@@ -136,7 +136,9 @@ class PermissionManager {
       ssh_options = '';
     } else {
       if (typeof ssh_options !== 'object') {
-        throw new Error('ssh_options is not an object: ' + typeof ssh_options);
+        const error = new Error('ssh_options is not an object: ' + typeof ssh_options);
+        error.t_code = 400;
+        throw error;
       }
       ssh_options = JSON.stringify(ssh_options);
     }
@@ -150,7 +152,7 @@ class PermissionManager {
   async get(group_id, id) {
     const sql = 'select host, user, ssh_options from permissions where instance = ? and id = ? and group_id = ?';
     const row = await this.db.get(sql, [getInstance(), id, group_id]);
-    return parseSSHOptions(row);
+    return row ? parseSSHOptions(row) : row;
   }
 
   async delete(group_id, id) {
@@ -165,7 +167,9 @@ class PermissionManager {
       ssh_options = '';
     } else {
       if (typeof ssh_options !== 'object') {
-        throw new Error('ssh_options is not an object: ' + typeof ssh_options);
+        const error = new Error('ssh_options is not an object: ' + typeof ssh_options);
+        error.t_code = 400;
+        throw error;
       }
       ssh_options = JSON.stringify(ssh_options);
     }

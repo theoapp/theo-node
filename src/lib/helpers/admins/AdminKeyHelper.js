@@ -84,6 +84,11 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
 };
 
 export const adminAddAccountKeys = async (db, account_id, keys, req) => {
+  if (!Array.isArray(keys)) {
+    const error = new Error('Malformed object, keys must be an array');
+    error.t_code = 400;
+    throw error;
+  }
   const am = new AccountManager(db);
   let account;
   try {

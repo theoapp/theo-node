@@ -34,7 +34,7 @@ export default function handleImpExp(express) {
   router.post('/', requireAdminAuthMiddleware, async (req, res, next) => {
     try {
       await imp(req.db, req.body);
-      res.json(204);
+      res.sendStatus(204);
     } catch (err) {
       console.log('Import failed ', err);
       res.status(err.t_code || 500);

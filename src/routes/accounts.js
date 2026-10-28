@@ -44,8 +44,8 @@ export default function handleAccounts(express) {
       res.json(ret);
     } catch (err) {
       console.error('GET /accounts', err);
-      res.status(500);
-      res.json({ status: 500, reason: err.message });
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
 
@@ -75,8 +75,8 @@ export default function handleAccounts(express) {
       const accounts = await am.search(name, email, Number(limit), Number(offset));
       res.json(accounts);
     } catch (err) {
-      res.status(500);
-      res.json({ status: 500, reason: err.message });
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
 

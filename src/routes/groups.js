@@ -42,8 +42,8 @@ export default function handleGroups(express) {
       }
       res.json(ret);
     } catch (err) {
-      res.status(500);
-      res.json({ status: 500, reason: err.message });
+      res.status(err.t_code || 500);
+      res.json({ status: err.t_code || 500, reason: err.message });
     }
   });
 

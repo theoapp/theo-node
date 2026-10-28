@@ -166,7 +166,7 @@ export const initRoutes = express => {
   });
 
   router.delete('/all', requireCoreAuthMiddleware, async (req, res) => {
-    if (!isMultiInstances) {
+    if (!isMultiInstances()) {
       return res.status(409).json({ code: 409, reason: 'Not available' });
     }
     const instance = getInstance();

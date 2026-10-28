@@ -19,6 +19,25 @@ let _cm;
 
 export const MAX_ROWS = 100;
 
+export const SORT_VALUES = ['asc', 'desc'];
+
+// order_by and sort come from the query string and are interpolated in sql: accept only known values
+export const buildOrderBy = (order_by, sort, columns, defaultColumn) => {
+  order_by = order_by || defaultColumn;
+  sort = sort || 'asc';
+  if (!columns.includes(order_by)) {
+    const error = new Error('Invalid order_by, valid values are: ' + columns.join(', '));
+    error.t_code = 400;
+    throw error;
+  }
+  if (!SORT_VALUES.includes(sort)) {
+    const error = new Error('Invalid sort, valid values are: ' + SORT_VALUES.join(', '));
+    error.t_code = 400;
+    throw error;
+  }
+  return `order by ${order_by} ${sort}`;
+};
+
 class BaseCacheManager {
   constructor(db) {
     this.db = db;

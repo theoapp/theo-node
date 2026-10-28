@@ -13,8 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import BaseCacheManager, { MAX_ROWS } from './BaseCacheManager';
+import BaseCacheManager, { buildOrderBy, MAX_ROWS } from './BaseCacheManager';
 import { getInstance } from '../utils/instanceUtils';
+
+export const GROUP_ORDER_COLUMNS = ['id', 'name', 'active', 'created_at'];
 
 class GroupManager extends BaseCacheManager {
   async getAllCount(where = '', whereArgs = []) {
@@ -35,15 +37,14 @@ class GroupManager extends BaseCacheManager {
     if (!offset || offset < 0) {
       offset = 0;
     }
+    const orderBy = buildOrderBy(order_by, sort, GROUP_ORDER_COLUMNS, 'name');
     let total = -1;
     const where = 'and is_internal = ? ';
     const whereArgs = [0];
     if (!skipCount) {
       total = await this.getAllCount(where, [0]);
     }
-    order_by = order_by || 'name';
-    sort = sort || 'asc';
-    let sql = `select id, name, active, created_at from tgroups where instance = ? ${where} order by ${order_by} ${sort}`;
+    let sql = `select id, name, active, created_at from tgroups where instance = ? ${where} ${orderBy}`;
     if (limit) {
       sql += ' limit ' + limit;
     }
@@ -70,6 +71,7 @@ class GroupManager extends BaseCacheManager {
     if (!offset || offset < 0) {
       offset = 0;
     }
+    const orderBy = buildOrderBy(order_by, sort, GROUP_ORDER_COLUMNS, 'name');
     let where = 'and is_internal = ? ';
     const whereArgs = [0];
 
@@ -79,8 +81,7 @@ class GroupManager extends BaseCacheManager {
     }
 
     const total = await this.getAllCount(where, whereArgs);
-    order_by = order_by || 'name';
-    let sql = `select id, name, active, created_at from tgroups where instance = ? ${where} order by ${order_by} ${sort}`;
+    let sql = `select id, name, active, created_at from tgroups where instance = ? ${where} ${orderBy}`;
     if (limit) {
       sql += ' limit ' + limit;
     }
