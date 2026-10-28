@@ -237,7 +237,7 @@ describe('REST Check keys', function () {
       const data = await resAdmin.json();
       data.public_keys.forEach(public_key => {
         if (public_key.fingerprint === fingerprint) {
-          assert.notStrictEqual(public_key.last_used_at, null);
+          assert.strictEqual(typeof public_key.last_used_at, 'number');
         } else {
           assert.strictEqual(public_key.last_used_at, null);
         }

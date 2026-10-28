@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Client } from 'pg';
+import { Client, types } from 'pg';
 import BaseClient from '../baseclient';
 
 // const regrep = /([=><\s])(\?)/g;
@@ -29,6 +29,16 @@ export const convertToPSSyntax = function convertToPSsyntax(sql) {
   return sql.replace(regrepPh, replacer).replace(regrepUser, 'osuser');
 };
 
+// BIGINT (int8) columns hold ms timestamps and counts: pg returns them as strings by default
+const typesInt8AsNumber = {
+  getTypeParser(oid, format) {
+    if (oid === types.builtins.INT8 && format !== 'binary') {
+      return Number;
+    }
+    return types.getTypeParser(oid, format);
+  }
+};
+
 const cleanUserRow = function (row) {
   row.user = row.osuser;
   delete row.osuser;
@@ -38,7 +48,7 @@ const cleanUserRow = function (row) {
 export default class PostgresClient extends BaseClient {
   constructor(config) {
     super();
-    this.client = new Client(config);
+    this.client = new Client({ ...config, types: typesInt8AsNumber });
   }
 
   getServerVersion() {

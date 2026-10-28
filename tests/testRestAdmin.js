@@ -201,6 +201,11 @@ describe('REST Test account', function () {
       assert.strictEqual(resAccount.public_keys.length, 1);
       assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
       assert.strictEqual(resAccount.permissions.length, 0);
+      // BIGINT columns must be numbers with every db engine
+      assert.strictEqual(typeof resAccount.created_at, 'number');
+      assert.strictEqual(resAccount.expire_at, 0);
+      assert.strictEqual(typeof resAccount.public_keys[0].created_at, 'number');
+      assert.strictEqual(typeof resAccount.groups[0].created_at, 'number');
     });
   });
 
@@ -970,7 +975,8 @@ describe('REST Test invalid requests', function () {
       assert.strictEqual(res.status, 200);
       const res2 = await call('GET', '/accounts?order_by=email&sort=desc');
       assert.strictEqual(res2.status, 200);
-      const { rows } = await res2.json();
+      const { rows, total } = await res2.json();
+      assert.strictEqual(total, 2);
       assert.deepStrictEqual(
         rows.map(row => row.email),
         [email, 'aaa@example.com']
