@@ -1,19 +1,39 @@
-openapi: "3.0.0"
+openapi: "3.0.3"
 info:
-  description: "Theo node - The Authorized Keys Manager. You can find out more about Theo at [https://github.com/theoapp/](https://github.com/theoapp/)."
-  version: "0.12.0"
   title: "Theo"
+  version: "2.0.9"
+  description: |
+    Theo node - The Authorized Keys Manager. You can find out more about Theo at [https://github.com/theoapp/](https://github.com/theoapp/).
+
+    ### Authentication
+    Every request, but `/`, `/healthz`, authenticates with a bearer token (`Authorization: Bearer <token>`):
+    - **client** tokens can only read `/authorized_keys`
+    - **admin** tokens can use every admin endpoint (and `/authorized_keys`)
+    - **core** token (core mode, `CORE_TOKEN`) can also manage tokens. It may send `X-On-Behalf-Of` to act on behalf of another token.
+
+    ### Multi instances
+    When the server runs with `MULTI_INSTANCES=1` every request is bound to the instance named after the request
+    hostname (`Host` header): accounts, groups, keys, permissions and tokens of different instances are isolated.
+
+    ### Ids
+    Wherever an account is identified by `{id}` its email can be used too; wherever a group is identified by `{id}` its name can be used too.
   contact:
     email: "team@authkeys.io"
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 servers:
+  - url: http://localhost:9100
+    description: Local theo server
   - url: https://theo.test.authkeys.io
     description: Public UNTRUSTABLE test theo server
 tags:
   - name: "utils"
     description: "Utils methods"
+  - name: "tokens"
+    description: "Tokens management (core mode)"
+  - name: "authorized_keys"
+    description: "Public keys lookup used by sshd AuthorizedKeysCommand"
   - name: "account"
     description: "Everything about accounts"
   - name: "keys"
@@ -22,107 +42,278 @@ tags:
     description: "Everything about permissions"
   - name: "groups"
     description: "Everything about groups"
+  - name: "impexp"
+    description: "Export and import of the whole database"
 paths:
   /:
     get:
       tags:
         - "utils"
-      summary: "Get server status"
-      operationId: getStatus
+      summary: "Get server name and description"
+      operationId: getInfo
+      security: []
       responses:
         200:
-          description: "Server status"
+          description: "Server info"
           content:
             application/json:
               schema:
+                type: "object"
+                required:
+                  - "name"
+                  - "description"
                 properties:
-                  status:
-                    type: "integer"
-                    format: "int32"
-                    example: 200
+                  name:
+                    type: "string"
+                    example: "theo"
+                  description:
+                    type: "string"
+                    example: "Theo is your AuthorizedKeys manager"
+  /healthz:
+    get:
+      tags:
+        - "utils"
+      summary: "Health check"
+      operationId: healthCheck
+      security: []
+      responses:
+        200:
+          description: "Server is up"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+                example: "OK"
+  /uptime:
+    get:
+      tags:
+        - "utils"
+      summary: "Get server version and uptime"
+      operationId: getUptime
+      security:
+        - bearerTokenAdmin: []
+      responses:
+        200:
+          description: "Server uptime"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Uptime"
+        401:
+          $ref: "#/components/responses/Unauthorized"
   /flushdb:
     post:
       tags:
         - "utils"
       summary: "Flush all databases and cache. It's enabled ONLY when server runs in TEST mode"
       operationId: flushDB
+      security:
+        - bearerTokenAdmin: []
       responses:
         204:
           description: "Db flushed"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         403:
-          description: "Even if authenticated, the operation is forbidden (server is NOT RUNNING in TEST mode"
+          description: "Even if authenticated, the operation is forbidden (server is NOT RUNNING in TEST mode)"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ForbiddenErrorResponse'
-        default:
+                $ref: "#/components/schemas/ForbiddenErrorResponse"
+        404:
+          description: "Nothing flushed"
+        500:
           description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
   /tokens:
     post:
       tags:
-        - "utils"
-      summary: "Replaces admin and clients tokens."
+        - "tokens"
+      summary: "Replace all the tokens of the instance"
       operationId: replaceTokens
+      security:
+        - bearerTokenCore: []
       requestBody:
-        description: New tokens
+        description: "New tokens. At least one between core, admin, admins and clients is required."
         required: true
         content:
           application/json:
             schema:
               type: "object"
+              required:
+                - "tokens"
               properties:
-                admin:
-                  type: "string"
-                  example: "j5jkl34h523hjlbnsdjgjhq45gh23fh"
-                clients:
-                  type: "array"
-                  items:
-                    type: "string"
-                    example: "j5jkl34h523hjlbnsdjgjhq45gh23fh"
+                tokens:
+                  $ref: "#/components/schemas/Tokens"
       responses:
         204:
-          description: "Token refreshed"
+          description: "Tokens replaced"
         400:
           description: "Invalid payload"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InvalidPayloadErrorResponse"
-        default:
+                $ref: "#/components/schemas/CodeErrorResponse"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
           description: "Error"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/CodeErrorResponse"
+    delete:
+      tags:
+        - "tokens"
+      summary: "Delete all the tokens of the instance"
+      operationId: deleteTokens
       security:
         - bearerTokenCore: []
+      responses:
+        204:
+          description: "Tokens deleted"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+  /all:
+    delete:
+      tags:
+        - "utils"
+      summary: "Delete accounts, groups and tokens of the instance. Available only when MULTI_INSTANCES=1"
+      operationId: deleteInstance
+      security:
+        - bearerTokenCore: []
+      responses:
+        200:
+          description: "Instance deleted"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                required:
+                  - "status"
+                  - "message"
+                properties:
+                  status:
+                    type: "integer"
+                    format: "int32"
+                    example: 200
+                  message:
+                    type: "string"
+                    example: "instance deleted"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        409:
+          description: "Server is not running with MULTI_INSTANCES=1"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CodeErrorResponse"
+  /authorized_keys/{host}/{user}:
+    get:
+      tags:
+        - "authorized_keys"
+      summary: "Get the public keys allowed to login as user on host"
+      operationId: getAuthorizedKeys
+      security:
+        - bearerTokenClient: []
+        - bearerTokenAdmin: []
+        - bearerTokenCore: []
+      parameters:
+        - $ref: "#/components/parameters/Host"
+        - $ref: "#/components/parameters/User"
+        - $ref: "#/components/parameters/Fingerprint"
+        - $ref: "#/components/parameters/AcceptAuthorizedKeys"
+      responses:
+        200:
+          $ref: "#/components/responses/AuthorizedKeys"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        406:
+          description: "Keys must be requested as application/json when REQUIRE_SIGNED_KEY is set"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          $ref: "#/components/responses/Error"
+  /authorized_keys/{user}:
+    get:
+      tags:
+        - "authorized_keys"
+      summary: "Get the public keys allowed to login as user on the host making the request (resolved by reverse DNS)"
+      operationId: getAuthorizedKeysByReverseDNS
+      security:
+        - bearerTokenClient: []
+        - bearerTokenAdmin: []
+        - bearerTokenCore: []
+      parameters:
+        - $ref: "#/components/parameters/User"
+        - $ref: "#/components/parameters/Fingerprint"
+        - $ref: "#/components/parameters/AcceptAuthorizedKeys"
+      responses:
+        200:
+          $ref: "#/components/responses/AuthorizedKeys"
+        400:
+          description: "Unable to resolve the hostname of the client"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        406:
+          description: "Keys must be requested as application/json when REQUIRE_SIGNED_KEY is set"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          $ref: "#/components/responses/Error"
+  /permissions/{host}/{user}:
+    get:
+      tags:
+        - "permissions"
+      summary: "Get the accounts allowed to login as user on host, with the matching permissions"
+      operationId: searchPermissions
+      security:
+        - bearerTokenAdmin: []
+      parameters:
+        - $ref: "#/components/parameters/Host"
+        - $ref: "#/components/parameters/User"
+      responses:
+        200:
+          description: "Matching permissions"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/PermissionMatch"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Error"
   /accounts:
     get:
       tags:
         - "account"
-      summary: "Retrieves accounts"
+      summary: "Retrieve accounts"
       operationId: listAccounts
+      security:
+        - bearerTokenAdmin: []
       parameters:
-        - name: "limit"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: "search"
           in: "query"
-          description: "Number of accounts to retrieve"
+          description: "Search by name or email (substring match)"
           required: false
           schema:
-            type: "integer"
-            format: "int32"
-        - name: "offset"
-          in: "query"
-          description: "Offset of the list"
-          required: false
-          schema:
-            type: "integer"
-            format: "int32"
+            type: "string"
+            example: "mac"
+        - $ref: "#/components/parameters/AccountOrderBy"
+        - $ref: "#/components/parameters/Sort"
       responses:
         200:
           description: "List of accounts"
@@ -130,78 +321,69 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccountsList"
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Error"
     post:
       tags:
         - "account"
-      summary: "Create new account"
+      summary: "Create a new account"
       operationId: addAccount
       security:
         - bearerTokenAdmin: []
       requestBody:
-        description: Account to add
+        description: "Account to add"
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountNew'
+              $ref: "#/components/schemas/AccountNew"
       responses:
         200:
-          description: Account response
+          description: "The new account"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountResponse'
+                $ref: "#/components/schemas/Account"
         400:
-          description: "Invalid payload"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InvalidPayloadErrorResponse'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        409:
+          $ref: "#/components/responses/Conflict"
+        500:
+          $ref: "#/components/responses/Error"
   /accounts/search:
     get:
       tags:
         - "account"
       summary: "Search accounts"
-      operationId: searchAccount
+      operationId: searchAccounts
+      security:
+        - bearerTokenAdmin: []
       parameters:
-        - name: "limit"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: "search"
           in: "query"
-          description: "Number of accounts to retrieve"
+          description: "Default value for both name and email"
           required: false
           schema:
-            type: "integer"
-            format: "int32"
-        - name: "offset"
-          in: "query"
-          description: "Offset of the list"
-          required: false
-          schema:
-            type: "integer"
-            format: "int32"
+            type: "string"
+            example: "mac"
         - name: "name"
           in: "query"
-          description: "Search by name"
+          description: "Search by name (substring match)"
           required: false
           schema:
             type: "string"
             example: "mac"
         - name: "email"
           in: "query"
-          description: "Search by email"
+          description: "Search by email (substring match)"
           required: false
           schema:
             type: "string"
@@ -213,28 +395,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccountsList"
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Error"
   /accounts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
     get:
       tags:
         - "account"
-      summary: "Get account"
+      summary: "Get an account"
       operationId: getAccount
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Account ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
+      security:
+        - bearerTokenAdmin: []
       responses:
         200:
           description: "Account"
@@ -242,261 +416,227 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Account"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Account not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
     put:
       tags:
         - "account"
-      summary: "Edit account"
+      summary: "Edit an account"
       operationId: editAccount
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Account ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
+      security:
+        - bearerTokenAdmin: []
       requestBody:
-        description: "Fields to edit"
+        description: "Fields to edit, at least one is required"
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountEdit'
+              $ref: "#/components/schemas/AccountEdit"
       responses:
         201:
-          description: "Done"
+          $ref: "#/components/responses/Done"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Account not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
     delete:
       tags:
         - "account"
-      summary: "Delete account"
+      summary: "Delete an account"
       operationId: deleteAccount
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Account ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
+      security:
+        - bearerTokenAdmin: []
       responses:
         201:
-          description: "Done"
+          $ref: "#/components/responses/Done"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Account not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
   /accounts/{id}/keys:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
     post:
       tags:
         - "account"
         - "keys"
-      summary: "Add keys to account"
+      summary: "Add public keys to an account"
       operationId: addKeysToAccount
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Account ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
+      security:
+        - bearerTokenAdmin: []
       requestBody:
-        description: "New key(s) to add"
+        description: "New key(s) to add. When REQUIRE_SIGNED_KEY is set every key must be an object with its signature."
         required: true
         content:
           application/json:
             schema:
+              type: "object"
+              required:
+                - "keys"
               properties:
                 keys:
                   type: "array"
                   items:
-                    oneOf:
-                      - type: "string"
-                        example: "ssh-rsa AAA[...]xv macno@laptop"
-                      - $ref: "#/components/schemas/PublicKeyNew"
+                    $ref: "#/components/schemas/PublicKeyNewItem"
       responses:
         200:
-          description: Account response
+          description: "Added keys"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountResponse'
+                $ref: "#/components/schemas/AddedKeysResponse"
         400:
-          description: "Invalid payload"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InvalidPayloadErrorResponse'
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Account not found"
+          $ref: "#/components/responses/NotFound"
+        409:
+          description: "The key already exists"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          $ref: "#/components/responses/Error"
   /accounts/{id}/keys/{key_id}:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+      - name: "key_id"
+        in: "path"
+        description: "Public key ID"
+        required: true
+        schema:
+          type: "integer"
+          format: "int64"
+    put:
+      tags:
+        - "account"
+        - "keys"
+      summary: "Set the ssh options of a public key"
+      operationId: editAccountKey
+      security:
+        - bearerTokenAdmin: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SSHOptionsEdit"
+      responses:
+        201:
+          $ref: "#/components/responses/Done"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
     delete:
       tags:
         - "account"
         - "keys"
-      summary: "Delete public key from account"
+      summary: "Delete a public key from an account"
       operationId: deleteKeyFromAccount
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Account ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
-        - name: "key_id"
-          in: "path"
-          description: "Public Key ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
+      security:
+        - bearerTokenAdmin: []
       responses:
         201:
-          description: "Done"
+          $ref: "#/components/responses/Done"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Account/Key not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
   /accounts/{id}/keys/import/{service}:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+      - name: "service"
+        in: "path"
+        description: "Service to fetch the keys from"
+        required: true
+        schema:
+          type: "string"
+          enum:
+            - "github"
+            - "gitlab"
     post:
       tags:
         - "account"
         - "keys"
-      summary: "Add public keys to account loading them from external service"
+      summary: "Add public keys to an account loading them from an external service. Not available when REQUIRE_SIGNED_KEY is set. Keys already present are skipped."
       operationId: addKeysFromServiceToAccount
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Account ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
-        - name: "service"
-          in: "path"
-          description: "Service to fetch the keys from"
-          required: true
-          schema:
-            type: "string"
-            example: "github"
+      security:
+        - bearerTokenAdmin: []
       requestBody:
         description: "Username to fetch"
         required: true
         content:
           application/json:
             schema:
+              type: "object"
+              required:
+                - "username"
               properties:
                 username:
                   type: "string"
                   example: "macno"
       responses:
         200:
-          description: Account response
+          description: "Added keys"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountResponse'
+                $ref: "#/components/schemas/AddedKeysResponse"
         400:
-          description: "Invalid payload"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InvalidPayloadErrorResponse'
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Account not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
   /accounts/{id}/permissions:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
     post:
       tags:
         - "account"
         - "permissions"
-      summary: "Add permissions to account"
-      operationId: addPermissionsToAccount
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Account ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
+      summary: "Add a permission to an account"
+      operationId: addPermissionToAccount
+      security:
+        - bearerTokenAdmin: []
       requestBody:
         description: "New permission to add"
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PermissionNew'
+              $ref: "#/components/schemas/PermissionNew"
       responses:
         200:
-          description: Account response
+          description: "Permission added"
           content:
             application/json:
               schema:
+                type: "object"
+                required:
+                  - "account_id"
+                  - "permission_id"
                 properties:
                   account_id:
                     type: "integer"
@@ -507,81 +647,79 @@ paths:
                     format: "int64"
                     example: 435
         400:
-          description: "Invalid payload"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InvalidPayloadErrorResponse'
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Account not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
   /accounts/{id}/permissions/{permission_id}:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+      - $ref: "#/components/parameters/PermissionId"
+    put:
+      tags:
+        - "account"
+        - "permissions"
+      summary: "Set the ssh options of an account permission"
+      operationId: editAccountPermission
+      security:
+        - bearerTokenAdmin: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SSHOptionsEdit"
+      responses:
+        201:
+          $ref: "#/components/responses/Done"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
     delete:
       tags:
         - "account"
         - "permissions"
-      summary: "Delete permission from account"
+      summary: "Delete a permission from an account"
       operationId: deletePermissionFromAccount
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Account ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
-        - name: "permission_id"
-          in: "path"
-          description: "Permission ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
+      security:
+        - bearerTokenAdmin: []
       responses:
         201:
-          description: "Done"
+          $ref: "#/components/responses/Done"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Account/Permission not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
   /groups:
     get:
       tags:
         - "groups"
-      summary: "Retrieves groups"
+      summary: "Retrieve groups (internal account groups are not listed)"
       operationId: listGroups
+      security:
+        - bearerTokenAdmin: []
       parameters:
-        - name: "limit"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: "name"
           in: "query"
-          description: "Number of groups to retrieve"
+          description: "Search by name (substring match)"
           required: false
           schema:
-            type: "integer"
-            format: "int32"
-        - name: "offset"
-          in: "query"
-          description: "Offset of the list"
-          required: false
-          schema:
-            type: "integer"
-            format: "int32"
+            type: "string"
+            example: "dev"
+        - $ref: "#/components/parameters/GroupOrderBy"
+        - $ref: "#/components/parameters/Sort"
       responses:
         200:
           description: "List of groups"
@@ -589,25 +727,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GroupsList"
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Error"
     post:
       tags:
         - "groups"
-      summary: "Create new group"
+      summary: "Create a new group"
       operationId: addGroup
+      security:
+        - bearerTokenAdmin: []
       requestBody:
         description: "Group's name to create"
         required: true
         content:
           application/json:
             schema:
+              type: "object"
               required:
                 - "name"
               properties:
@@ -616,34 +755,29 @@ paths:
                   example: "Developers"
       responses:
         200:
-          description: "Group"
+          description: "The new group"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Group"
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        409:
+          $ref: "#/components/responses/Conflict"
+        500:
+          $ref: "#/components/responses/Error"
   /groups/{id}:
+    parameters:
+      - $ref: "#/components/parameters/GroupId"
     get:
       tags:
         - "groups"
       summary: "Retrieve a group"
       operationId: getGroup
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Group ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
-          example: 765
+      security:
+        - bearerTokenAdmin: []
       responses:
         200:
           description: "Group"
@@ -651,30 +785,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Group"
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
     post:
       tags:
         - "groups"
       summary: "DEPRECATED: Use /groups/{id}/account(s). Add account(s) to a group"
       operationId: deprecatedAddAccountsToGroup
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Group ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
-          example: 765
+      deprecated: true
+      security:
+        - bearerTokenAdmin: []
       requestBody:
-        description: "Account(s) to add to the group"
+        description: "Account(s) to add to the group: only one between id and ids"
         required: true
         content:
           application/json:
@@ -684,38 +810,82 @@ paths:
                 - $ref: "#/components/schemas/AccountIds"
       responses:
         200:
-          description: "Group"
+          description: "Result for each account (when ids is used)"
+          headers:
+            X-Sunset:
+              $ref: "#/components/headers/X-Sunset"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Group"
+                $ref: "#/components/schemas/GroupAccountsResults"
+        204:
+          description: "Account added to the group (when id is used)"
+          headers:
+            X-Sunset:
+              $ref: "#/components/headers/X-Sunset"
         400:
-          description: "Invalid payload"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/InvalidPayloadErrorResponse"
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
+    put:
+      tags:
+        - "groups"
+      summary: "Enable or disable a group"
+      operationId: editGroup
       security:
         - bearerTokenAdmin: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "active"
+              properties:
+                active:
+                  $ref: "#/components/schemas/ActiveInput"
+      responses:
+        201:
+          $ref: "#/components/responses/Done"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
+    delete:
+      tags:
+        - "groups"
+      summary: "Delete a group"
+      operationId: deleteGroup
+      security:
+        - bearerTokenAdmin: []
+      responses:
+        201:
+          $ref: "#/components/responses/Done"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
   /groups/{id}/account:
+    parameters:
+      - $ref: "#/components/parameters/GroupId"
     post:
       tags:
         - "groups"
-      summary: "Add account to a group"
+      summary: "Add an account to a group"
       operationId: addAccountToGroup
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Group ID"
-          required: true
-          schema:
-            $ref: '#/components/schemas/Id'
+      security:
+        - bearerTokenAdmin: []
       requestBody:
         description: "Account to add to the group"
         required: true
@@ -725,44 +895,31 @@ paths:
               $ref: "#/components/schemas/AccountId"
       responses:
         204:
-          description: "Account added to a group"
+          description: "Account added to the group"
         400:
-          description: "Invalid payload"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/InvalidPayloadErrorResponse"
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
           description: "Entity not found (group or account)"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/NotFoundErrorResponse"
-        default:
-          description: "Error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-        - bearerTokenAdmin: []
+        500:
+          $ref: "#/components/responses/Error"
   /groups/{id}/accounts:
+    parameters:
+      - $ref: "#/components/parameters/GroupId"
     post:
       tags:
         - "groups"
       summary: "Add accounts to a group"
       operationId: addAccountsToGroup
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "Group ID"
-          required: true
-          schema:
-            type: "integer"
-            format: "int64"
-          example: 765
+      security:
+        - bearerTokenAdmin: []
       requestBody:
-        description: "Accounts to add to a group"
+        description: "Accounts to add to the group"
         required: true
         content:
           application/json:
@@ -770,62 +927,603 @@ paths:
               $ref: "#/components/schemas/AccountIds"
       responses:
         200:
-          description: "List of results"
+          description: "Result for each account"
           content:
             application/json:
               schema:
-                type: "array"
-                items:
-                  type: "object"
-                  required:
-                    - "status"
-                    - "account"
-                  properties:
-                    status:
-                      type: "integer"
-                      format: "int32"
-                      example: 400
-                    account:
-                      oneOf:
-                        - $ref: '#/components/schemas/Id'
-                        - type: "string"
-                          example: "macno@authkeys.io"
-                    reason:
-                      nullable: true
-                      type: "string"
-                      example: "Account not found"
+                $ref: "#/components/schemas/GroupAccountsResults"
         400:
-          description: "Invalid payload"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/InvalidPayloadErrorResponse"
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
-          description: "Group not found"
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
+  /groups/{id}/{account_id}:
+    parameters:
+      - $ref: "#/components/parameters/GroupId"
+      - name: "account_id"
+        in: "path"
+        description: "Account ID or email"
+        required: true
+        schema:
+          $ref: "#/components/schemas/Id"
+    delete:
+      tags:
+        - "groups"
+      summary: "Remove an account from a group"
+      operationId: deleteAccountFromGroup
+      security:
+        - bearerTokenAdmin: []
+      responses:
+        204:
+          description: "Account removed from the group"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          description: "Group or account not found, or account not in the group"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/NotFoundErrorResponse"
-        default:
-          description: "Error"
+        500:
+          $ref: "#/components/responses/Error"
+  /groups/{id}/permissions:
+    parameters:
+      - $ref: "#/components/parameters/GroupId"
+    post:
+      tags:
+        - "groups"
+        - "permissions"
+      summary: "Add a permission to a group"
+      operationId: addPermissionToGroup
+      security:
+        - bearerTokenAdmin: []
+      requestBody:
+        description: "New permission to add"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PermissionNew"
+      responses:
+        200:
+          description: "Permission added"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                type: "object"
+                required:
+                  - "group_id"
+                  - "permission_id"
+                properties:
+                  group_id:
+                    type: "integer"
+                    format: "int64"
+                    example: 12
+                  permission_id:
+                    type: "integer"
+                    format: "int64"
+                    example: 435
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
+  /groups/{id}/permissions/{permission_id}:
+    parameters:
+      - $ref: "#/components/parameters/GroupId"
+      - $ref: "#/components/parameters/PermissionId"
+    put:
+      tags:
+        - "groups"
+        - "permissions"
+      summary: "Set the ssh options of a group permission"
+      operationId: editGroupPermission
       security:
         - bearerTokenAdmin: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SSHOptionsEdit"
+      responses:
+        201:
+          $ref: "#/components/responses/Done"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
+    delete:
+      tags:
+        - "groups"
+        - "permissions"
+      summary: "Delete a permission from a group"
+      operationId: deletePermissionFromGroup
+      security:
+        - bearerTokenAdmin: []
+      responses:
+        201:
+          $ref: "#/components/responses/Done"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Error"
+  /impexp:
+    get:
+      tags:
+        - "impexp"
+      summary: "Export accounts and groups"
+      operationId: exportData
+      security:
+        - bearerTokenAdmin: []
+      responses:
+        200:
+          description: "Dump"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dump"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - "impexp"
+      summary: "Import a dump created by GET /impexp"
+      operationId: importData
+      security:
+        - bearerTokenAdmin: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Dump"
+      responses:
+        204:
+          description: "Dump imported"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Error"
 components:
   securitySchemes:
     bearerTokenCore:
       type: http
       scheme: bearer
+      description: "Core token (CORE_TOKEN)"
     bearerTokenAdmin:
       type: http
       scheme: bearer
+      description: "Admin token (or core token)"
     bearerTokenClient:
       type: http
       scheme: bearer
+      description: "Client (agent) token"
+  headers:
+    X-Sunset:
+      description: "Version in which the deprecated endpoint will be removed"
+      schema:
+        type: "string"
+        example: "1.0.0"
+    X-From-Cache:
+      description: "Whether the keys were served from the cache"
+      schema:
+        type: "string"
+        enum:
+          - "true"
+          - "false"
+  parameters:
+    AccountId:
+      name: "id"
+      in: "path"
+      description: "Account ID or email"
+      required: true
+      schema:
+        $ref: "#/components/schemas/Id"
+    GroupId:
+      name: "id"
+      in: "path"
+      description: "Group ID or name"
+      required: true
+      schema:
+        $ref: "#/components/schemas/Id"
+    PermissionId:
+      name: "permission_id"
+      in: "path"
+      description: "Permission ID"
+      required: true
+      schema:
+        type: "integer"
+        format: "int64"
+    Host:
+      name: "host"
+      in: "path"
+      required: true
+      schema:
+        type: "string"
+        example: "server1.example.com"
+    User:
+      name: "user"
+      in: "path"
+      required: true
+      schema:
+        type: "string"
+        example: "root"
+    Fingerprint:
+      name: "f"
+      in: "query"
+      description: "Fingerprint of the key being used: when it matches, the key last_used_at is updated (application/json only)"
+      required: false
+      schema:
+        type: "string"
+        example: "SHA256:FcVOofKlyFRbcrq5zfQH6ipEFwGEZ3hG0iydwWl6TLU"
+    AcceptAuthorizedKeys:
+      name: "Accept"
+      in: "header"
+      description: "Use application/json to get the keys as JSON (required when REQUIRE_SIGNED_KEY is set), otherwise the keys are returned as authorized_keys text"
+      required: false
+      schema:
+        type: "string"
+        enum:
+          - "application/json"
+          - "text/plain"
+    Limit:
+      name: "limit"
+      in: "query"
+      description: "Number of items to retrieve"
+      required: false
+      schema:
+        type: "integer"
+        format: "int32"
+        minimum: 1
+        maximum: 100
+        default: 10
+    Offset:
+      name: "offset"
+      in: "query"
+      description: "Offset of the list"
+      required: false
+      schema:
+        type: "integer"
+        format: "int32"
+        minimum: 0
+        default: 0
+    AccountOrderBy:
+      name: "order_by"
+      in: "query"
+      description: "Field to sort the accounts by"
+      required: false
+      schema:
+        type: "string"
+        enum:
+          - "id"
+          - "name"
+          - "email"
+          - "active"
+          - "expire_at"
+          - "created_at"
+        default: "name"
+    GroupOrderBy:
+      name: "order_by"
+      in: "query"
+      description: "Field to sort the groups by"
+      required: false
+      schema:
+        type: "string"
+        enum:
+          - "id"
+          - "name"
+          - "active"
+          - "created_at"
+        default: "name"
+    Sort:
+      name: "sort"
+      in: "query"
+      description: "Sort direction"
+      required: false
+      schema:
+        type: "string"
+        enum:
+          - "asc"
+          - "desc"
+        default: "asc"
+  responses:
+    Done:
+      description: "Done"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            required:
+              - "status"
+            properties:
+              status:
+                type: "integer"
+                format: "int32"
+                example: 201
+    AuthorizedKeys:
+      description: "Allowed public keys"
+      headers:
+        X-From-Cache:
+          $ref: "#/components/headers/X-From-Cache"
+      content:
+        text/plain:
+          schema:
+            type: "string"
+            description: "authorized_keys file content: one key per line, prefixed by its ssh options"
+            example: "from=\"10.0.0.1\" ssh-rsa AAA[...]xv macno@laptop"
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/AuthorizedKey"
+    BadRequest:
+      description: "Invalid payload or parameters"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InvalidPayloadErrorResponse"
+    Unauthorized:
+      description: "Missing or invalid token"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnauthorizedErrorResponse"
+    NotFound:
+      description: "Item not found"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundErrorResponse"
+    Conflict:
+      description: "Item already exists"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Error:
+      description: "Error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    Id:
+      oneOf:
+        - type: "integer"
+          format: "int64"
+          example: 251
+        - type: "string"
+          example: "macno@authkeys.io"
+    Ids:
+      type: "array"
+      items:
+        $ref: "#/components/schemas/Id"
+    Active:
+      type: "integer"
+      format: "int32"
+      example: 1
+      enum:
+        - 0
+        - 1
+    ActiveInput:
+      description: "Boolean or 0/1"
+      oneOf:
+        - type: "boolean"
+        - type: "integer"
+          enum:
+            - 0
+            - 1
+    Timestamp:
+      description: "Milliseconds since epoch"
+      type: "integer"
+      format: "int64"
+      example: 1539688358693
+    ExpireAt:
+      description: "Expiration as milliseconds since epoch, 0 means never"
+      type: "integer"
+      format: "int64"
+      example: 0
+    ExpireAtInput:
+      description: "Expiration as milliseconds since epoch or ISO 8601 string. 0, null or an empty string mean never"
+      nullable: true
+      oneOf:
+        - type: "integer"
+          format: "int64"
+          example: 1893456000000
+        - type: "string"
+          format: "date-time"
+          example: "2030-01-01T00:00:00Z"
+    SSHOptions:
+      type: "object"
+      description: "ssh options rendered in front of the key in authorized_keys"
+      properties:
+        from:
+          type: "array"
+          items:
+            type: "string"
+          example:
+            - "10.0.0.0/8"
+        permitopen:
+          type: "array"
+          items:
+            type: "string"
+        environment:
+          type: "array"
+          items:
+            type: "string"
+        command:
+          type: "string"
+        restrict:
+          type: "boolean"
+        agent-forwarding:
+          type: "boolean"
+        no-agent-forwarding:
+          type: "boolean"
+        port-forwarding:
+          type: "boolean"
+        no-port-forwarding:
+          type: "boolean"
+        pty:
+          type: "boolean"
+        no-pty:
+          type: "boolean"
+        user-rc:
+          type: "boolean"
+        no-user-rc:
+          type: "boolean"
+        X11-forwarding:
+          type: "boolean"
+        no-X11-forwarding:
+          type: "boolean"
+    StoredSSHOptions:
+      description: "ssh options, false when not set"
+      oneOf:
+        - $ref: "#/components/schemas/SSHOptions"
+        - type: "boolean"
+          enum:
+            - false
+    SSHOptionsEdit:
+      type: "object"
+      required:
+        - "ssh_options"
+      properties:
+        ssh_options:
+          $ref: "#/components/schemas/SSHOptions"
+    Tokens:
+      type: "object"
+      properties:
+        core:
+          type: "string"
+          example: "j5jkl34h523hjlbnsdjgjhq45gh23fh"
+        admin:
+          description: "DEPRECATED: use admins. As string the assignee will be 'admin'"
+          deprecated: true
+          oneOf:
+            - type: "string"
+            - $ref: "#/components/schemas/AdminToken"
+        admins:
+          type: "array"
+          items:
+            oneOf:
+              - type: "string"
+                description: "DEPRECATED: the assignee will be md5(token)"
+              - $ref: "#/components/schemas/AdminToken"
+        clients:
+          type: "array"
+          items:
+            type: "string"
+            example: "j5jkl34h523hjlbnsdjgjhq45gh23fh"
+    AdminToken:
+      type: "object"
+      required:
+        - "token"
+        - "assignee"
+      properties:
+        token:
+          type: "string"
+          example: "j5jkl34h523hjlbnsdjgjhq45gh23fh"
+        assignee:
+          type: "string"
+          example: "macno"
+    Uptime:
+      type: "object"
+      required:
+        - "name"
+        - "version"
+        - "node_version"
+        - "hostname"
+        - "uptime"
+        - "uptime_hr"
+        - "memory_usage"
+      properties:
+        name:
+          type: "string"
+          example: "theo"
+        version:
+          type: "string"
+          example: "2.0.9"
+        node_version:
+          type: "string"
+          example: "v24.11.0"
+        hostname:
+          type: "string"
+          example: "theo-1"
+        uptime:
+          description: "Seconds since start"
+          type: "integer"
+          format: "int64"
+          example: 3600
+        uptime_hr:
+          type: "string"
+          example: "1 hour"
+        memory_usage:
+          type: "string"
+          example: "70M"
+    AuthorizedKey:
+      type: "object"
+      required:
+        - "public_key"
+        - "public_key_sig"
+        - "fingerprint"
+        - "email"
+        - "ssh_options"
+      properties:
+        public_key:
+          type: "string"
+          example: "ssh-rsa AAA[...]xv macno@laptop"
+        public_key_sig:
+          type: "string"
+          nullable: true
+          example: "XgRI6y3[...]S0ZFHN"
+        fingerprint:
+          type: "string"
+          example: "SHA256:FcVOofKlyFRbcrq5zfQH6ipEFwGEZ3hG0iydwWl6TLU"
+        email:
+          type: "string"
+          example: "macno@authkeys.io"
+        ssh_options:
+          description: "Rendered ssh options, empty string when not set"
+          type: "string"
+          example: "from=\"10.0.0.0/8\",no-pty"
+    PermissionMatch:
+      type: "object"
+      required:
+        - "id"
+        - "email"
+        - "host"
+        - "user"
+        - "ssh_options"
+      properties:
+        id:
+          description: "Account ID"
+          type: "integer"
+          format: "int64"
+        email:
+          type: "string"
+          example: "macno@authkeys.io"
+        host:
+          type: "string"
+          example: "%.example.com"
+        user:
+          type: "string"
+          example: "root"
+        ssh_options:
+          $ref: "#/components/schemas/StoredSSHOptions"
     BasicList:
       type: "object"
       required:
@@ -843,24 +1541,20 @@ components:
         offset:
           type: "integer"
           format: "int32"
-        rows:
-          type: "array"
-          items:
-            type: "string"
     AccountId:
       type: "object"
       required:
         - "id"
       properties:
         id:
-          $ref: '#/components/schemas/Id'
+          $ref: "#/components/schemas/Id"
     AccountIds:
       type: "object"
       required:
         - "ids"
       properties:
         ids:
-          $ref: '#/components/schemas/Ids'
+          $ref: "#/components/schemas/Ids"
     AccountNew:
       type: "object"
       required:
@@ -873,24 +1567,22 @@ components:
         email:
           type: "string"
           example: "macno@authkeys.io"
+        active:
+          $ref: "#/components/schemas/ActiveInput"
         expire_at:
-          $ref: '#/components/schemas/ExpireAt'
+          $ref: "#/components/schemas/ExpireAtInput"
         keys:
           type: "array"
           items:
-            oneOf:
-              - type: "string"
-                example: "ssh-rsa AAA[...]xv macno@laptop"
-              - $ref: "#/components/schemas/PublicKeyNew"
+            $ref: "#/components/schemas/PublicKeyNewItem"
     AccountEdit:
       type: "object"
+      minProperties: 1
       properties:
-        expire_at:
-          type: "integer"
-          format: "int64"
-          nullable: true
         active:
-          $ref: "#/components/schemas/Active"
+          $ref: "#/components/schemas/ActiveInput"
+        expire_at:
+          $ref: "#/components/schemas/ExpireAtInput"
     AccountMinimal:
       type: "object"
       required:
@@ -902,7 +1594,9 @@ components:
         - "created_at"
       properties:
         id:
-          $ref: '#/components/schemas/Id'
+          type: "integer"
+          format: "int64"
+          example: 251
         name:
           type: "string"
           example: "Michele"
@@ -914,33 +1608,31 @@ components:
         expire_at:
           $ref: "#/components/schemas/ExpireAt"
         created_at:
-          $ref: "#/components/schemas/CreatedAt"
+          $ref: "#/components/schemas/Timestamp"
     Account:
       allOf:
-        - $ref: '#/components/schemas/AccountMinimal'
+        - $ref: "#/components/schemas/AccountMinimal"
         - type: "object"
           required:
-            - "expire_at"
             - "public_keys"
             - "groups"
             - "permissions"
           properties:
-            expire_at:
-              $ref: '#/components/schemas/ExpireAt'
             public_keys:
               type: "array"
               items:
-                $ref: '#/components/schemas/PublicKey'
+                $ref: "#/components/schemas/PublicKey"
             groups:
               type: "array"
               items:
-                $ref: '#/components/schemas/GroupMinimal'
+                $ref: "#/components/schemas/AccountGroup"
             permissions:
+              type: "array"
               items:
-                $ref: '#/components/schemas/Permission'
+                $ref: "#/components/schemas/AccountPermission"
     AccountsList:
       allOf:
-        - $ref: '#/components/schemas/BasicList'
+        - $ref: "#/components/schemas/BasicList"
         - type: "object"
           properties:
             rows:
@@ -956,17 +1648,30 @@ components:
         - "created_at"
       properties:
         id:
-          $ref: '#/components/schemas/Id'
+          type: "integer"
+          format: "int64"
+          example: 12
         name:
           type: "string"
           example: "Developers"
         active:
-          $ref: '#/components/schemas/Active'
+          $ref: "#/components/schemas/Active"
         created_at:
-          $ref: '#/components/schemas/CreatedAt'
+          $ref: "#/components/schemas/Timestamp"
+    AccountGroup:
+      allOf:
+        - $ref: "#/components/schemas/GroupMinimal"
+        - type: "object"
+          required:
+            - "is_internal"
+          properties:
+            is_internal:
+              description: "1 for the account's own group (named after its email)"
+              allOf:
+                - $ref: "#/components/schemas/Active"
     Group:
       allOf:
-        - $ref: '#/components/schemas/GroupMinimal'
+        - $ref: "#/components/schemas/GroupMinimal"
         - type: "object"
           required:
             - "accounts"
@@ -975,20 +1680,37 @@ components:
             accounts:
               type: "array"
               items:
-                $ref: '#/components/schemas/AccountMinimal'
+                $ref: "#/components/schemas/AccountMinimal"
             permissions:
               type: "array"
               items:
-                $ref: '#/components/schemas/Permission'
+                $ref: "#/components/schemas/Permission"
     GroupsList:
       allOf:
-        - $ref: '#/components/schemas/BasicList'
+        - $ref: "#/components/schemas/BasicList"
         - type: "object"
           properties:
             rows:
               type: "array"
               items:
                 $ref: "#/components/schemas/GroupMinimal"
+    GroupAccountsResults:
+      type: "array"
+      items:
+        type: "object"
+        required:
+          - "status"
+          - "account"
+        properties:
+          status:
+            type: "integer"
+            format: "int32"
+            example: 404
+          account:
+            $ref: "#/components/schemas/Id"
+          reason:
+            type: "string"
+            example: "Account not found"
     PublicKeyNew:
       type: "object"
       required:
@@ -1000,44 +1722,84 @@ components:
         signature:
           type: "string"
           example: "XgRI6y3[...]S0ZFHN"
-          nullable: true
+        ssh_options:
+          $ref: "#/components/schemas/SSHOptions"
+    PublicKeyNewItem:
+      oneOf:
+        - type: "string"
+          example: "ssh-rsa AAA[...]xv macno@laptop"
+        - $ref: "#/components/schemas/PublicKeyNew"
     PublicKey:
       type: "object"
       required:
         - "id"
         - "public_key"
+        - "fingerprint"
         - "public_key_sig"
+        - "key_ssh_options"
+        - "last_used_at"
         - "created_at"
       properties:
         id:
-          $ref: '#/components/schemas/Id'
+          type: "integer"
+          format: "int64"
+          example: 35
         public_key:
           type: "string"
           example: "ssh-rsa AAA[...]xv macno@laptop"
+        fingerprint:
+          type: "string"
+          example: "SHA256:FcVOofKlyFRbcrq5zfQH6ipEFwGEZ3hG0iydwWl6TLU"
         public_key_sig:
           type: "string"
+          nullable: true
           example: "XgRI6y3[...]S0ZFHN"
+        key_ssh_options:
+          $ref: "#/components/schemas/StoredSSHOptions"
+        last_used_at:
+          allOf:
+            - $ref: "#/components/schemas/Timestamp"
           nullable: true
         created_at:
-          $ref: '#/components/schemas/CreatedAt'
-    Active:
-      type: "integer"
-      format: "int32"
-      example: 1
-      minimum: 0
-      maximum: 1
-    AccountResponse:
+          $ref: "#/components/schemas/Timestamp"
+    AddedPublicKey:
+      type: "object"
+      required:
+        - "id"
+        - "public_key"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          example: 35
+        public_key:
+          oneOf:
+            - type: "string"
+              example: "ssh-rsa AAA[...]xv macno@laptop"
+            - type: "object"
+              description: "When the key was sent with its signature"
+              required:
+                - "key"
+                - "signature"
+              properties:
+                key:
+                  type: "string"
+                signature:
+                  type: "string"
+    AddedKeysResponse:
       type: "object"
       required:
         - "account_id"
         - "public_keys"
       properties:
         account_id:
-          $ref: '#/components/schemas/Id'
+          type: "integer"
+          format: "int64"
+          example: 251
         public_keys:
           type: "array"
           items:
-            $ref: "#/components/schemas/PublicKey"
+            $ref: "#/components/schemas/AddedPublicKey"
     PermissionNew:
       type: "object"
       required:
@@ -1045,42 +1807,59 @@ components:
         - "host"
       properties:
         user:
+          description: "Remote user, % is a wildcard"
+          type: "string"
+          example: "root"
+        host:
+          description: "Host, % is a wildcard"
+          type: "string"
+          example: "%.example.com"
+        ssh_options:
+          $ref: "#/components/schemas/SSHOptions"
+    Permission:
+      type: "object"
+      required:
+        - "id"
+        - "user"
+        - "host"
+        - "ssh_options"
+        - "created_at"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          example: 435
+        user:
           type: "string"
           example: "root"
         host:
           type: "string"
-          example: "server1"
-    Permission:
+          example: "%.example.com"
+        ssh_options:
+          $ref: "#/components/schemas/StoredSSHOptions"
+        created_at:
+          $ref: "#/components/schemas/Timestamp"
+    AccountPermission:
       allOf:
-        - $ref: '#/components/schemas/PermissionNew'
+        - $ref: "#/components/schemas/Permission"
         - type: "object"
-          required:
-            - "id"
-            - "created_at"
           properties:
-            id:
-              $ref: '#/components/schemas/Id'
-            created_at:
-              $ref: '#/components/schemas/CreatedAt'
-    Id:
-      oneOf:
-        - type: "integer"
-          format: "int64"
-          example: 251
-        - type: "string"
-          example: "unique email/code"
-    Ids:
-      type: "array"
-      items:
-        $ref: '#/components/schemas/Id'
-    ExpireAt:
-      type: "integer"
-      format: "int64"
-      example: 0
-    CreatedAt:
-      type: "integer"
-      format: "int64"
-      example: 1539688358693
+            is_internal:
+              description: "true when the permission belongs to the account's own group"
+              type: "boolean"
+            from_group:
+              $ref: "#/components/schemas/AccountGroup"
+    Dump:
+      type: "object"
+      properties:
+        accounts:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Account"
+        groups:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Group"
     ErrorResponse:
       type: "object"
       required:
@@ -1094,9 +1873,22 @@ components:
         reason:
           type: "string"
           example: "Internal Server Error"
+    CodeErrorResponse:
+      type: "object"
+      required:
+        - "code"
+        - "reason"
+      properties:
+        code:
+          type: "integer"
+          format: "int32"
+          example: 400
+        reason:
+          type: "string"
+          example: "Invalid payload"
     NotFoundErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: "object"
           properties:
             status:
@@ -1105,16 +1897,25 @@ components:
               example: "Item not found"
     InvalidPayloadErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: "object"
           properties:
             status:
               example: 400
             reason:
               example: "Invalid payload"
+    UnauthorizedErrorResponse:
+      allOf:
+        - $ref: "#/components/schemas/ErrorResponse"
+        - type: "object"
+          properties:
+            status:
+              example: 401
+            reason:
+              example: "Unauthorized"
     ForbiddenErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: "object"
           properties:
             status:
