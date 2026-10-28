@@ -7,11 +7,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
-      test: pg_isready -d ${POSTGRES_DB}
+      test: pg_isready -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB}
       interval: 10s
-      timeout: 60s
-      retries: 10
-      start_period: 80s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+      start_interval: 1s
   theo:
     image: theo:test
     container_name: theo

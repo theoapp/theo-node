@@ -8,10 +8,12 @@ services:
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     healthcheck:
-      test: mariadb-admin -u root -p${MARIADB_ROOT_PASSWORD} status
-      interval: 30s
-      timeout: 30s
+      test: healthcheck.sh --connect --innodb_initialized
+      interval: 10s
+      timeout: 5s
       retries: 3
+      start_period: 60s
+      start_interval: 1s
   theo:
     image: theo:test
     container_name: theo
