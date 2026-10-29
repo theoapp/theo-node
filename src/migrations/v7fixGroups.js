@@ -31,7 +31,7 @@ export const runV7migrationMariaDb = async client => {
   try {
     const dropFKSql = 'alter table permissions DROP FOREIGN KEY permissions_account_id';
     await client.run(dropFKSql);
-  } catch (e) {
+  } catch (_e) {
     const dropFKSql = 'alter table permissions DROP FOREIGN KEY permissions_ibfk_2';
     await client.run(dropFKSql);
   }

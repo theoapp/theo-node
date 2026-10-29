@@ -44,7 +44,7 @@ class InMemoryCacheManager extends CachedManager {
   del(key) {
     return new Promise(resolve => {
       const instance = getInstance();
-      if (cache[instance]?.[cache]) {
+      if (cache[instance]?.[key]) {
         delete cache[instance][key];
         resolve(true);
       } else {
@@ -54,7 +54,7 @@ class InMemoryCacheManager extends CachedManager {
   }
 
   flush() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const instance = getInstance();
       delete cache[instance];
       resolve(true);

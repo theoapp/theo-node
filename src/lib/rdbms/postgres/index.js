@@ -106,7 +106,7 @@ export default class PostgresManager extends DbManager {
     return 'postgres';
   }
 
-  getClient(pool = false) {
+  getClient() {
     this.client = new PostgresClient(this.config);
     return this.client;
   }

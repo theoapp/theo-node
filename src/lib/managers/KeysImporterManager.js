@@ -18,7 +18,7 @@ class KeysImporterManager {
     this.options = options;
   }
 
-  get(username) {
+  get() {
     throw new Error('Not implemented');
   }
 }

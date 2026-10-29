@@ -27,7 +27,7 @@ import { getLogger } from '@fluidware-it/saddlebag';
 let sqlite3;
 try {
   sqlite3 = require('sqlite3');
-} catch (e) {
+} catch (_e) {
   // Module not installed
 }
 
@@ -148,7 +148,7 @@ class SqliteManager extends DbManager {
     });
   }
 
-  getClient(pool = false, next = false) {
+  getClient(_pool = false, next = false) {
     if (!this.db || this.db.closed) {
       this.openDb(() => {
         if (next) {
@@ -242,12 +242,16 @@ class SqliteManager extends DbManager {
     if (fromVersion < 5) {
       try {
         await this.client.run('alter table groups add updated_at integer');
-      } catch (err) {}
+      } catch (_err) {
+        //
+      }
     }
     if (fromVersion < 6) {
       try {
         await this.client.run('alter table public_keys add public_key_sig varchar(1024)');
-      } catch (err) {}
+      } catch (_err) {
+        //
+      }
     }
     if (fromVersion < 7) {
       await runV7migrationSqliteDb(this.client);
@@ -294,7 +298,7 @@ class SqliteManager extends DbManager {
       try {
         await this.client.run('alter table tgroups add is_internal INTEGER not null default 0');
         await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
-      } catch (e) {
+      } catch (_e) {
         //
       }
     }

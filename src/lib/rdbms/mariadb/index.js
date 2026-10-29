@@ -234,12 +234,16 @@ class MariadbManager extends DbManager {
     if (fromVersion < 5) {
       try {
         await dbConn.run('alter table groups add updated_at BIGINT UNSIGNED');
-      } catch (err) {}
+      } catch (_err) {
+        //
+      }
     }
     if (fromVersion < 6) {
       try {
         await dbConn.run('alter table public_keys add public_key_sig varchar(1024)');
-      } catch (err) {}
+      } catch (_err) {
+        //
+      }
     }
     if (fromVersion < 7) {
       await runV7migrationMariaDb(dbConn);
@@ -270,7 +274,7 @@ class MariadbManager extends DbManager {
       await dbConn.run('alter table public_keys modify fingerprint varchar(128) not null');
       try {
         await dbConn.run('alter table public_keys add unique(fingerprint)');
-      } catch (e) {
+      } catch (_e) {
         getLogger().error(`!!!! ATTENTION !!!
 Unable to force uniqueness on fingerprint. This means you have the same public key used multiple time, this could be a problem.
 Pleas fix it and then run this command on your database:

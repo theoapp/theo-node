@@ -18,15 +18,15 @@ class CachedManager {
     this.options = options;
   }
 
-  get(key) {
+  get() {
     throw new Error('Not implemented');
   }
 
-  set(key, value) {
+  set() {
     throw new Error('Not implemented');
   }
 
-  del(key) {
+  del() {
     throw new Error('Not implemented');
   }
 

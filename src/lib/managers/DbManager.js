@@ -26,7 +26,7 @@ class DbManager {
     throw new Error('Not implemented');
   }
 
-  upgradeDb(fromVersion) {
+  upgradeDb() {
     throw new Error('Not implemented');
   }
 
@@ -42,11 +42,11 @@ class DbManager {
     throw new Error('Not implemented');
   }
 
-  getClient(pool = false) {
+  getClient() {
     throw new Error('Not implemented');
   }
 
-  setClient(client) {
+  setClient() {
     throw new Error('Not implemented');
   }
 

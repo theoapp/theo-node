@@ -65,7 +65,9 @@ const checkUserHost = async function (dm, accept, user, host, res, fingerprint) 
               });
           });
         }
-      } catch (e) {}
+      } catch (_e) {
+        //
+      }
     }
   } else {
     const ah = AppHelper();

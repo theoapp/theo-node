@@ -22,7 +22,7 @@ export const getDirFiles = (dir, onlyDir) => {
     if (!stat.isDirectory()) {
       return false;
     }
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
   let files = fs.readdirSync(dir);

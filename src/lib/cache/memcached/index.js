@@ -31,7 +31,7 @@ class MemcachedManager extends CachedManager {
       const Memcached = require('memcached');
       this.memcached = new Memcached(settings.uri, options);
       getLogger().info('MemcachedManager started');
-    } catch (e) {
+    } catch (_e) {
       // Module not loaded
     }
   }
@@ -86,7 +86,9 @@ class MemcachedManager extends CachedManager {
   quit() {
     try {
       this.memcached.end();
-    } catch (e) {}
+    } catch (_e) {
+      //
+    }
   }
 }
 

@@ -26,7 +26,7 @@ let createClient;
 
 try {
   createClient = require('redis').createClient;
-} catch (e) {
+} catch (_e) {
   // not loaded
 }
 
@@ -60,6 +60,7 @@ class RedisManager extends CachedManager {
     this.testConn()
       .then()
       .catch(e => {
+        getLogger().error(`Failed to connect to redis: ${e.message}`);
         process.exit(1);
       });
   }

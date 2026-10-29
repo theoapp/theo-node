@@ -21,19 +21,19 @@ try {
   const Mariadb = require('./mariadb');
   modules.mariadb = Mariadb.default;
   modules.mysql = Mariadb.default;
-} catch (e) {
+} catch (_e) {
   getLogger().info('mariadb driver not loaded');
 }
 try {
   const Sqlite = require('./sqlite');
   modules.sqlite = Sqlite.default;
-} catch (e) {
+} catch (_e) {
   getLogger().info('sqlite driver not loaded');
 }
 try {
   const Postgres = require('./postgres');
   modules.postgres = Postgres.default;
-} catch (e) {
+} catch (_e) {
   getLogger().info('postgres driver not loaded');
 }
 

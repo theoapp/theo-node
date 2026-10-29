@@ -18,27 +18,27 @@ class BaseClient {
     throw new Error('Not implemented');
   }
 
-  all(sql, params) {
+  all() {
     throw new Error('Not implemented');
   }
 
-  get(sql, params) {
+  get() {
     throw new Error('Not implemented');
   }
 
-  run(sql, params) {
+  run() {
     throw new Error('Not implemented');
   }
 
-  insert(sql, params) {
+  insert() {
     throw new Error('Not implemented');
   }
 
-  update(sql, params) {
+  update() {
     throw new Error('Not implemented');
   }
 
-  delete(sql, params) {
+  delete() {
     throw new Error('Not implemented');
   }
 

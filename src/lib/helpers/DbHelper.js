@@ -58,7 +58,7 @@ class DbHelper {
       if (!gotClient && client) {
         try {
           await client.close();
-        } catch (e) {
+        } catch (_e) {
           //
         }
       }

@@ -171,7 +171,7 @@ export const adminDeleteAccount = async (db, account_id, req) => {
     const gm = new GroupManager(db);
     try {
       await gm.deleteInternal(account_email);
-    } catch (e) {
+    } catch (_e) {
       // I don't care
     }
     EventHelper.emit('theo:change', {
