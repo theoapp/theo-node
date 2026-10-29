@@ -15,6 +15,7 @@
 
 import { getCacheModule } from '../cache/modules';
 import EventHelper from './EventHelper';
+import { getInstance as getCurrentInstance } from '../utils/instanceUtils';
 let _instance;
 
 class CacheHelper {
@@ -57,6 +58,19 @@ export const loadCacheManager = function () {
     return false;
   }
   return cm;
+};
+
+export const notifyReloadTokens = function () {
+  setImmediate(async () => {
+    const cm = loadCacheManager();
+    try {
+      const client = await cm.open();
+      const instance = getCurrentInstance();
+      await client.publish('core_tokens', 'flush_tokens:' + instance);
+    } catch (e) {
+      console.error('Error while flushing cache tokens', e);
+    }
+  });
 };
 
 export default getInstance;

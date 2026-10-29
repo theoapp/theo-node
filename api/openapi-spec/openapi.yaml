@@ -50,6 +50,7 @@ paths:
       tags:
         - "utils"
       summary: "Get server name and description"
+      x-eov-operation-handler: MainController
       operationId: getInfo
       security: []
       responses:
@@ -74,6 +75,7 @@ paths:
       tags:
         - "utils"
       summary: "Health check"
+      x-eov-operation-handler: MainController
       operationId: healthCheck
       security: []
       responses:
@@ -89,6 +91,7 @@ paths:
       tags:
         - "utils"
       summary: "Get server version and uptime"
+      x-eov-operation-handler: MainController
       operationId: getUptime
       security:
         - bearerTokenAdmin: []
@@ -106,6 +109,7 @@ paths:
       tags:
         - "utils"
       summary: "Flush all databases and cache. It's enabled ONLY when server runs in TEST mode"
+      x-eov-operation-handler: MainController
       operationId: flushDB
       security:
         - bearerTokenAdmin: []
@@ -129,6 +133,7 @@ paths:
       tags:
         - "tokens"
       summary: "Replace all the tokens of the instance"
+      x-eov-operation-handler: TokensController
       operationId: replaceTokens
       security:
         - bearerTokenCore: []
@@ -165,6 +170,7 @@ paths:
       tags:
         - "tokens"
       summary: "Delete all the tokens of the instance"
+      x-eov-operation-handler: TokensController
       operationId: deleteTokens
       security:
         - bearerTokenCore: []
@@ -178,6 +184,7 @@ paths:
       tags:
         - "utils"
       summary: "Delete accounts, groups and tokens of the instance. Available only when MULTI_INSTANCES=1"
+      x-eov-operation-handler: MainController
       operationId: deleteInstance
       security:
         - bearerTokenCore: []
@@ -214,6 +221,7 @@ paths:
       tags:
         - "authorized_keys"
       summary: "Get the public keys allowed to login as user on host"
+      x-eov-operation-handler: AuthorizedKeysController
       operationId: getAuthorizedKeys
       security:
         - bearerTokenClient: []
@@ -242,6 +250,7 @@ paths:
       tags:
         - "authorized_keys"
       summary: "Get the public keys allowed to login as user on the host making the request (resolved by reverse DNS)"
+      x-eov-operation-handler: AuthorizedKeysController
       operationId: getAuthorizedKeysByReverseDNS
       security:
         - bearerTokenClient: []
@@ -275,6 +284,7 @@ paths:
       tags:
         - "permissions"
       summary: "Get the accounts allowed to login as user on host, with the matching permissions"
+      x-eov-operation-handler: PermissionsController
       operationId: searchPermissions
       security:
         - bearerTokenAdmin: []
@@ -299,6 +309,7 @@ paths:
       tags:
         - "account"
       summary: "Retrieve accounts"
+      x-eov-operation-handler: AccountsController
       operationId: listAccounts
       security:
         - bearerTokenAdmin: []
@@ -331,6 +342,7 @@ paths:
       tags:
         - "account"
       summary: "Create a new account"
+      x-eov-operation-handler: AccountsController
       operationId: addAccount
       security:
         - bearerTokenAdmin: []
@@ -361,6 +373,7 @@ paths:
       tags:
         - "account"
       summary: "Search accounts"
+      x-eov-operation-handler: AccountsController
       operationId: searchAccounts
       security:
         - bearerTokenAdmin: []
@@ -406,6 +419,7 @@ paths:
       tags:
         - "account"
       summary: "Get an account"
+      x-eov-operation-handler: AccountsController
       operationId: getAccount
       security:
         - bearerTokenAdmin: []
@@ -426,6 +440,7 @@ paths:
       tags:
         - "account"
       summary: "Edit an account"
+      x-eov-operation-handler: AccountsController
       operationId: editAccount
       security:
         - bearerTokenAdmin: []
@@ -451,6 +466,7 @@ paths:
       tags:
         - "account"
       summary: "Delete an account"
+      x-eov-operation-handler: AccountsController
       operationId: deleteAccount
       security:
         - bearerTokenAdmin: []
@@ -471,6 +487,7 @@ paths:
         - "account"
         - "keys"
       summary: "Add public keys to an account"
+      x-eov-operation-handler: AccountsController
       operationId: addKeysToAccount
       security:
         - bearerTokenAdmin: []
@@ -524,6 +541,7 @@ paths:
         - "account"
         - "keys"
       summary: "Set the ssh options of a public key"
+      x-eov-operation-handler: AccountsController
       operationId: editAccountKey
       security:
         - bearerTokenAdmin: []
@@ -549,6 +567,7 @@ paths:
         - "account"
         - "keys"
       summary: "Delete a public key from an account"
+      x-eov-operation-handler: AccountsController
       operationId: deleteKeyFromAccount
       security:
         - bearerTokenAdmin: []
@@ -578,6 +597,7 @@ paths:
         - "account"
         - "keys"
       summary: "Add public keys to an account loading them from an external service. Not available when REQUIRE_SIGNED_KEY is set. Keys already present are skipped."
+      x-eov-operation-handler: AccountsController
       operationId: addKeysFromServiceToAccount
       security:
         - bearerTokenAdmin: []
@@ -617,6 +637,7 @@ paths:
         - "account"
         - "permissions"
       summary: "Add a permission to an account"
+      x-eov-operation-handler: AccountsController
       operationId: addPermissionToAccount
       security:
         - bearerTokenAdmin: []
@@ -663,6 +684,7 @@ paths:
         - "account"
         - "permissions"
       summary: "Set the ssh options of an account permission"
+      x-eov-operation-handler: AccountsController
       operationId: editAccountPermission
       security:
         - bearerTokenAdmin: []
@@ -688,6 +710,7 @@ paths:
         - "account"
         - "permissions"
       summary: "Delete a permission from an account"
+      x-eov-operation-handler: AccountsController
       operationId: deletePermissionFromAccount
       security:
         - bearerTokenAdmin: []
@@ -705,6 +728,7 @@ paths:
       tags:
         - "groups"
       summary: "Retrieve groups (internal account groups are not listed)"
+      x-eov-operation-handler: GroupsController
       operationId: listGroups
       security:
         - bearerTokenAdmin: []
@@ -737,6 +761,7 @@ paths:
       tags:
         - "groups"
       summary: "Create a new group"
+      x-eov-operation-handler: GroupsController
       operationId: addGroup
       security:
         - bearerTokenAdmin: []
@@ -775,6 +800,7 @@ paths:
       tags:
         - "groups"
       summary: "Retrieve a group"
+      x-eov-operation-handler: GroupsController
       operationId: getGroup
       security:
         - bearerTokenAdmin: []
@@ -795,6 +821,7 @@ paths:
       tags:
         - "groups"
       summary: "DEPRECATED: Use /groups/{id}/account(s). Add account(s) to a group"
+      x-eov-operation-handler: GroupsController
       operationId: deprecatedAddAccountsToGroup
       deprecated: true
       security:
@@ -835,6 +862,7 @@ paths:
       tags:
         - "groups"
       summary: "Enable or disable a group"
+      x-eov-operation-handler: GroupsController
       operationId: editGroup
       security:
         - bearerTokenAdmin: []
@@ -864,6 +892,7 @@ paths:
       tags:
         - "groups"
       summary: "Delete a group"
+      x-eov-operation-handler: GroupsController
       operationId: deleteGroup
       security:
         - bearerTokenAdmin: []
@@ -883,6 +912,7 @@ paths:
       tags:
         - "groups"
       summary: "Add an account to a group"
+      x-eov-operation-handler: GroupsController
       operationId: addAccountToGroup
       security:
         - bearerTokenAdmin: []
@@ -915,6 +945,7 @@ paths:
       tags:
         - "groups"
       summary: "Add accounts to a group"
+      x-eov-operation-handler: GroupsController
       operationId: addAccountsToGroup
       security:
         - bearerTokenAdmin: []
@@ -953,6 +984,7 @@ paths:
       tags:
         - "groups"
       summary: "Remove an account from a group"
+      x-eov-operation-handler: GroupsController
       operationId: deleteAccountFromGroup
       security:
         - bearerTokenAdmin: []
@@ -977,6 +1009,7 @@ paths:
         - "groups"
         - "permissions"
       summary: "Add a permission to a group"
+      x-eov-operation-handler: GroupsController
       operationId: addPermissionToGroup
       security:
         - bearerTokenAdmin: []
@@ -1023,6 +1056,7 @@ paths:
         - "groups"
         - "permissions"
       summary: "Set the ssh options of a group permission"
+      x-eov-operation-handler: GroupsController
       operationId: editGroupPermission
       security:
         - bearerTokenAdmin: []
@@ -1048,6 +1082,7 @@ paths:
         - "groups"
         - "permissions"
       summary: "Delete a permission from a group"
+      x-eov-operation-handler: GroupsController
       operationId: deletePermissionFromGroup
       security:
         - bearerTokenAdmin: []
@@ -1065,6 +1100,7 @@ paths:
       tags:
         - "impexp"
       summary: "Export accounts and groups"
+      x-eov-operation-handler: ImpExpController
       operationId: exportData
       security:
         - bearerTokenAdmin: []
@@ -1083,6 +1119,7 @@ paths:
       tags:
         - "impexp"
       summary: "Import a dump created by GET /impexp"
+      x-eov-operation-handler: ImpExpController
       operationId: importData
       security:
         - bearerTokenAdmin: []
@@ -1168,19 +1205,18 @@ components:
       in: "query"
       description: "Fingerprint of the key being used: when it matches, the key last_used_at is updated (application/json only)"
       required: false
+      allowReserved: true
       schema:
         type: "string"
         example: "SHA256:FcVOofKlyFRbcrq5zfQH6ipEFwGEZ3hG0iydwWl6TLU"
     AcceptAuthorizedKeys:
       name: "Accept"
       in: "header"
-      description: "Use application/json to get the keys as JSON (required when REQUIRE_SIGNED_KEY is set), otherwise the keys are returned as authorized_keys text"
+      description: "When it contains application/json the keys are returned as JSON (required when REQUIRE_SIGNED_KEY is set), otherwise as authorized_keys text"
       required: false
       schema:
         type: "string"
-        enum:
-          - "application/json"
-          - "text/plain"
+        example: "application/json"
     Limit:
       name: "limit"
       in: "query"
@@ -1303,7 +1339,7 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
     Id:
-      oneOf:
+      anyOf:
         - type: "integer"
           format: "int64"
           example: 251
@@ -1340,13 +1376,12 @@ components:
       example: 0
     ExpireAtInput:
       description: "Expiration as milliseconds since epoch or ISO 8601 string. 0, null or an empty string mean never"
-      nullable: true
       oneOf:
         - type: "integer"
           format: "int64"
+          nullable: true
           example: 1893456000000
         - type: "string"
-          format: "date-time"
           example: "2030-01-01T00:00:00Z"
     SSHOptions:
       type: "object"
@@ -1757,9 +1792,11 @@ components:
         key_ssh_options:
           $ref: "#/components/schemas/StoredSSHOptions"
         last_used_at:
-          allOf:
-            - $ref: "#/components/schemas/Timestamp"
+          type: "integer"
+          format: "int64"
           nullable: true
+          description: "Milliseconds since epoch the key was last used, if ever"
+          example: 1672531200000
         created_at:
           $ref: "#/components/schemas/Timestamp"
     AddedPublicKey:

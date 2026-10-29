@@ -18,6 +18,7 @@ import EventHelper from '../helpers/EventHelper';
 import { getInstance } from '../utils/instanceUtils';
 import { common_error } from '../utils/logUtils';
 import { md5 } from '../utils/cryptoUtils';
+import { HTTPError } from '@fluidware-it/express-microservice';
 
 const checkForBearer = function (req, header) {
   const authorization = req.header(header);
@@ -128,6 +129,12 @@ export const requireCoreAuthMiddleware = (req, res, next) => {
   next();
 };
 
+export function checkCoreAuth(req) {
+  if (!req.is_authorized || !req.is_core) {
+    throw new HTTPError('Unauthorized', 401);
+  }
+}
+
 export const requireAdminAuthMiddleware = (req, res, next) => {
   if (!req.is_authorized || !req.is_admin) {
     res.status(401);
@@ -137,6 +144,12 @@ export const requireAdminAuthMiddleware = (req, res, next) => {
   next();
 };
 
+export function checkAdminAuth(req) {
+  if (!req.is_authorized || !req.is_admin) {
+    throw new HTTPError('Unauthorized', 401);
+  }
+}
+
 export const requireAuthMiddleware = (req, res, next) => {
   if (!req.is_authorized) {
     res.status(401);
@@ -145,3 +158,9 @@ export const requireAuthMiddleware = (req, res, next) => {
   }
   next();
 };
+
+export function checkAuth(req) {
+  if (!req.is_authorized) {
+    throw new HTTPError('Unauthorized', 401);
+  }
+}

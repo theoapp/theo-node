@@ -31,6 +31,7 @@ RUN npm ci --omit=optional &&\
     npm cache clean --force
 
 COPY --from=builder /usr/src/app/build ./build/
+COPY --from=builder /usr/src/app/api/openapi-spec ./api/openapi-spec/
 
 EXPOSE 9100
 

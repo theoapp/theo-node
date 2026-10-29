@@ -13,8 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { requireAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
-import { getAuthorizedKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysHelper';
+import { checkAuth } from '../lib/middlewares/AuthMiddleware';
+import { sendError } from '../lib/utils/responseUtils';
+import { getAuthorizedKeys as getKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysHelper';
 import { dnsReverse } from '../lib/utils/dnsUtils';
 import AppHelper from '../lib/helpers/AppHelper';
 import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
@@ -73,60 +74,65 @@ const checkUserHost = async function (dm, accept, user, host, res, fingerprint) 
       err.t_code = 406;
       throw err;
     }
-    const { keys, cache } = await getAuthorizedKeys(dm, user, host);
+    const { keys, cache } = await getKeys(dm, user, host);
     res.header('X-From-Cache', cache);
     res.header('Content-Type', 'text/plain');
     res.send(keys);
   }
 };
 
-export default function handleKeys(express) {
-  const router = express.Router();
-
-  router.get('/:host/:user', requireAuthMiddleware, async (req, res) => {
-    const accept = req.header('Accept');
-    const { host, user } = req.params;
-    const { f } = req.query;
-    try {
-      await checkUserHost(req.dm, accept, user, host, res, f);
-    } catch (err) {
-      if (process.env.MODE === 'test') {
-        common_error('Failed authorized_keys', err.message);
-      }
-      res.status(err.t_code || 500);
-      res.json({ status: err.t_code || 500, reason: err.message });
-      console.error(err);
+export async function getAuthorizedKeys(req, res) {
+  try {
+    checkAuth(req);
+  } catch (e) {
+    sendError(res, e);
+    return;
+  }
+  const accept = req.header('Accept');
+  const { host, user } = req.params;
+  const { f } = req.query;
+  try {
+    await checkUserHost(req.dm, accept, user, host, res, f);
+  } catch (err) {
+    if (process.env.MODE === 'test') {
+      common_error('Failed authorized_keys', err.message);
     }
-  });
+    sendError(res, err);
+    console.error(err);
+  }
+}
 
-  router.get('/:user', requireAuthMiddleware, async (req, res) => {
-    const accept = req.header('Accept');
-    const { user } = req.params;
-    const { f } = req.query;
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    try {
-      const host = await dnsReverse(ip);
-      if (host && host.length > 0) {
-        try {
-          await checkUserHost(req.dm, accept, user, host[0], res, f);
-        } catch (err) {
-          if (process.env.MODE === 'test') {
-            common_error('Failed authorized_keys', err.message);
-          }
-          res.status(err.t_code || 500);
-          res.json({ status: err.t_code || 500, reason: err.message });
+export async function getAuthorizedKeysByReverseDNS(req, res) {
+  try {
+    checkAuth(req);
+  } catch (e) {
+    sendError(res, e);
+    return;
+  }
+  const accept = req.header('Accept');
+  const { user } = req.params;
+  const { f } = req.query;
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  try {
+    const host = await dnsReverse(ip);
+    if (host && host.length > 0) {
+      try {
+        await checkUserHost(req.dm, accept, user, host[0], res, f);
+      } catch (err) {
+        if (process.env.MODE === 'test') {
+          common_error('Failed authorized_keys', err.message);
         }
-      } else {
-        res.status(400);
-        res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });
+        sendError(res, err);
       }
-    } catch (err) {
-      if (process.env.MODE === 'test') {
-        common_error('Failed reverse %s', ip, err.message);
-      }
+    } else {
       res.status(400);
       res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });
     }
-  });
-  return router;
+  } catch (err) {
+    if (process.env.MODE === 'test') {
+      common_error('Failed reverse %s', ip, err.message);
+    }
+    res.status(400);
+    res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });
+  }
 }

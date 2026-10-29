@@ -13,8 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Microservice from '@authkeys/microservice';
-import { initRoutes } from './routes';
+import { Microservice } from '@fluidware-it/express-microservice';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import { auditMiddleware } from './lib/middlewares/AuditMiddleware';
@@ -22,6 +21,8 @@ import { common_error, common_warn } from './lib/utils/logUtils';
 import UpdateHelper from './lib/helpers/UpdateHelper';
 import { getAsyncLocalStorage, isMultiInstances } from './lib/utils/instanceUtils';
 import os from 'os';
+import path from 'path';
+import { EnvParse } from '@fluidware-it/saddlebag';
 
 const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
 
@@ -36,7 +37,7 @@ const doURLneedDb = function (path) {
         return false;
       }
     } else {
-      if (path === noDbUrls[i]) {
+      if (path === noDbUrls[i].path) {
         return false;
       }
     }
@@ -44,13 +45,28 @@ const doURLneedDb = function (path) {
   return true;
 };
 
+// Keep the bind options of @authkeys/microservice (PORT, ADDRESSES, ADDRESS)
+// and let theo's own authMiddleware handle bearer tokens
+const getMicroserviceConfig = function (environment) {
+  const { PORT, ADDRESSES, ADDRESS } = environment;
+  const config = { port: Number(PORT), forwardUnknownBearer: true };
+  if (ADDRESSES) {
+    config.addresses = ADDRESSES.split(',')
+      .map(a => a.trim())
+      .filter(a => !!a);
+  } else if (ADDRESS) {
+    config.address = ADDRESS;
+  }
+  return config;
+};
+
 class TheoServer extends Microservice {
   dm;
 
   constructor(environment, dm) {
-    super(environment);
+    super(getMicroserviceConfig(environment));
     this.dm = dm;
-    this.skip_updatecheck = this.envBool(process.env, 'SKIP_UPDATECHECK', false);
+    this.skip_updatecheck = EnvParse.envBool('SKIP_UPDATECHECK', false);
     if (!this.skip_updatecheck) {
       last_check = Date.now();
       UpdateHelper.checkUpdate(true);
@@ -62,17 +78,18 @@ class TheoServer extends Microservice {
     }
   }
 
-  setupRoutes(app, express) {
-    app.disable('x-powered-by');
+  setupRoutes() {
+    this.express.disable('x-powered-by');
     if (process.env.TRUST_PROXY === '1') {
-      app.set('trust proxy', process.env.TRUST_PROXY_LIST);
+      this.express.set('trust proxy', process.env.TRUST_PROXY_LIST);
     }
     const hostname = os.hostname();
     const asyncLocalStorage = getAsyncLocalStorage();
     const _isMultiInstances = isMultiInstances();
-    app.use((req, res, next) => {
+    const debugAuth = EnvParse.envBool('DEBUG_AUTH', false);
+    this.express.use((req, res, next) => {
       res.set('x-served-by', hostname);
-      req.debugAuth = this.envBool(process.env, 'DEBUG_AUTH', false);
+      req.debugAuth = debugAuth;
       asyncLocalStorage.run({}, () => {
         const store = asyncLocalStorage.getStore();
         store.instance = _isMultiInstances ? req.hostname : 'theo';
@@ -80,9 +97,9 @@ class TheoServer extends Microservice {
         next();
       });
     });
-    app.use(authMiddleware);
-    app.use(auditMiddleware);
-    app.use(async (req, res, next) => {
+    this.express.use(authMiddleware);
+    this.express.use(auditMiddleware);
+    this.express.use(async (req, res, next) => {
       const { path, method } = req;
       res.set('Connection', 'close');
       req.dm = this.dm;
@@ -96,7 +113,10 @@ class TheoServer extends Microservice {
             common_error('Failed to open db:', err.message);
             // Ops..
             res.status(500);
-            res.json({ status: 500, reason: 'A problem occurred, please retry' });
+            res.json({
+              status: 500,
+              reason: 'A problem occurred, please retry'
+            });
             return;
           }
           req.db = client;
@@ -119,7 +139,11 @@ class TheoServer extends Microservice {
       }
       next();
     });
-    app.use('/', initRoutes(express));
+    this.useOpenapiValidatorMiddleware(
+      path.join(__dirname, '..', 'api', 'openapi-spec', 'openapi.yaml'),
+      path.join(__dirname, 'controllers'),
+      true
+    );
   }
 
   getName() {
