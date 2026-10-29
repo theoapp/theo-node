@@ -19,9 +19,9 @@ import { getAuthorizedKeys as getKeys, getAuthorizedKeysAsJson } from '../lib/he
 import { dnsReverse } from '../lib/utils/dnsUtils';
 import AppHelper from '../lib/helpers/AppHelper';
 import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
-import { common_debug, common_error } from '../lib/utils/logUtils';
 import KeyManager from '../lib/managers/KeyManager';
 import { MODE } from '../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const checkFingerPrint = async function (user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
@@ -36,7 +36,7 @@ const checkFingerPrint = async function (user, host, fingerprint, keys) {
       return keys[i];
     }
   }
-  common_debug('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
+  getLogger().debug('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
 };
 
 const checkUserHost = async function (dm, accept, user, host, res, fingerprint) {
@@ -55,12 +55,12 @@ const checkUserHost = async function (dm, accept, user, host, res, fingerprint) 
                 return KeyManager.setLastUsed(db, fingerprint);
               })
               .catch(e => {
-                console.error('Failed to update last_used_at', e);
+                getLogger().error(e, 'Failed to update last_used_at');
               })
               .finally(() => {
                 const ret = db.close();
                 if (ret && ret instanceof Promise) {
-                  ret.catch(err => console.error(err));
+                  ret.catch(err => getLogger().error(err, 'Failed to close db'));
                 }
               });
           });
@@ -95,11 +95,8 @@ export async function getAuthorizedKeys(req, res) {
   try {
     await checkUserHost(req.dm, accept, user, host, res, f);
   } catch (err) {
-    if (MODE === 'test') {
-      common_error('Failed authorized_keys', err.message);
-    }
+    getLogger().error(err, 'Failed authorized_keys');
     sendError(res, err);
-    console.error(err);
   }
 }
 
@@ -121,7 +118,7 @@ export async function getAuthorizedKeysByReverseDNS(req, res) {
         await checkUserHost(req.dm, accept, user, host[0], res, f);
       } catch (err) {
         if (MODE === 'test') {
-          common_error('Failed authorized_keys', err.message);
+          getLogger().error({ error_message: err.message }, 'Failed authorized_keys');
         }
         sendError(res, err);
       }
@@ -131,7 +128,7 @@ export async function getAuthorizedKeysByReverseDNS(req, res) {
     }
   } catch (err) {
     if (MODE === 'test') {
-      common_error('Failed reverse %s', ip, err.message);
+      getLogger().error({ error_message: err.message }, 'Failed reverse %s', ip);
     }
     res.status(400);
     res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });

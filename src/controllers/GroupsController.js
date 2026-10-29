@@ -28,6 +28,7 @@ import {
   adminGetGroup,
   adminUpdateGroupPermission
 } from '../lib/helpers/AdminHelper';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export async function listGroups(req, res) {
   try {
@@ -111,7 +112,7 @@ export async function deprecatedAddAccountsToGroup(req, res) {
       res.json(done);
     }
   } catch (err) {
-    console.error(err);
+    getLogger().error(err, 'Failed to add accounts to group');
     sendError(res, err);
   }
 }
@@ -165,7 +166,7 @@ export async function addAccountToGroup(req, res) {
     res.status(204);
     res.end();
   } catch (err) {
-    console.error(err);
+    getLogger().error(err, 'Failed to add account to group');
     sendError(res, err);
   }
 }
@@ -188,7 +189,7 @@ export async function addAccountsToGroup(req, res) {
     res.status(200);
     res.json(done);
   } catch (err) {
-    console.error(err);
+    getLogger().error(err, 'Failed to add accounts to group');
     sendError(res, err);
   }
 }

@@ -16,6 +16,7 @@
 import GroupAccountManager from '../../managers/GroupAccountManager';
 import GroupManager from '../../managers/GroupManager';
 import AccountManager from '../../managers/AccountManager';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 async function getGroup(db, group_id) {
   let group;
@@ -142,7 +143,7 @@ export const adminCreateGroupAccounts = async (db, group_id, accounts_id, req) =
     try {
       await gm.setUpdatedAt(group_id);
     } catch (e) {
-      console.error('Failed to invalidate cache!', e.message);
+      getLogger().error({ error_message: e.message }, 'Failed to invalidate cache!');
     }
   }
   return ret;

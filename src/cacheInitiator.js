@@ -14,27 +14,27 @@
 // limitations under the License.
 
 import CacheHelper from './lib/helpers/CacheHelper';
-import { common_error, common_info, common_warn } from './lib/utils/logUtils';
 import RedisManager from './lib/cache/redis';
 import { getAsyncLocalStorage } from './lib/utils/instanceUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const redisSubscribe = async (cm, dm, ah) => {
   const conn = cm.getClient();
   const subscriber = conn.duplicate();
   subscriber
-    .on('connect', () => console.log('connect', new Date().toJSON()))
-    .on('ready', () => console.log('ready', new Date().toJSON()))
-    .on('error', err => console.error('error', err, new Date().toJSON()));
+    .on('connect', () => getLogger().info('redis subscriber connect'))
+    .on('ready', () => getLogger().info('redis subscriber ready'))
+    .on('error', err => getLogger().error(err, 'redis subscriber error'));
   try {
     await subscriber.connect();
   } catch (e) {
-    console.error('redis.connect thrown an error', e.message);
+    getLogger().error({ error_message: e.message }, 'redis.connect thrown an error');
   }
 
   try {
     await subscriber.subscribe('core_tokens', async message => {
       if (message.startsWith('flush_tokens')) {
-        common_warn('Flushing tokens!');
+        getLogger().warn('Flushing tokens!');
         let dbClient;
         try {
           dbClient = dm.getClient();
@@ -43,11 +43,11 @@ const redisSubscribe = async (cm, dm, ah) => {
           await asyncLocalStorage.run({}, () => {
             const store = asyncLocalStorage.getStore();
             store.instance = message.split(':')[1];
-            common_warn(`Loading tokens for ${store.instance}`);
+            getLogger().warn(`Loading tokens for ${store.instance}`);
             return ah.loadAuthTokens(dbClient);
           });
         } catch (e) {
-          common_error('Failed to reload tokens!!!', e.message);
+          getLogger().error({ error_message: e.message }, 'Failed to reload tokens!!!');
         } finally {
           if (dbClient) {
             dbClient.close();
@@ -56,7 +56,7 @@ const redisSubscribe = async (cm, dm, ah) => {
       }
     });
   } catch (e) {
-    console.error('redis.subscribe thrown an error', e.message);
+    getLogger().error({ error_message: e.message }, 'redis.subscribe thrown an error');
   }
 };
 
@@ -66,21 +66,21 @@ const initCache = function (subscribe_core_token, dm, ah) {
   try {
     ch = CacheHelper(ah.getSettings('cache'));
   } catch (err) {
-    common_error('Unable to create CacheHelper %s', err.message);
+    getLogger().error('Unable to create CacheHelper %s', err.message);
   }
   if (ch) {
     cm = ch.getManager();
     if (cm) {
       if (!subscribe_core_token) {
-        common_info('Flushing CacheManager');
+        getLogger().info('Flushing CacheManager');
         cm.flush().catch(er => {
-          common_error('Failed to initialize CacheManager: %s', er.message);
+          getLogger().error('Failed to initialize CacheManager: %s', er.message);
         });
       } else {
         if (cm instanceof RedisManager) {
           redisSubscribe(cm, dm, ah)
-            .then(() => common_info('Subscribed RedisManager'))
-            .catch(console.error);
+            .then(() => getLogger().info('Subscribed RedisManager'))
+            .catch(e => getLogger().error(e, 'Failed to subscribe RedisManager'));
         }
       }
     }

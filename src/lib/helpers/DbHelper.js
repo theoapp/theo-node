@@ -15,8 +15,8 @@
 
 import EventHelper from './EventHelper';
 import { getRdbmsModule } from '../rdbms/modules';
-import { common_debug, common_error, common_info } from '../utils/logUtils';
 import { setTimeout } from 'node:timers/promises';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 let _instance;
 
@@ -69,10 +69,10 @@ class DbHelper {
     let currentVersion;
     try {
       const serverVersion = await client.getServerVersion();
-      common_info('Db Version', serverVersion);
+      getLogger().info('Db Version %s', serverVersion);
       this.manager.setClient(client);
     } catch (e) {
-      common_error('checkDb failed %s', e.message);
+      getLogger().error('checkDb failed %s', e.message);
       process.exit(99);
     }
     try {
@@ -83,11 +83,11 @@ class DbHelper {
         currentVersion = row.value;
       }
     } catch (e) {
-      common_error('Failed to read current version, exiting. ', e.message);
+      getLogger().error({ error_message: e.message }, 'Failed to read current version, exiting');
       process.exit(92);
     }
 
-    common_info('Check db: currentVersion %s targetVersion %s', currentVersion, this.manager.dbVersion);
+    getLogger().info('Check db: currentVersion %s targetVersion %s', currentVersion, this.manager.dbVersion);
 
     if (currentVersion === -999) {
       try {
@@ -97,19 +97,19 @@ class DbHelper {
           await setTimeout(2000);
           return this.checkDb(client);
         } else {
-          common_error('Unable to create _version table: [%s] %s', e.code, e.message);
+          getLogger().error('Unable to create _version table: [%s] %s', e.code, e.message);
           process.exit(90);
         }
       }
     } else if (currentVersion < 0) {
-      common_error('Db in initialization, exiting ');
+      getLogger().error('Db in initialization, exiting');
       process.exit(91);
     }
 
     try {
       if (currentVersion === 0) {
         await this.manager.initDb();
-        common_info('Db created');
+        getLogger().info('Db created');
         return true;
       }
       if (this.manager.dbVersion === currentVersion) {
@@ -117,20 +117,11 @@ class DbHelper {
       }
       if (this.manager.dbVersion > currentVersion) {
         await this.manager.upgradeDb(currentVersion);
-        common_info('Db updated to ', this.manager.dbVersion);
+        getLogger().info('Db updated to %s', this.manager.dbVersion);
         return true;
       }
     } catch (e) {
-      common_error('\n');
-      common_error('\n');
-      common_error(' !!!!!!!! FATAL ERROR !!!!!!!!');
-      common_error('\n');
-      common_error('checkDb failed %s', e.message);
-      common_error('\n');
-      common_error(' !!!!!!!! FATAL ERROR !!!!!!!!');
-      common_error('\n');
-      common_error('\n');
-      console.error(e);
+      getLogger().fatal(e, '!!!!!!!! FATAL ERROR !!!!!!!! checkDb failed');
       process.exit(96);
     }
     return true;
@@ -142,10 +133,10 @@ class DbHelper {
       EventHelper.emit('theo:flushdb');
       try {
         await this.checkDb(client);
-        common_debug('check db done');
+        getLogger().debug('check db done');
         return true;
       } catch (e) {
-        common_error('Failed to check db', e);
+        getLogger().error(e, 'Failed to check db');
         throw e;
       }
     } else {

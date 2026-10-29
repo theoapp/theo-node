@@ -17,6 +17,7 @@ import { checkAdminAuth } from '../lib/middlewares/AuthMiddleware';
 import { sendError } from '../lib/utils/responseUtils';
 import { exp, imp } from '../lib/helpers/ImpExpHelper';
 import { MODE } from '../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export async function exportData(req, res) {
   try {
@@ -30,7 +31,7 @@ export async function exportData(req, res) {
     res.json(dump);
   } catch (err) {
     if (MODE === 'test') {
-      console.error('Failed to export', err);
+      getLogger().error(err, 'Failed to export');
     }
     sendError(res, err);
   }
@@ -47,7 +48,7 @@ export async function importData(req, res) {
     await imp(req.db, req.body);
     res.sendStatus(204);
   } catch (err) {
-    console.log('Import failed ', err);
+    getLogger().error(err, 'Import failed');
     sendError(res, err);
   }
 }

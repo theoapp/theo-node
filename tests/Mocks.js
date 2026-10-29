@@ -16,7 +16,3 @@ export const mockDateNow = function () {
   // mock now = 1462361249717ms = 4th May 2016 11:27:29,717
   return 1462361249717;
 };
-
-export const mockDateToISOString = function () {
-  return '2016-05-04T11:27:29.717Z';
-};

@@ -10,7 +10,7 @@
   "rules": {
     "no-undef": "warn",
     "no-use-before-define": "warn",
-    "no-console": "off",
+    "no-console": "error",
     "no-process-env": "error",
     "camelcase": "off",
     "prettier/prettier": [

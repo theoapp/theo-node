@@ -19,6 +19,7 @@ import { MAX_ROWS } from '../managers/BaseCacheManager';
 import PermissionManager from '../managers/PermissionManager';
 import KeyManager from '../managers/KeyManager';
 import GroupAccountManager from '../managers/GroupAccountManager';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const getAllGroups = async db => {
   const gm = new GroupManager(db);
@@ -51,9 +52,9 @@ const getAllAccounts = async db => {
 };
 
 export const exp = async db => {
-  console.log('Getting groups');
+  getLogger().info('Getting groups');
   const groups = await getAllGroups(db);
-  console.log('Getting accounts');
+  getLogger().info('Getting accounts');
   const accounts = await getAllAccounts(db);
   return {
     accounts,
@@ -74,7 +75,7 @@ export const imp = async (db, dump) => {
           await pm.create(id, permission.user, permission.host, permission.ssh_options);
         }
       } catch (e) {
-        console.error('IMP: Failed to create group %s', group.name, e);
+        getLogger().error(e, 'IMP: Failed to create group %s', group.name);
       }
     }
   }
@@ -114,7 +115,7 @@ export const imp = async (db, dump) => {
           }
         }
       } catch (e) {
-        console.error('IMP: Failed to create account %s', account.email, e);
+        getLogger().error(e, 'IMP: Failed to create account %s', account.email);
       }
     }
   }

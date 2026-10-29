@@ -15,6 +15,7 @@
 
 import KeysImporterManager from '../../managers/KeysImporterManager';
 import { http_get } from '../../utils/httpUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 class GitlabImporter extends KeysImporterManager {
   async get(username) {
@@ -29,7 +30,7 @@ class GitlabImporter extends KeysImporterManager {
         return [];
       }
     } catch (err) {
-      console.error('Failed to import from gitlab', err);
+      getLogger().error(err, 'Failed to import from gitlab');
     }
   }
 }

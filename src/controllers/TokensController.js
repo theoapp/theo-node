@@ -19,6 +19,7 @@ import AppHelper from '../lib/helpers/AppHelper';
 import AuthTokenManager from '../lib/managers/AuthTokenManager';
 import { notifyReloadTokens } from '../lib/helpers/CacheHelper';
 import { CLUSTER_MODE } from '../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 // Reload tokens, called using CORE token
 export async function replaceTokens(req, res) {
@@ -65,7 +66,7 @@ export async function replaceTokens(req, res) {
       res.sendStatus(204);
     }
   } catch (err) {
-    console.error('Error while pushing tokens', err);
+    getLogger().error(err, 'Error while pushing tokens');
     res.status(500).json({ code: 500, reason: 'Fail to update tokens' });
   }
 }

@@ -19,6 +19,7 @@ import AppHelper from '../AppHelper';
 import { getOpenSSHPublicKey, SSHFingerprint } from '../../utils/sshUtils';
 import EventHelper from '../EventHelper';
 import { getKeysImporterModule, getKeysImporterModulesList } from '../../keys_importer/modules';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const adminAddAccountKey = async (km, signRequired, key, account, req) => {
   let _key;
@@ -39,7 +40,7 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
   if (signRequired && !_signature) {
     const err = new Error('Key must be signed');
     err.t_code = 400;
-    console.error('Key must be signed!');
+    getLogger().warn('Key must be signed!');
     throw err;
   }
   try {
@@ -145,7 +146,7 @@ export const adminUpdateAccountKey = async function (db, account_id, key_id, ssh
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   if (!ssh_options && ssh_options !== '') {
@@ -200,7 +201,7 @@ export const adminDeleteAccountKey = async (db, account_id, key_id, req) => {
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   const km = new KeyManager(db, am);

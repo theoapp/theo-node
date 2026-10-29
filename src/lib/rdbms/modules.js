@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { common_info } from '../utils/logUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const modules = {};
 
@@ -22,19 +22,19 @@ try {
   modules.mariadb = Mariadb.default;
   modules.mysql = Mariadb.default;
 } catch (e) {
-  common_info('mariadb driver not loaded');
+  getLogger().info('mariadb driver not loaded');
 }
 try {
   const Sqlite = require('./sqlite');
   modules.sqlite = Sqlite.default;
 } catch (e) {
-  common_info('sqlite driver not loaded');
+  getLogger().info('sqlite driver not loaded');
 }
 try {
   const Postgres = require('./postgres');
   modules.postgres = Postgres.default;
 } catch (e) {
-  common_info('postgres driver not loaded');
+  getLogger().info('postgres driver not loaded');
 }
 
 export const getRdbmsModule = name => {

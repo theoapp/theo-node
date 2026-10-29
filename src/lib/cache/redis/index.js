@@ -14,9 +14,9 @@
 // limitations under the License.
 
 import CachedManager from '../../managers/CacheManager';
-import { common_error, common_info } from '../../utils/logUtils';
 import { getInstance } from '../../utils/instanceUtils';
 import { REDIS_CONNECTION_RETRY_INTERVAL, REDIS_MAX_CONNECTION_RETRIES } from '../../../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const MAX_RETRIES = Number(REDIS_MAX_CONNECTION_RETRIES) || 10;
 const MAX_RETRY_TIMEOUT = Number(REDIS_CONNECTION_RETRY_INTERVAL) * 1000 || 5000;
@@ -67,10 +67,10 @@ class RedisManager extends CachedManager {
   async testConn() {
     try {
       await this.open();
-      common_info('Redis server OK ');
+      getLogger().info('Redis server OK');
       this.close();
     } catch (e) {
-      common_error('Failed to test redis connection', e);
+      getLogger().error(e, 'Failed to test redis connection');
     }
   }
 
@@ -107,7 +107,7 @@ class RedisManager extends CachedManager {
         redisConn = undefined;
       }
     } catch (e) {
-      common_error(e.message);
+      getLogger().error({ error_message: e.message }, 'Failed to close redis connection');
     }
   }
 
@@ -115,7 +115,7 @@ class RedisManager extends CachedManager {
     if (!redisConn) {
       redisConn = createClient(this.options);
       redisConn.on('error', e => {
-        console.log('Redis Client Error', e);
+        getLogger().error(e, 'Redis Client Error');
       });
       await redisConn.connect();
     }

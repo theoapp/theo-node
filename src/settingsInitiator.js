@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { common_error, common_warn } from './lib/utils/logUtils';
 import { md5 } from './lib/utils/cryptoUtils';
 import { getLoadDbEnvSettings, loadPostgresEnvSettings } from './dbInitiator';
 import { DEFAULT_INSTANCE_NAME, isMultiInstances } from './lib/utils/instanceUtils';
@@ -34,6 +33,7 @@ import {
   REQUIRE_SIGNED_KEY,
   SETTINGS_FILE
 } from './const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 function convertTokens(settings) {
   if (settings.admin) settings.instances[DEFAULT_INSTANCE_NAME].admin = settings.admin;
@@ -44,7 +44,7 @@ function setEnvTokens(settings) {
   const adminToken = ADMIN_TOKEN || false;
   const adminTokens = ADMIN_TOKENS || false;
   if (adminToken && adminTokens) {
-    common_error('ADMIN_TOKEN && ADMIN_TOKENS must not be used together');
+    getLogger().error('ADMIN_TOKEN && ADMIN_TOKENS must not be used together');
     process.exit(2);
   }
   if (adminToken) {
@@ -61,8 +61,9 @@ function setEnvTokens(settings) {
     _adminTokens.forEach(_adminToken => {
       let [token, assignee] = _adminToken.split(':');
       if (!assignee) {
-        console.warn('[WARN] ADMIN_TOKENS must be in the form: token:assignee. See documentation');
-        console.warn('[WARN] We will use md5(token) as assignee');
+        getLogger().warn(
+          'ADMIN_TOKENS must be in the form: token:assignee. See documentation. We will use md5(token) as assignee'
+        );
         assignee = md5(token);
       }
       const _token = md5(`${DEFAULT_INSTANCE_NAME}:${token}`);
@@ -75,8 +76,9 @@ function setEnvTokens(settings) {
         let assignee;
         let token;
         if (typeof _adminToken === 'string') {
-          console.warn('[WARN] settings.admin.tokens must be an object: { token, assignee }. See documentation');
-          console.warn('[WARN] We will use md5(token) as assignee');
+          getLogger().warn(
+            'settings.admin.tokens must be an object: { token, assignee }. See documentation. We will use md5(token) as assignee'
+          );
           assignee = md5(_adminToken);
           token = _adminToken;
         } else {
@@ -148,7 +150,7 @@ const initSettings = function () {
     }
     if (settings.db.engine === 'sqlite') {
       if (CLUSTER_MODE) {
-        common_error('DB ERROR! Engine mariadb/mysql is required for CLUSTER_MODE');
+        getLogger().error('DB ERROR! Engine mariadb/mysql is required for CLUSTER_MODE');
         process.exit(1);
       }
       if (DB_STORAGE) {
@@ -156,7 +158,7 @@ const initSettings = function () {
       } else {
         const sqlite_path = DATA_PATH || false;
         if (sqlite_path) {
-          console.warn('DB WARNING! DATA_PATH has been deprecated, please use DB_STORAGE');
+          getLogger().warn('DB WARNING! DATA_PATH has been deprecated, please use DB_STORAGE');
           settings.db.storage = sqlite_path;
         }
       }
@@ -177,14 +179,14 @@ const initSettings = function () {
     }
 
     if (!coreToken && isMultiInstances()) {
-      common_error('CORE TOKEN is required with MULTI_INSTANCES');
+      getLogger().error('CORE TOKEN is required with MULTI_INSTANCES');
       process.exit(1);
     }
 
     if (PORT) {
       settings.server.http_port = Number(PORT);
     } else if (HTTP_PORT) {
-      common_warn('HTTP_PORT is deprecated. Please use PORT instead');
+      getLogger().warn('HTTP_PORT is deprecated. Please use PORT instead');
       settings.server.http_port = Number(HTTP_PORT);
     }
 

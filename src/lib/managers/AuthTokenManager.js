@@ -15,6 +15,7 @@
 
 import { md5 } from '../utils/cryptoUtils';
 import { getInstance } from '../utils/instanceUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 class AuthTokenManager {
   constructor(db) {
@@ -67,12 +68,12 @@ class AuthTokenManager {
     let token;
     let assignee;
     if (typeof admin === 'string') {
-      console.error('[WARN] tokens.admin as string is deprecated. Please see documentation');
+      getLogger().warn('tokens.admin as string is deprecated. Please see documentation');
       if (as_admin) {
-        console.error('[WARN] We will use "admin" as assignee');
+        getLogger().warn('We will use "admin" as assignee');
         assignee = 'admin';
       } else {
-        console.error('[WARN] We will use md5(tokens.admin) as assignee');
+        getLogger().warn('We will use md5(tokens.admin) as assignee');
         assignee = md5(admin);
       }
       token = admin;

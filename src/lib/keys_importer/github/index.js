@@ -15,6 +15,7 @@
 
 import KeysImporterManager from '../../managers/KeysImporterManager';
 import { http_get } from '../../utils/httpUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 class GithubImporter extends KeysImporterManager {
   async get(username) {
@@ -26,7 +27,7 @@ class GithubImporter extends KeysImporterManager {
         return key.key;
       });
     } catch (err) {
-      console.error('Failed to import from github', err);
+      getLogger().error(err, 'Failed to import from github');
     }
   }
 }

@@ -17,10 +17,10 @@ import DbManager from '../../managers/DbManager';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
-import { common_debug, common_error } from '../../utils/logUtils';
 import ConnectionManager from '@authkeys/mysql-connman';
 import { runV18migration } from '../../../migrations/v18fixInstance';
 import { CLUSTER_MODE } from '../../../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 class MariadbManager extends DbManager {
   dbVersion = 18;
@@ -122,7 +122,7 @@ class MariadbManager extends DbManager {
       try {
         row = await this.client.get(`${sqlCheck} for update`);
         if (row.value === this.dbVersion) {
-          common_debug('Version is equal: %s vs %s, set AUTOCOMMIT=1', row.value, this.dbVersion);
+          getLogger().debug('Version is equal: %s vs %s, set AUTOCOMMIT=1', row.value, this.dbVersion);
           await this.client.run('ROLLBACK');
           await this.client.run('SET AUTOCOMMIT=1');
         }
@@ -132,7 +132,7 @@ class MariadbManager extends DbManager {
         if (e.code === 'ER_NO_SUCH_TABLE') {
           return false;
         }
-        common_error('Ooops: %s', e.message, e.code);
+        getLogger().error({ error_message: e.message, code: e.code }, 'Ooops');
         throw e;
       }
     } else {
@@ -142,7 +142,7 @@ class MariadbManager extends DbManager {
         if (e.code === 'ER_NO_SUCH_TABLE') {
           return false;
         }
-        common_error('Ooops: %s', e.message, e.code);
+        getLogger().error({ error_message: e.message, code: e.code }, 'Ooops');
         throw e;
       }
     }
@@ -163,7 +163,7 @@ class MariadbManager extends DbManager {
         await this.client.run('select value from _version for update');
       }
     } catch (e) {
-      common_error('Unable to insert -1 version in _version table: [%s] %s', e.code, e.message);
+      getLogger().error('Unable to insert -1 version in _version table: [%s] %s', e.code, e.message);
       throw e;
     }
     return 0;
@@ -257,7 +257,7 @@ class MariadbManager extends DbManager {
       try {
         await dbConn.run('alter table public_keys add unique(fingerprint)');
       } catch (e) {
-        common_error(`!!!! ATTENTION !!!
+        getLogger().error(`!!!! ATTENTION !!!
 Unable to force uniqueness on fingerprint. This means you have the same public key used multiple time, this could be a problem.
 Pleas fix it and then run this command on your database:
 
@@ -296,16 +296,15 @@ alter table public_keys add unique(fingerprint);
   }
 
   async flushDb() {
-    console.log('Flushing db...');
+    getLogger().info('Flushing db...');
     const tables = 'public_keys, groups_accounts, permissions, tgroups, accounts, auth_tokens, _version'.split(',');
     for (let i = 0; i < tables.length; i++) {
       const sqlDrop = 'drop table ' + tables[i];
       try {
         await this.client.run(sqlDrop);
-        common_debug('Dropped %s', tables[i]);
+        getLogger().debug('Dropped %s', tables[i]);
       } catch (e) {
-        common_error('Failed to drop %s', tables[i]);
-        console.error(e);
+        getLogger().error(e, 'Failed to drop %s', tables[i]);
         // it doesn't exists
       }
     }

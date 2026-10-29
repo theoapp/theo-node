@@ -15,6 +15,7 @@
 
 import PermissionManager from '../managers/PermissionManager';
 import { loadCacheManager } from './CacheHelper';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 let _cm;
 
@@ -29,7 +30,7 @@ const checkCache = async key => {
         return keys;
       }
     } catch (err) {
-      console.error('Failed to fetch from cache, using db', err.message);
+      getLogger().error({ error_message: err.message }, 'Failed to fetch from cache, using db');
     }
   }
   return false;
@@ -49,7 +50,7 @@ export const getAuthorizedKeys = async (dm, user, host) => {
     })
     .join('\n');
   if (_cm !== false) {
-    _cm.set(cache_key, skeys).catch(err => console.error('Failed to save cache for %s', cache_key, err));
+    _cm.set(cache_key, skeys).catch(err => getLogger().error(err, 'Failed to save cache for %s', cache_key));
   }
   return { keys: skeys, cache };
 };
@@ -74,7 +75,7 @@ export const getAuthorizedKeysAsJson = async (dm, user, host, skip_cache = false
   } finally {
     const ret = db.close();
     if (ret && ret instanceof Promise) {
-      ret.catch(err => console.error(err));
+      ret.catch(err => getLogger().error(err, 'Failed to close db'));
     }
   }
   if (!skip_cache) {
@@ -82,7 +83,7 @@ export const getAuthorizedKeysAsJson = async (dm, user, host, skip_cache = false
       setImmediate(() => {
         _cm
           .set(cache_key, JSON.stringify(keys))
-          .catch(err => console.error('Failed to save cache for %s', cache_key, err));
+          .catch(err => getLogger().error(err, 'Failed to save cache for %s', cache_key));
       });
     }
   }

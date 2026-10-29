@@ -15,9 +15,9 @@
 
 import packageJson from '../../../package';
 import { http_post } from '../utils/httpUtils';
-import { common_error, common_info } from '../utils/logUtils';
 import { getInstance } from '../utils/instanceUtils';
 import { LOG_AUDIT_CONSOLE, LOG_AUDIT_TOKEN, LOG_AUDIT_URL } from '../../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const auditEnable = LOG_AUDIT_CONSOLE || LOG_AUDIT_URL;
 
@@ -59,14 +59,14 @@ class AuditHelper {
     };
     if (LOG_AUDIT_CONSOLE) {
       setImmediate(() => {
-        common_info('[AUDIT]', JSON.stringify(obj));
+        getLogger().info({ audit: obj }, 'AUDIT');
       });
       return;
     }
     if (LOG_AUDIT_URL) {
       setImmediate(() => {
         http_post(LOG_AUDIT_URL, obj, { ...auditHTTPHeaders, 'x-instance-code': getInstance() }).catch(e => {
-          common_error('Unable to send audit log', JSON.stringify(obj), e.message);
+          getLogger().error({ audit: obj, error_message: e.message }, 'Unable to send audit log');
         });
       });
     }

@@ -14,10 +14,10 @@
 // limitations under the License.
 
 import DbManager from '../../managers/DbManager';
-import { common_debug, common_error } from '../../utils/logUtils';
 import PostgresClient from './client';
 import { runV18migration } from '../../../migrations/v18fixInstance';
 import { CLUSTER_MODE } from '../../../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export default class PostgresManager extends DbManager {
   dbVersion = 18;
@@ -123,7 +123,7 @@ export default class PostgresManager extends DbManager {
       try {
         row = await this.client.get(`${sqlCheck} for update`);
         if (row.value === this.dbVersion) {
-          common_debug('Version is equal: %s vs %s', row.value, this.dbVersion);
+          getLogger().debug('Version is equal: %s vs %s', row.value, this.dbVersion);
           await this.client.run('ROLLBACK');
         }
         return row;
@@ -132,7 +132,7 @@ export default class PostgresManager extends DbManager {
         if (e.code === '42P01') {
           return false;
         }
-        common_error('Ooops: %s', e.message, e.code);
+        getLogger().error({ error_message: e.message, code: e.code }, 'Ooops');
         throw e;
       }
     } else {
@@ -142,7 +142,7 @@ export default class PostgresManager extends DbManager {
         if (e.code === '42P01') {
           return false;
         }
-        common_error('Ooops: %s', e.message, e.code);
+        getLogger().error({ error_message: e.message, code: e.code }, 'Ooops');
         throw e;
       }
     }
@@ -163,7 +163,7 @@ export default class PostgresManager extends DbManager {
         await this.client.run('select value from _version for update');
       }
     } catch (e) {
-      common_error('Unable to insert -1 version in _version table: [%s] %s', e.code, e.message);
+      getLogger().error('Unable to insert -1 version in _version table: [%s] %s', e.code, e.message);
       throw e;
     }
     return 0;
@@ -207,16 +207,15 @@ export default class PostgresManager extends DbManager {
   }
 
   async flushDb(client) {
-    console.log('Flushing db...');
+    getLogger().info('Flushing db...');
     const tables = 'public_keys, groups_accounts, permissions, tgroups, accounts, auth_tokens, _version'.split(',');
     for (let i = 0; i < tables.length; i++) {
       const sqlDrop = 'drop table ' + tables[i];
       try {
         await client.run(sqlDrop);
-        common_debug('Dropped %s', tables[i]);
+        getLogger().debug('Dropped %s', tables[i]);
       } catch (e) {
-        common_error('Failed to drop %s', tables[i]);
-        console.error(e);
+        getLogger().error(e, 'Failed to drop %s', tables[i]);
         // it doesn't exists
       }
     }

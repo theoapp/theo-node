@@ -14,6 +14,7 @@
 // limitations under the License.
 
 import CachedManager from '../../managers/CacheManager';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const MAX_EXPIRATION = 2592000;
 
@@ -29,7 +30,7 @@ class MemcachedManager extends CachedManager {
     try {
       const Memcached = require('memcached');
       this.memcached = new Memcached(settings.uri, options);
-      console.log('MemcachedManager started');
+      getLogger().info('MemcachedManager started');
     } catch (e) {
       // Module not loaded
     }

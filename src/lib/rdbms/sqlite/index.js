@@ -22,6 +22,7 @@ import { dirname } from 'path';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { md5 } from '../../utils/cryptoUtils';
 import { runV18migration } from '../../../migrations/v18fixInstance';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 let sqlite3;
 try {
@@ -123,7 +124,7 @@ class SqliteManager extends DbManager {
             try {
               fs.mkdirSync(parentDir, { recursive: true });
             } catch (err) {
-              console.error('ERROR creating dir structure for Sqlite db file: %s', storage, err.message);
+              getLogger().error(err, 'ERROR creating dir structure for Sqlite db file: %s', storage);
               throw err;
             }
           }
@@ -171,13 +172,13 @@ class SqliteManager extends DbManager {
   close() {
     if (this.db.closed) return;
     this.db.closed = true;
-    console.log('Closing db');
+    getLogger().debug('Closing db');
     return new Promise((resolve, reject) => {
       this.db.close(err => {
         if (err) {
           return reject(err);
         }
-        console.log('Closed');
+        getLogger().debug('Closed');
         resolve();
       });
     });
@@ -188,14 +189,14 @@ class SqliteManager extends DbManager {
     try {
       await this.client.run(sqlCreateTable);
     } catch (e) {
-      console.error('Unable to create _version table', e.message);
+      getLogger().error({ error_message: e.message }, 'Unable to create _version table');
       throw e;
     }
     try {
       const sqlInsertVersionZero = 'insert into _version values (0)';
       await this.client.run(sqlInsertVersionZero);
     } catch (e) {
-      console.error('Unable to insert 0 version in _version table', e.message);
+      getLogger().error({ error_message: e.message }, 'Unable to insert 0 version in _version table');
       throw e;
     }
     return 0;
@@ -342,7 +343,7 @@ class SqliteManager extends DbManager {
   }
 
   async flushDb() {
-    console.log('Flushing db...');
+    getLogger().info('Flushing db...');
     /*
     if (this.is_in_memory) {
       await this.close();
@@ -355,9 +356,9 @@ class SqliteManager extends DbManager {
       const sqlDrop = 'drop table ' + tables[i];
       try {
         await this.client.run(sqlDrop);
-        console.log('Dropped ', tables[i]);
+        getLogger().debug('Dropped %s', tables[i]);
       } catch (e) {
-        console.error('Failed to drop %s', tables[i], e);
+        getLogger().error(e, 'Failed to drop %s', tables[i]);
         // it doesn't exists
       }
     }

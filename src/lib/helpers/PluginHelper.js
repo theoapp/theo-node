@@ -16,6 +16,7 @@
 import path from 'path';
 import { getDirFiles } from '../utils/fsUtils';
 import EventHelper from './EventHelper';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const PLUGIN_PATH = 'plugins';
 
@@ -36,12 +37,12 @@ export const loadPlugins = async plugins => {
           try {
             await loadPlugin(files[i]);
           } catch (e) {
-            console.error('[ %s ] Failed to load plugin %s:', new Date().toISOString(), files[i], e.message);
+            getLogger().error({ error_message: e.message }, 'Failed to load plugin %s', files[i]);
           }
         }
       }
     }
   } catch (err) {
-    console.error('[ %s ] Unable to initialize plugins', new Date().toISOString(), err.message);
+    getLogger().error({ error_message: err.message }, 'Unable to initialize plugins');
   }
 };

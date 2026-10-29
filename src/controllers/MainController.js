@@ -80,7 +80,7 @@ export async function flushDB(req, res) {
       res.sendStatus(404);
     }
   } catch (err) {
-    console.error('Error while flushing db', err);
+    getLogger().error(err, 'Error while flushing db');
     res.sendStatus(500);
   }
 }
@@ -116,7 +116,7 @@ export async function deleteInstance(req, res) {
       const client = await cm.open();
       await client.del(instance);
     } catch (e) {
-      console.error('Error while flushing cache', e);
+      getLogger().error(e, 'Error while flushing cache');
     }
   }
   if (deleted > 0) {

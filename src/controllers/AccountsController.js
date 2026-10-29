@@ -29,6 +29,7 @@ import {
   adminUpdateAccountPermission,
   adminUpdateAccountKey
 } from '../lib/helpers/AdminHelper';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export async function listAccounts(req, res) {
   try {
@@ -48,7 +49,7 @@ export async function listAccounts(req, res) {
     }
     res.json(ret);
   } catch (err) {
-    console.error('GET /accounts', err);
+    getLogger().error(err, 'Failed to list accounts');
     sendError(res, err);
   }
 }
@@ -121,7 +122,7 @@ export async function editAccount(req, res) {
     const done = await adminEditAccount(req.db, req.params.id, active, expire_at, req);
     sendDone(res, done);
   } catch (err) {
-    console.error(err);
+    getLogger().error(err, 'Failed to edit account');
     sendError(res, err);
   }
 }
@@ -240,7 +241,7 @@ export async function editAccountPermission(req, res) {
     );
     sendDone(res, done);
   } catch (err) {
-    console.error(err);
+    getLogger().error(err, 'Failed to edit account permission');
     sendError(res, err);
   }
 }

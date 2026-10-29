@@ -17,36 +17,37 @@ import { DEFAULT_INSTANCE_NAME } from '../lib/utils/instanceUtils';
 import { exp, imp } from '../lib/helpers/ImpExpHelper';
 import DbHelper from '../lib/helpers/DbHelper';
 import { md5 } from '../lib/utils/cryptoUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export async function runV18migration(dbManager) {
   // add instance column to tables:
   try {
     const tables = ['accounts', 'tgroups', 'public_keys', 'permissions'];
     for (const table of tables) {
-      console.log('alter ', table);
+      getLogger().debug('alter %s', table);
       await dbManager.client.run(`alter table ${table} add instance varchar(32)`);
       await dbManager.client.run(`update ${table} set instance = ?`, [DEFAULT_INSTANCE_NAME]);
     }
-    console.log('get tokens');
+    getLogger().debug('get tokens');
     const tokens = await dbManager.client.all('select token, assignee, type, created_at from auth_tokens');
-    console.log('pre exp');
+    getLogger().debug('pre exp');
     const dump = await exp(dbManager.client);
     const dh = DbHelper();
-    console.log('pre _flush');
+    getLogger().debug('pre _flush');
     await dh._flush(dbManager.client);
 
     for (const tokenRow of tokens) {
-      console.log('insert token ', tokenRow);
       const { token, assignee, type, created_at } = tokenRow;
+      getLogger().debug('insert %s token for %s', type, assignee);
       await dbManager.client.insert(
         'insert into auth_tokens (instance, token, assignee, type, created_at) values (?, ?, ?, ?, ?)',
         [DEFAULT_INSTANCE_NAME, md5(`${DEFAULT_INSTANCE_NAME}:${token}`), assignee, type, created_at]
       );
     }
-    console.log('pre imp');
+    getLogger().debug('pre imp');
     await imp(dbManager.client, dump);
   } catch (e) {
-    console.error(e);
+    getLogger().error(e, 'v18 migration failed');
     throw e;
   }
 }

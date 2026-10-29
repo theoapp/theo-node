@@ -17,6 +17,7 @@ import { checkAdminAuth } from '../lib/middlewares/AuthMiddleware';
 import { sendError } from '../lib/utils/responseUtils';
 import { getAuthorizedKeysAsFullJson } from '../lib/helpers/KeysHelper';
 import { MODE } from '../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export async function searchPermissions(req, res) {
   try {
@@ -31,7 +32,7 @@ export async function searchPermissions(req, res) {
     res.json(keys);
   } catch (err) {
     if (MODE === 'test') {
-      console.error('Failed search permissions', err);
+      getLogger().error(err, 'Failed search permissions');
     }
     sendError(res, err);
   }

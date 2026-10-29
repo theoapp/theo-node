@@ -15,6 +15,7 @@
 
 import GroupManager from '../../managers/GroupManager';
 import PermissionManager from '../../managers/PermissionManager';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export const adminAddGroupPermission = async (db, group_id, user, host, ssh_options, req) => {
   if (!user) {
@@ -38,7 +39,7 @@ export const adminAddGroupPermission = async (db, group_id, user, host, ssh_opti
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   const pm = new PermissionManager(db);
@@ -66,7 +67,7 @@ export const adminDeleteGroupPermission = async (db, group_id, permission_id, re
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   const pm = new PermissionManager(db);
@@ -106,7 +107,7 @@ export const adminUpdateGroupPermission = async (db, group_id, permission_id, ss
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   const pm = new PermissionManager(db);

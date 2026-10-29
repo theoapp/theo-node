@@ -17,12 +17,12 @@ import { Microservice } from '@fluidware-it/express-microservice';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import { auditMiddleware } from './lib/middlewares/AuditMiddleware';
-import { common_error, common_warn } from './lib/utils/logUtils';
 import UpdateHelper from './lib/helpers/UpdateHelper';
 import { getAsyncLocalStorage, isMultiInstances } from './lib/utils/instanceUtils';
 import os from 'os';
 import path from 'path';
 import { ADDRESS, ADDRESSES, DEBUG_AUTH, SKIP_UPDATECHECK, TRUST_PROXY, TRUST_PROXY_LIST } from './const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
 
@@ -70,10 +70,9 @@ class TheoServer extends Microservice {
       last_check = Date.now();
       UpdateHelper.checkUpdate(true);
     } else {
-      common_warn('         SKIP_UPDATECHECK');
-      common_warn('    we will not check for new versions!');
-      common_warn('    be sure to star https://github.com/theoapp/theo-node');
-      common_warn('    to be notified when a new release is out!');
+      getLogger().warn(
+        'SKIP_UPDATECHECK: we will not check for new versions! Be sure to star https://github.com/theoapp/theo-node to be notified when a new release is out!'
+      );
     }
   }
 
@@ -108,7 +107,7 @@ class TheoServer extends Microservice {
           try {
             await client.open();
           } catch (err) {
-            common_error('Failed to open db:', err.message);
+            getLogger().error({ error_message: err.message }, 'Failed to open db');
             // Ops..
             res.status(500);
             res.json({
@@ -122,7 +121,7 @@ class TheoServer extends Microservice {
             try {
               client.close();
             } catch (e) {
-              common_error('failed to close db:', e.message);
+              getLogger().error({ error_message: e.message }, 'failed to close db');
             }
           });
         }

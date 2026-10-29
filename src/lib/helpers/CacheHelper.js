@@ -16,6 +16,7 @@
 import { getCacheModule } from '../cache/modules';
 import EventHelper from './EventHelper';
 import { getInstance as getCurrentInstance } from '../utils/instanceUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 let _instance;
 
 class CacheHelper {
@@ -33,7 +34,7 @@ class CacheHelper {
     EventHelper.on('theo:flushdb', () => {
       setImmediate(() => {
         if (this.manager) {
-          this.manager.flush().catch(console.error);
+          this.manager.flush().catch(e => getLogger().error(e, 'Failed to flush cache'));
         }
       });
     });
@@ -68,7 +69,7 @@ export const notifyReloadTokens = function () {
       const instance = getCurrentInstance();
       await client.publish('core_tokens', 'flush_tokens:' + instance);
     } catch (e) {
-      console.error('Error while flushing cache tokens', e);
+      getLogger().error(e, 'Error while flushing cache tokens');
     }
   });
 };

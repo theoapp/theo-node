@@ -16,7 +16,7 @@
 import packageJson from '../../../package';
 import { http_get } from '../utils/httpUtils';
 import semver from 'semver';
-import { common_debug, common_warn } from '../utils/logUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const CHECK_UPDATE_URL = 'https://update.theo.authkeys.io/version';
 
@@ -31,13 +31,13 @@ class UpdateHelper {
   static checkUpdate = function (quick = false) {
     const timeout = quick ? 0 : Math.floor(Math.random() * (60000 - 1000) + 1000);
     if (!quick) {
-      common_debug('checkUpdate in %s ms', timeout);
+      getLogger().debug('checkUpdate in %s ms', timeout);
     }
     setTimeout(function () {
       http_get(CHECK_UPDATE_URL, UpdateHelper._getHttpHeaders())
         .then(data => {
           if (!data) {
-            common_warn('Failed to check new version, empty response');
+            getLogger().warn('Failed to check new version, empty response');
             return;
           }
           let version;
@@ -49,13 +49,11 @@ class UpdateHelper {
             version = data;
           }
           if (semver.gt(version, packageJson.version)) {
-            common_warn('');
-            common_warn('   !!! %s Update available: %s !!!', securityUpdate ? 'Security' : '', version);
-            common_warn('');
+            getLogger().warn('!!! %sUpdate available: %s !!!', securityUpdate ? 'Security ' : '', version);
           }
         })
         .catch(e => {
-          common_warn('Failed to check new version:', e.message);
+          getLogger().warn({ error_message: e.message }, 'Failed to check new version');
         });
     }, timeout);
   };

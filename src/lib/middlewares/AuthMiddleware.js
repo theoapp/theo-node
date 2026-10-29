@@ -16,9 +16,9 @@
 import AppHelper from '../helpers/AppHelper';
 import EventHelper from '../helpers/EventHelper';
 import { getInstance } from '../utils/instanceUtils';
-import { common_error } from '../utils/logUtils';
 import { md5 } from '../utils/cryptoUtils';
 import { HTTPError } from '@fluidware-it/express-microservice';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const checkForBearer = function (req, header) {
   const authorization = req.header(header);
@@ -108,7 +108,7 @@ export const authMiddleware = (req, res, next) => {
         next();
       }
     } catch (e) {
-      common_error('Failed to check token', e);
+      getLogger().error(e, 'Failed to check token');
       next();
     } finally {
       if (!req.debugAuth) {

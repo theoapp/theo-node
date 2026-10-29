@@ -14,6 +14,7 @@
 // limitations under the License.
 
 import { loadCacheManager } from '../helpers/CacheHelper';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 let _cm;
 
@@ -49,7 +50,7 @@ class BaseCacheManager {
     }
     if (_cm !== false) {
       _cm.flush().catch(err => {
-        console.error('Failed to flush cache', err.message);
+        getLogger().error({ error_message: err.message }, 'Failed to flush cache');
       });
     }
   }
