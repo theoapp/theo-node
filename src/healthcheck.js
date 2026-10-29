@@ -13,9 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ADDRESS, ADDRESSES, HOSTNAME, PORT } from './const';
+
 // Same bind address resolution as @authkeys/microservice (ADDRESSES, ADDRESS, then HOSTNAME):
 // inside Docker HOSTNAME is set, so the server does not listen on 127.0.0.1
-const { ADDRESSES, ADDRESS, HOSTNAME, PORT } = process.env;
 const host = (ADDRESSES && ADDRESSES.split(',')[0]) || ADDRESS || HOSTNAME || '127.0.0.1';
 
 globalThis

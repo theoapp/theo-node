@@ -16,6 +16,7 @@
 import { checkAdminAuth } from '../lib/middlewares/AuthMiddleware';
 import { sendError } from '../lib/utils/responseUtils';
 import { getAuthorizedKeysAsFullJson } from '../lib/helpers/KeysHelper';
+import { MODE } from '../const';
 
 export async function searchPermissions(req, res) {
   try {
@@ -29,7 +30,7 @@ export async function searchPermissions(req, res) {
     const keys = await getAuthorizedKeysAsFullJson(req.db, user, host);
     res.json(keys);
   } catch (err) {
-    if (process.env.MODE === 'test') {
+    if (MODE === 'test') {
       console.error('Failed search permissions', err);
     }
     sendError(res, err);

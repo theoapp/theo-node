@@ -20,6 +20,7 @@ import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { common_debug, common_error } from '../../utils/logUtils';
 import ConnectionManager from '@authkeys/mysql-connman';
 import { runV18migration } from '../../../migrations/v18fixInstance';
+import { CLUSTER_MODE } from '../../../const';
 
 class MariadbManager extends DbManager {
   dbVersion = 18;
@@ -115,7 +116,7 @@ class MariadbManager extends DbManager {
 
   async getCurrentVersion() {
     const sqlCheck = 'select value from _version';
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       await this.client.run('SET AUTOCOMMIT=0');
       let row;
       try {
@@ -158,7 +159,7 @@ class MariadbManager extends DbManager {
     try {
       const sqlInsertVersionZero = 'insert into _version values (-1)';
       await this.client.run(sqlInsertVersionZero);
-      if (process.env.CLUSTER_MODE === '1') {
+      if (CLUSTER_MODE) {
         await this.client.run('select value from _version for update');
       }
     } catch (e) {
@@ -170,7 +171,7 @@ class MariadbManager extends DbManager {
 
   async initDb() {
     let dbConn;
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn = this.getClient();
       await dbConn.open();
     } else {
@@ -183,14 +184,14 @@ class MariadbManager extends DbManager {
     await dbConn.run(this.CREATE_TABLE_PERMISSIONS);
     await dbConn.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
     await this.updateVersion();
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn.close();
     }
   }
 
   async upgradeDb(fromVersion) {
     let dbConn;
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn = this.getClient();
       await dbConn.open();
     } else {
@@ -277,7 +278,7 @@ alter table public_keys add unique(fingerprint);
     if (fromVersion < 18) {
       await runV18migration(this);
     }
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn.close();
     }
     await this.updateVersion();
@@ -285,7 +286,7 @@ alter table public_keys add unique(fingerprint);
 
   async updateVersion() {
     const sql = 'update _version set value = ' + this.dbVersion;
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       await this.client.run(sql);
       await this.client.run('COMMIT');
       return this.client.run('set AUTOCOMMIT=1');

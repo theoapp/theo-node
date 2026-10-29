@@ -14,8 +14,7 @@
 // limitations under the License.
 
 import { AsyncLocalStorage } from 'async_hooks';
-
-const useInstances = process.env.MULTI_INSTANCES === '1';
+import { MULTI_INSTANCES } from '../../const';
 
 const asyncLocalStorage = new AsyncLocalStorage();
 
@@ -25,11 +24,11 @@ export function getAsyncLocalStorage() {
 }
 
 export function isMultiInstances() {
-  return useInstances;
+  return MULTI_INSTANCES;
 }
 
 export function getInstance() {
-  if (useInstances) {
+  if (MULTI_INSTANCES) {
     const store = asyncLocalStorage.getStore();
     if (store && store.instance) {
       return store.instance;

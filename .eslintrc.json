@@ -11,6 +11,7 @@
     "no-undef": "warn",
     "no-use-before-define": "warn",
     "no-console": "off",
+    "no-process-env": "error",
     "camelcase": "off",
     "prettier/prettier": [
       "error",

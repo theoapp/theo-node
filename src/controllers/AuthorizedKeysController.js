@@ -21,6 +21,7 @@ import AppHelper from '../lib/helpers/AppHelper';
 import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
 import { common_debug, common_error } from '../lib/utils/logUtils';
 import KeyManager from '../lib/managers/KeyManager';
+import { MODE } from '../const';
 
 const checkFingerPrint = async function (user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
@@ -94,7 +95,7 @@ export async function getAuthorizedKeys(req, res) {
   try {
     await checkUserHost(req.dm, accept, user, host, res, f);
   } catch (err) {
-    if (process.env.MODE === 'test') {
+    if (MODE === 'test') {
       common_error('Failed authorized_keys', err.message);
     }
     sendError(res, err);
@@ -119,7 +120,7 @@ export async function getAuthorizedKeysByReverseDNS(req, res) {
       try {
         await checkUserHost(req.dm, accept, user, host[0], res, f);
       } catch (err) {
-        if (process.env.MODE === 'test') {
+        if (MODE === 'test') {
           common_error('Failed authorized_keys', err.message);
         }
         sendError(res, err);
@@ -129,7 +130,7 @@ export async function getAuthorizedKeysByReverseDNS(req, res) {
       res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });
     }
   } catch (err) {
-    if (process.env.MODE === 'test') {
+    if (MODE === 'test') {
       common_error('Failed reverse %s', ip, err.message);
     }
     res.status(400);

@@ -17,6 +17,23 @@ import { common_error, common_warn } from './lib/utils/logUtils';
 import { md5 } from './lib/utils/cryptoUtils';
 import { getLoadDbEnvSettings, loadPostgresEnvSettings } from './dbInitiator';
 import { DEFAULT_INSTANCE_NAME, isMultiInstances } from './lib/utils/instanceUtils';
+import {
+  ADMIN_TOKEN,
+  ADMIN_TOKENS,
+  CACHE_ENABLED,
+  CACHE_OPTIONS,
+  CACHE_URI,
+  CLIENT_TOKENS,
+  CLUSTER_MODE,
+  CORE_TOKEN,
+  DATA_PATH,
+  DB_ENGINE,
+  DB_STORAGE,
+  HTTP_PORT,
+  PORT,
+  REQUIRE_SIGNED_KEY,
+  SETTINGS_FILE
+} from './const';
 
 function convertTokens(settings) {
   if (settings.admin) settings.instances[DEFAULT_INSTANCE_NAME].admin = settings.admin;
@@ -24,8 +41,8 @@ function convertTokens(settings) {
 }
 
 function setEnvTokens(settings) {
-  const adminToken = process.env.ADMIN_TOKEN || false;
-  const adminTokens = process.env.ADMIN_TOKENS || false;
+  const adminToken = ADMIN_TOKEN || false;
+  const adminTokens = ADMIN_TOKENS || false;
   if (adminToken && adminTokens) {
     common_error('ADMIN_TOKEN && ADMIN_TOKENS must not be used together');
     process.exit(2);
@@ -79,7 +96,7 @@ function setEnvTokens(settings) {
       settings.instances[DEFAULT_INSTANCE_NAME].admin.tokens = tokens;
     }
   }
-  const clientTokens = process.env.CLIENT_TOKENS || false;
+  const clientTokens = CLIENT_TOKENS || false;
   if (clientTokens) {
     settings.instances[DEFAULT_INSTANCE_NAME].client.tokens = clientTokens
       .split(',')
@@ -114,7 +131,7 @@ const initSettings = function () {
     };
   }
 
-  const settingsJson = process.env.SETTINGS_FILE;
+  const settingsJson = SETTINGS_FILE;
   if (settingsJson) {
     const _settings = require(settingsJson);
     if (_settings.admin || _settings.client) {
@@ -123,23 +140,21 @@ const initSettings = function () {
     Object.assign(settings, _settings);
   }
 
-  const cluster_mode = process.env.CLUSTER_MODE || '0';
-
-  settings.cluster_mode = cluster_mode;
+  settings.cluster_mode = CLUSTER_MODE;
 
   const setDbEnv = () => {
-    if (process.env.DB_ENGINE) {
-      settings.db.engine = process.env.DB_ENGINE;
+    if (DB_ENGINE) {
+      settings.db.engine = DB_ENGINE;
     }
     if (settings.db.engine === 'sqlite') {
-      if (cluster_mode === '1') {
+      if (CLUSTER_MODE) {
         common_error('DB ERROR! Engine mariadb/mysql is required for CLUSTER_MODE');
         process.exit(1);
       }
-      if (process.env.DB_STORAGE) {
-        settings.db.storage = process.env.DB_STORAGE;
+      if (DB_STORAGE) {
+        settings.db.storage = DB_STORAGE;
       } else {
-        const sqlite_path = process.env.DATA_PATH || false;
+        const sqlite_path = DATA_PATH || false;
         if (sqlite_path) {
           console.warn('DB WARNING! DATA_PATH has been deprecated, please use DB_STORAGE');
           settings.db.storage = sqlite_path;
@@ -154,7 +169,7 @@ const initSettings = function () {
   };
 
   const setEnv = () => {
-    const coreToken = process.env.CORE_TOKEN || false;
+    const coreToken = CORE_TOKEN || false;
     if (coreToken) {
       settings.core = {
         token: coreToken
@@ -166,29 +181,25 @@ const initSettings = function () {
       process.exit(1);
     }
 
-    if (process.env.PORT) {
-      settings.server.http_port = Number(process.env.PORT);
-    } else {
-      if (process.env.HTTP_PORT) {
-        common_warn('HTTP_PORT is deprecated. Please use PORT instead');
-        settings.server.http_port = Number(process.env.HTTP_PORT);
-      }
-      process.env.PORT = settings.server.http_port;
+    if (PORT) {
+      settings.server.http_port = Number(PORT);
+    } else if (HTTP_PORT) {
+      common_warn('HTTP_PORT is deprecated. Please use PORT instead');
+      settings.server.http_port = Number(HTTP_PORT);
     }
 
-    const cache = process.env.CACHE_ENABLED || false;
+    const cache = CACHE_ENABLED || false;
 
     if (cache) {
       settings.cache = {
         type: cache,
         settings: {
-          uri: process.env.CACHE_URI || false,
-          options: process.env.CACHE_OPTIONS || false
+          uri: CACHE_URI || false,
+          options: CACHE_OPTIONS || false
         }
       };
     }
-    const keySign = process.env.REQUIRE_SIGNED_KEY || '0';
-    if (keySign === '1') {
+    if (REQUIRE_SIGNED_KEY) {
       settings.keys.sign = true;
     }
     setDbEnv();

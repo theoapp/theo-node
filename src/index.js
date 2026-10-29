@@ -14,6 +14,7 @@
 // limitations under the License.
 
 import './appenv';
+import { DB_CONN_MAX_RETRY as _DB_CONN_MAX_RETRY, LOAD_PLUGINS, MODE } from './const';
 import packageJson from '../package';
 import AppHelper from './lib/helpers/AppHelper';
 import util from 'util';
@@ -27,7 +28,6 @@ import initSettings from './settingsInitiator';
 
 initLogger();
 
-const { DB_CONN_MAX_RETRY: _DB_CONN_MAX_RETRY } = process.env;
 const DB_CONN_MAX_RETRY =
   typeof _DB_CONN_MAX_RETRY !== 'undefined' && !isNaN(_DB_CONN_MAX_RETRY) ? Number(_DB_CONN_MAX_RETRY) : 10;
 
@@ -59,13 +59,13 @@ if (settings.core) {
   common_info(' Using core mode ');
   common_info(' !!! INFO !!! \n');
   if (settings.cache && settings.cache.type === 'redis') {
-    if (settings.cluster_mode === '1') {
+    if (settings.cluster_mode) {
       subscribe_core_token = true;
     }
   }
 }
 
-if (process.env.MODE !== 'test') {
+if (MODE !== 'test') {
   console.log(`
 
           _   _   ___   _____
@@ -79,8 +79,8 @@ if (process.env.MODE !== 'test') {
   common_info('Theo starts');
 }
 const ah = AppHelper(settings);
-if (process.env.LOAD_PLUGINS) {
-  loadPlugins(process.env.LOAD_PLUGINS).catch(e => console.error('Failed to load plugins!', e.message));
+if (LOAD_PLUGINS) {
+  loadPlugins(LOAD_PLUGINS).catch(e => console.error('Failed to load plugins!', e.message));
 }
 let dh;
 let dm;
@@ -146,7 +146,7 @@ let theoServer;
 
 const startServer = () => {
   // Theo server
-  theoServer = new TheoServer(process.env, dm);
+  theoServer = new TheoServer(settings.server.http_port, dm);
   theoServer
     .start()
     .then(() => {
@@ -181,7 +181,7 @@ const startTestDb = async retry => {
   }
 };
 
-if (settings.cluster_mode === '1') {
+if (settings.cluster_mode) {
   const timeout = Math.round(Math.random() * 2000);
   common_debug('CLUSTER_MODE: waiting %s ms to start node', timeout);
   setTimeout(function () {

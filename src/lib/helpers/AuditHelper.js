@@ -17,10 +17,9 @@ import packageJson from '../../../package';
 import { http_post } from '../utils/httpUtils';
 import { common_error, common_info } from '../utils/logUtils';
 import { getInstance } from '../utils/instanceUtils';
+import { LOG_AUDIT_CONSOLE, LOG_AUDIT_TOKEN, LOG_AUDIT_URL } from '../../const';
 
-const { LOG_AUDIT_CONSOLE, LOG_AUDIT_URL, LOG_AUDIT_TOKEN } = process.env;
-
-const auditEnable = (LOG_AUDIT_CONSOLE && LOG_AUDIT_CONSOLE === 'true') || LOG_AUDIT_URL;
+const auditEnable = LOG_AUDIT_CONSOLE || LOG_AUDIT_URL;
 
 const getHTTPHeaders = function () {
   if (!LOG_AUDIT_URL) return;
@@ -58,7 +57,7 @@ class AuditHelper {
       entity,
       data
     };
-    if (LOG_AUDIT_CONSOLE && LOG_AUDIT_CONSOLE === 'true') {
+    if (LOG_AUDIT_CONSOLE) {
       setImmediate(() => {
         common_info('[AUDIT]', JSON.stringify(obj));
       });

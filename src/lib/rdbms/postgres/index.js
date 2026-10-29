@@ -17,6 +17,7 @@ import DbManager from '../../managers/DbManager';
 import { common_debug, common_error } from '../../utils/logUtils';
 import PostgresClient from './client';
 import { runV18migration } from '../../../migrations/v18fixInstance';
+import { CLUSTER_MODE } from '../../../const';
 
 export default class PostgresManager extends DbManager {
   dbVersion = 18;
@@ -116,7 +117,7 @@ export default class PostgresManager extends DbManager {
 
   async getCurrentVersion() {
     const sqlCheck = 'select value from _version';
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       await this.client.run('BEGIN');
       let row;
       try {
@@ -158,7 +159,7 @@ export default class PostgresManager extends DbManager {
     try {
       const sqlInsertVersionZero = 'insert into _version values (-1)';
       await this.client.run(sqlInsertVersionZero);
-      if (process.env.CLUSTER_MODE === '1') {
+      if (CLUSTER_MODE) {
         await this.client.run('select value from _version for update');
       }
     } catch (e) {
@@ -170,7 +171,7 @@ export default class PostgresManager extends DbManager {
 
   async initDb() {
     let dbConn;
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn = this.getClient();
       await dbConn.open();
     } else {
@@ -184,7 +185,7 @@ export default class PostgresManager extends DbManager {
     await dbConn.run(this.CREATE_INDEX_PERMISSION_HOST_USER);
     await dbConn.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
     await this.updateVersion();
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn.close();
     }
   }
@@ -197,7 +198,7 @@ export default class PostgresManager extends DbManager {
 
   async updateVersion() {
     const sql = 'update _version set value = ' + this.dbVersion;
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       await this.client.run(sql);
       await this.client.run('COMMIT');
     } else {

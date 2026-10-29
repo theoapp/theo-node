@@ -22,7 +22,7 @@ import UpdateHelper from './lib/helpers/UpdateHelper';
 import { getAsyncLocalStorage, isMultiInstances } from './lib/utils/instanceUtils';
 import os from 'os';
 import path from 'path';
-import { EnvParse } from '@fluidware-it/saddlebag';
+import { ADDRESS, ADDRESSES, DEBUG_AUTH, SKIP_UPDATECHECK, TRUST_PROXY, TRUST_PROXY_LIST } from './const';
 
 const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
 
@@ -47,9 +47,8 @@ const doURLneedDb = function (path) {
 
 // Keep the bind options of @authkeys/microservice (PORT, ADDRESSES, ADDRESS)
 // and let theo's own authMiddleware handle bearer tokens
-const getMicroserviceConfig = function (environment) {
-  const { PORT, ADDRESSES, ADDRESS } = environment;
-  const config = { port: Number(PORT), forwardUnknownBearer: true };
+const getMicroserviceConfig = function (port) {
+  const config = { port, forwardUnknownBearer: true };
   if (ADDRESSES) {
     config.addresses = ADDRESSES.split(',')
       .map(a => a.trim())
@@ -63,10 +62,10 @@ const getMicroserviceConfig = function (environment) {
 class TheoServer extends Microservice {
   dm;
 
-  constructor(environment, dm) {
-    super(getMicroserviceConfig(environment));
+  constructor(port, dm) {
+    super(getMicroserviceConfig(port));
     this.dm = dm;
-    this.skip_updatecheck = EnvParse.envBool('SKIP_UPDATECHECK', false);
+    this.skip_updatecheck = SKIP_UPDATECHECK;
     if (!this.skip_updatecheck) {
       last_check = Date.now();
       UpdateHelper.checkUpdate(true);
@@ -80,16 +79,15 @@ class TheoServer extends Microservice {
 
   setupRoutes() {
     this.express.disable('x-powered-by');
-    if (process.env.TRUST_PROXY === '1') {
-      this.express.set('trust proxy', process.env.TRUST_PROXY_LIST);
+    if (TRUST_PROXY) {
+      this.express.set('trust proxy', TRUST_PROXY_LIST);
     }
     const hostname = os.hostname();
     const asyncLocalStorage = getAsyncLocalStorage();
     const _isMultiInstances = isMultiInstances();
-    const debugAuth = EnvParse.envBool('DEBUG_AUTH', false);
     this.express.use((req, res, next) => {
       res.set('x-served-by', hostname);
-      req.debugAuth = debugAuth;
+      req.debugAuth = DEBUG_AUTH;
       asyncLocalStorage.run({}, () => {
         const store = asyncLocalStorage.getStore();
         store.instance = _isMultiInstances ? req.hostname : 'theo';

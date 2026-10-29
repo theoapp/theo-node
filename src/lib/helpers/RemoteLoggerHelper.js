@@ -17,8 +17,7 @@ import packageJson from '../../../package';
 import { http_post } from '../utils/httpUtils';
 import { common_error } from '../utils/logUtils';
 import { getInstance } from '../utils/instanceUtils';
-
-const { LOG_AUTH_KEYS_URL, LOG_AUTH_KEYS_TOKEN } = process.env;
+import { LOG_AUTH_KEYS_TOKEN, LOG_AUTH_KEYS_URL } from '../../const';
 
 class RemoteLoggerHelper {
   static getHttpHeaders() {

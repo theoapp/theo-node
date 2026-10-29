@@ -14,6 +14,7 @@
 // limitations under the License.
 
 import util from 'util';
+import { LOG_LEVEL as LOG_LEVEL_ENV } from '../../const';
 
 export const DEBUG = 'DEBUG';
 export const INFO = 'INFO';
@@ -45,7 +46,7 @@ export const initLogger = function (level = false, logfn = undefined) {
   } else {
     logger = logfn;
   }
-  const LOG_LEVEL_D = level || process.env.LOG_LEVEL || 'INFO';
+  const LOG_LEVEL_D = level || LOG_LEVEL_ENV || 'INFO';
   switch (LOG_LEVEL_D.toUpperCase()) {
     case DEBUG:
       LOG_LEVEL = LEVELS.DEBUG + LEVELS.INFO + LEVELS.WARN + LEVELS.ERROR;

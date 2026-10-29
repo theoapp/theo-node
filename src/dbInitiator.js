@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER } from './const';
+
 let loadDbEnvSettings;
 try {
   loadDbEnvSettings = require('@authkeys/mysql-connman').loadDbEnvSettings;
@@ -28,7 +30,6 @@ export const getLoadDbEnvSettings = function () {
 };
 
 export const loadPostgresEnvSettings = function (dbSettings) {
-  const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT } = process.env;
   if (!dbSettings.config) {
     dbSettings.config = {};
   }

@@ -18,6 +18,7 @@ import { sendError } from '../lib/utils/responseUtils';
 import AppHelper from '../lib/helpers/AppHelper';
 import AuthTokenManager from '../lib/managers/AuthTokenManager';
 import { notifyReloadTokens } from '../lib/helpers/CacheHelper';
+import { CLUSTER_MODE } from '../const';
 
 // Reload tokens, called using CORE token
 export async function replaceTokens(req, res) {
@@ -54,7 +55,7 @@ export async function replaceTokens(req, res) {
         await atm.create(tokens.clients[i], 'agent');
       }
     }
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       notifyReloadTokens();
       res.sendStatus(204);
     } else {
@@ -79,7 +80,7 @@ export async function deleteTokens(req, res) {
   }
   const atm = new AuthTokenManager(req.db);
   await atm.delete();
-  if (process.env.CLUSTER_MODE === '1') {
+  if (CLUSTER_MODE) {
     notifyReloadTokens();
     res.sendStatus(204);
   } else {

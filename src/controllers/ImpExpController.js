@@ -16,6 +16,7 @@
 import { checkAdminAuth } from '../lib/middlewares/AuthMiddleware';
 import { sendError } from '../lib/utils/responseUtils';
 import { exp, imp } from '../lib/helpers/ImpExpHelper';
+import { MODE } from '../const';
 
 export async function exportData(req, res) {
   try {
@@ -28,7 +29,7 @@ export async function exportData(req, res) {
     const dump = await exp(req.db);
     res.json(dump);
   } catch (err) {
-    if (process.env.MODE === 'test') {
+    if (MODE === 'test') {
       console.error('Failed to export', err);
     }
     sendError(res, err);

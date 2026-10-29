@@ -16,9 +16,10 @@
 import CachedManager from '../../managers/CacheManager';
 import { common_error, common_info } from '../../utils/logUtils';
 import { getInstance } from '../../utils/instanceUtils';
+import { REDIS_CONNECTION_RETRY_INTERVAL, REDIS_MAX_CONNECTION_RETRIES } from '../../../const';
 
-const MAX_RETRIES = Number(process.env.REDIS_MAX_CONNECTION_RETRIES) || 10;
-const MAX_RETRY_TIMEOUT = Number(process.env.REDIS_CONNECTION_RETRY_INTERVAL) * 1000 || 5000;
+const MAX_RETRIES = Number(REDIS_MAX_CONNECTION_RETRIES) || 10;
+const MAX_RETRY_TIMEOUT = Number(REDIS_CONNECTION_RETRY_INTERVAL) * 1000 || 5000;
 
 let redisConn;
 let createClient;

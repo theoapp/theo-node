@@ -22,6 +22,7 @@ import DbHelper from '../lib/helpers/DbHelper';
 import { loadCacheManager, notifyReloadTokens } from '../lib/helpers/CacheHelper';
 import { getInstance, isMultiInstances } from '../lib/utils/instanceUtils';
 import { getLogger } from '@fluidware-it/saddlebag';
+import { CLUSTER_MODE, MODE } from '../const';
 
 const uptime_start = Date.now();
 
@@ -62,7 +63,7 @@ export async function flushDB(req, res) {
     sendError(res, e);
     return;
   }
-  if (!process.env.MODE || process.env.MODE !== 'test') {
+  if (!MODE || MODE !== 'test') {
     res.status(403);
     res.json({ status: 403, reason: 'Operation is forbidden' });
     return;
@@ -71,7 +72,7 @@ export async function flushDB(req, res) {
     const dh = DbHelper();
     const done = await dh._flush(req.db);
     if (done) {
-      if (process.env.CLUSTER_MODE && process.env.CLUSTER_MODE === '1') {
+      if (CLUSTER_MODE) {
         notifyReloadTokens();
       }
       res.sendStatus(204);
