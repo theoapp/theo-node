@@ -14,12 +14,18 @@
 | CLUSTER_MODE                    | boolean |   false |          |          |
 | CORE_TOKEN                      |  string |         |          |          |
 | DATA_PATH                       |  string |         |          |          |
+| DB_CLUSTER                      |  string |         |          |          |
+| DB_CONNECTION_LIMIT             |  string |         |          |          |
 | DB_CONN_MAX_RETRY               |  string |         |          |          |
 | DB_ENGINE                       |  string |         |          |          |
 | DB_HOST                         |  string |         |          |          |
 | DB_NAME                         |  string |         |          |          |
+| DB_NOPOOL                       | boolean |   false |          |          |
 | DB_PASSWORD                     |  string |         |          |          |
+| DB_PASSWORD_FILE                |  string |         |          |          |
 | DB_PORT                         |  string |         |          |          |
+| DB_QUEUE_LIMIT                  |  string |         |          |          |
+| DB_SSL_CA                       |  string |         |          |          |
 | DB_STORAGE                      |  string |         |          |          |
 | DB_USER                         |  string |         |          |          |
 | DEBUG_AUTH                      | boolean |   false |          |          |

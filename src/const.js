@@ -39,6 +39,12 @@ export const DB_HOST = EnvParse.envStringOptional('DB_HOST');
 export const DB_NAME = EnvParse.envStringOptional('DB_NAME');
 export const DB_PORT = EnvParse.envStringOptional('DB_PORT');
 export const DB_CONN_MAX_RETRY = EnvParse.envStringOptional('DB_CONN_MAX_RETRY');
+export const DB_PASSWORD_FILE = EnvParse.envStringOptional('DB_PASSWORD_FILE');
+export const DB_SSL_CA = EnvParse.envStringOptional('DB_SSL_CA');
+export const DB_CLUSTER = EnvParse.envStringOptional('DB_CLUSTER');
+export const DB_CONNECTION_LIMIT = EnvParse.envStringOptional('DB_CONNECTION_LIMIT');
+export const DB_QUEUE_LIMIT = EnvParse.envStringOptional('DB_QUEUE_LIMIT');
+export const DB_NOPOOL = EnvParse.envBool('DB_NOPOOL', false);
 
 // Cache
 export const CACHE_ENABLED = EnvParse.envStringOptional('CACHE_ENABLED');

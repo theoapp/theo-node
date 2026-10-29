@@ -17,10 +17,11 @@ import DbManager from '../../managers/DbManager';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
-import ConnectionManager from '@authkeys/mysql-connman';
 import { runV18migration } from '../../../migrations/v18fixInstance';
 import { CLUSTER_MODE } from '../../../const';
 import { getLogger } from '@fluidware-it/saddlebag';
+import mysql from 'mysql2';
+import MariadbClient from './client';
 
 class MariadbManager extends DbManager {
   dbVersion = 18;
@@ -94,12 +95,25 @@ class MariadbManager extends DbManager {
     CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE
   )`;
 
-  connectionManager;
+  pool;
 
   constructor(settings) {
     super(settings);
     const { config, cluster, noDbPool } = settings;
-    this.connectionManager = new ConnectionManager(config, noDbPool, cluster);
+    this.cluster = !!cluster;
+    this.noDbPool = !!noDbPool;
+    if (cluster) {
+      // A failing node is taken offline and retried after restoreNodeTimeout
+      this.pool = mysql.createPoolCluster({ canRetry: true, restoreNodeTimeout: 5000 });
+      ['rw', 'ro'].forEach(ns => {
+        cluster[ns].forEach((node, i) => {
+          this.pool.add(`${ns}${i}`, { ...config, host: node.host, port: node.port || 3306 });
+        });
+      });
+      this.pool.on('offline', id => getLogger().warn('Db node %s offline', id));
+    } else {
+      this.pool = mysql.createPool(config);
+    }
   }
 
   getEngine() {
@@ -107,7 +121,7 @@ class MariadbManager extends DbManager {
   }
 
   getClient(pool = false) {
-    return this.connectionManager.getClient(pool);
+    return new MariadbClient(this.pool, { cluster: this.cluster, noDbPool: this.noDbPool, poolName: pool });
   }
 
   setClient(client) {
@@ -312,8 +326,9 @@ alter table public_keys add unique(fingerprint);
   }
 
   close() {
-    this.connectionManager.close();
-    return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      this.pool.end(err => (err ? reject(err) : resolve()));
+    });
   }
 }
 

@@ -63,7 +63,7 @@ build_full () {
 build_sqlite () {
   TAG_NAME=${DOCKER_TAG}-sqlite
 
-  npm uninstall @authkeys/mysql-connman redis memcached pg
+  npm uninstall mysql2 redis memcached pg
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -77,7 +77,7 @@ build_sqlite () {
 build_sqlite_redis () {
   TAG_NAME=${DOCKER_TAG}-sqlite-redis
 
-  npm uninstall @authkeys/mysql-connman memcached pg
+  npm uninstall mysql2 memcached pg
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -91,7 +91,7 @@ build_sqlite_memcached () {
 
   TAG_NAME=${DOCKER_TAG}-sqlite-memcached
 
-  npm uninstall @authkeys/mysql-connman redis pg
+  npm uninstall mysql2 redis pg
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -149,7 +149,7 @@ build_postgres () {
 
   TAG_NAME=${DOCKER_TAG}-postgres
 
-  npm uninstall @authkeys/mysql-connman sqlite3 redis memcached
+  npm uninstall mysql2 sqlite3 redis memcached
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then
@@ -163,7 +163,7 @@ build_postgres () {
 build_postgres_redis () {
   TAG_NAME=${DOCKER_TAG}-postgres-redis
 
-  npm uninstall @authkeys/mysql-connman sqlite3 memcached
+  npm uninstall mysql2 sqlite3 memcached
   docker_build "${TAG_NAME}"
 
   if [ "$1" = "push" ]; then

@@ -14,7 +14,7 @@
 // limitations under the License.
 
 import { md5 } from './lib/utils/cryptoUtils';
-import { getLoadDbEnvSettings, loadPostgresEnvSettings } from './dbInitiator';
+import { loadMariadbEnvSettings, loadPostgresEnvSettings } from './dbInitiator';
 import { DEFAULT_INSTANCE_NAME, isMultiInstances } from './lib/utils/instanceUtils';
 import {
   ADMIN_TOKEN,
@@ -165,8 +165,7 @@ const initSettings = function () {
     } else if (settings.db.engine === 'postgres') {
       loadPostgresEnvSettings(settings.db);
     } else {
-      const loadDbEnvSettings = getLoadDbEnvSettings();
-      loadDbEnvSettings(settings.db);
+      loadMariadbEnvSettings(settings.db);
     }
   };
 
