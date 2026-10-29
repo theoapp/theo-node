@@ -228,13 +228,22 @@ describe('REST Check keys', function () {
       assert.strictEqual(res.headers.get('content-type'), 'application/json; charset=utf-8');
       const json = await res.json();
       assert.strictEqual(json.length, 5);
-      const resAdmin = await fetch(base_url + '/accounts/hiacopettim@123-reg.co.uk', {
-        method: 'GET',
-        headers: {
-          Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+      // last_used_at is updated after the response is sent: wait for it
+      let data;
+      for (let i = 0; i < 20; i++) {
+        const resAdmin = await fetch(base_url + '/accounts/hiacopettim@123-reg.co.uk', {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer ' + process.env.ADMIN_TOKEN
+          }
+        });
+        data = await resAdmin.json();
+        const used = data.public_keys.find(public_key => public_key.fingerprint === fingerprint);
+        if (used && used.last_used_at !== null) {
+          break;
         }
-      });
-      const data = await resAdmin.json();
+        await awaitTimeout(50);
+      }
       data.public_keys.forEach(public_key => {
         if (public_key.fingerprint === fingerprint) {
           assert.strictEqual(typeof public_key.last_used_at, 'number');
