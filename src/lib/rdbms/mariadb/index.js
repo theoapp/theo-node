@@ -295,13 +295,13 @@ alter table public_keys add unique(fingerprint);
     }
   }
 
-  async flushDb() {
+  async flushDb(client = this.client) {
     getLogger().info('Flushing db...');
     const tables = 'public_keys, groups_accounts, permissions, tgroups, accounts, auth_tokens, _version'.split(',');
     for (let i = 0; i < tables.length; i++) {
       const sqlDrop = 'drop table ' + tables[i];
       try {
-        await this.client.run(sqlDrop);
+        await client.run(sqlDrop);
         getLogger().debug('Dropped %s', tables[i]);
       } catch (e) {
         getLogger().error(e, 'Failed to drop %s', tables[i]);
