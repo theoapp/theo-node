@@ -40,7 +40,7 @@ test_standalone () {
 test_sqlite () {
     # sqlite
     print_test_header sqlite
-    docker-compose -p theotests -f docker-compose/docker-compose-test.yml up -d
+    docker-compose -p theotests -f docker-compose/docker-compose-test.yml up -d --wait
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
@@ -60,7 +60,7 @@ test_sqlite () {
 test_sqlite_audit () {
     # sqlite
     print_test_header "sqlite audit"
-    docker-compose -p theotests -f docker-compose/docker-compose-test-audit.yml up -d
+    docker-compose -p theotests -f docker-compose/docker-compose-test-audit.yml up -d --wait
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN_AUDIT}" \
@@ -82,7 +82,7 @@ test_sqlite_audit () {
 test_sqlite_signed () {
     # sqlite + REQUIRE_SIGNED_KEY
     print_test_header "sqlite + REQUIRE_SIGNED_KEY"
-    docker-compose -p theotests -f docker-compose/docker-compose-test-signed.yml up -d
+    docker-compose -p theotests -f docker-compose/docker-compose-test-signed.yml up -d --wait
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
@@ -102,7 +102,7 @@ test_sqlite_signed () {
 test_sqlite_inmemory () {
     # sqlite + inmemory
     print_test_header "sqlite + inmemory"
-    docker-compose -p theotests -f docker-compose/docker-compose-test-inmemory.yml up -d
+    docker-compose -p theotests -f docker-compose/docker-compose-test-inmemory.yml up -d --wait
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
@@ -123,7 +123,7 @@ test_sqlite_inmemory () {
 test_sqlite_memcached () {
     # sqlite + memcached
     print_test_header "sqlite + memcached"
-    docker-compose -p theotests -f docker-compose/docker-compose-test-memcached.yml up -d
+    docker-compose -p theotests -f docker-compose/docker-compose-test-memcached.yml up -d --wait
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "ADMIN_TOKEN=${ADMIN_TOKEN}" \
