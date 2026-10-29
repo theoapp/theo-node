@@ -6,7 +6,7 @@
   "plugins": [
     "prettier"
   ],
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "rules": {
     "no-undef": "warn",
     "no-use-before-define": "warn",
