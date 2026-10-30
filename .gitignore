@@ -40,3 +40,4 @@ npm-debug.log
 /plugins
 
 /tmp*
+src/version.js

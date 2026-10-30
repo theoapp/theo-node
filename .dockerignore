@@ -5,7 +5,6 @@
 !package*.json
 !src
 !api/openapi-spec
-!scripts
 !tests
 !.mocharc.yaml
-!.nycrc.json
+!scripts/version-update.mjs
