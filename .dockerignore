@@ -1,6 +1,6 @@
 **
 
-!.babelrc
+!babel.config.json
 !.npmrc
 !package*.json
 !src

@@ -49,7 +49,7 @@
 | TRUST_PROXY                     | boolean |   false |          |          |
 | TRUST_PROXY_LIST                |  string |         |          |          |
 
-## @fluidware-it/express-microservice@0.6.2
+## @fluidware-it/express-microservice@0.7.0-rc.0
 
 | ENV                             |     type |                        default | required |                                               notes |
 | ------------------------------- | -------- | ------------------------------ | -------- | --------------------------------------------------- |
@@ -58,6 +58,7 @@
 | FW_APP_DEFAULT_ROLES            | string[] |                          admin |          |                                                     |
 | FW_MS_ADDRESS                   |   string |                                |          |                                                     |
 | FW_MS_ADDRESSES                 | string[] |                                |          |                                                     |
+| FW_MS_BYOA                      |  boolean |                          false |          |                        Bring Your Own Authenticator |
 | FW_MS_CERT                      |   string |                                |          |     full cert for https (wins over FW_MS_CERT_FILE) |
 | FW_MS_CERT_FILE                 |   string |                                |          |         path to file containing full cert for https |
 | FW_MS_FORWARD_UNKNOWN_BEARER    |  boolean |                          false |          | forward unknown bearer token to the next middleware |

@@ -48,7 +48,7 @@ const doURLneedDb = function (path) {
 // Keep the bind options of @authkeys/microservice (PORT, ADDRESSES, ADDRESS)
 // and let theo's own authMiddleware handle bearer tokens
 const getMicroserviceConfig = function (port) {
-  const config = { port, forwardUnknownBearer: true };
+  const config = { port, byoa: true };
   if (ADDRESSES) {
     config.addresses = ADDRESSES.split(',')
       .map(a => a.trim())
