@@ -27,6 +27,18 @@ fi
 
 source ./docker-compose/test_env
 
+# wait until the container healthcheck reports healthy
+wait_healthy() {
+  for i in $(seq 1 90); do
+    if [[ "$(docker inspect -f '{{.State.Health.Status}}' $1 2>/dev/null)" == "healthy" ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "ERR $1 is not healthy"
+  return 1
+}
+
 test_standalone () {
     print_test_header Standalone
     docker run --rm --name theo-tester theo-tester npm run test:standalone
@@ -223,6 +235,7 @@ test_mariadb_redis_core_noassignee () {
 
     print_test_header "mariadb + redis CORE no assignee AFTER RESTART"
     docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml restart theo
+    wait_healthy theo
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "CORE_TOKEN=${CORE_TOKEN}" \
@@ -252,6 +265,7 @@ test_mariadb_redis_core () {
 
     print_test_header "mariadb + redis CORE AFTER RESTART"
     docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core.yml restart theo
+    wait_healthy theo
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "CORE_TOKEN=${CORE_TOKEN}" \
@@ -322,6 +336,7 @@ test_postgres_redis_core () {
 
     print_test_header "postgres + redis CORE AFTER RESTART"
     docker compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core.yml restart theo
+    wait_healthy theo
     docker run --network theotests_default --rm --link theo \
         -e "THEO_URL=http://theo:9100" \
         -e "CORE_TOKEN=${CORE_TOKEN}" \
