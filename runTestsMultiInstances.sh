@@ -30,7 +30,7 @@ source ./docker-compose/test_env
 
 test_mariadb_redis_core_cluster_multi_instances() {
   print_test_header mariadb_redis_core_cluster_multiinstances
-  docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster-multiinstances.yml up -d --wait
+  docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster-multiinstances.yml up -d --wait
   docker run --network theotests_default --rm --link theo \
     -e "CORE_TOKEN=${CORE_TOKEN}" \
     -e "THEO_URL=http://theo:9100" \
@@ -38,9 +38,9 @@ test_mariadb_redis_core_cluster_multi_instances() {
   RETVAL=$?
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test-mariadb-redis-core-cluster-multiinstances FAILED"
-    docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster-multiinstances.yml logs theo
+    docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster-multiinstances.yml logs theo
   fi
-  docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster-multiinstances.yml down --volumes
+  docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster-multiinstances.yml down --volumes
   if [[ ${RETVAL} -gt 0 ]]; then
     exit ${RETVAL}
   fi

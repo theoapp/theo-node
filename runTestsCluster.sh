@@ -30,7 +30,7 @@ source ./docker-compose/test_env
 
 test_mariadb_redis_core_cluster() {
   print_test_header mariadb_redis_core_cluster
-  docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml up -d --wait
+  docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml up -d --wait
   RETVAL=$?
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose up FAILED"
@@ -45,11 +45,11 @@ test_mariadb_redis_core_cluster() {
   fi
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test-mariadb-redis-core-cluster FAILED"
-    docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo1
-    docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo2
-    docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo3
+    docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo1
+    docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo2
+    docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml logs --tail 50 theo3
   fi
-  docker-compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml down --volumes
+  docker compose -p theotests -f docker-compose/docker-compose-test-mariadb-redis-core-cluster.yml down --volumes
   if [[ ${RETVAL} -gt 0 ]]; then
     exit ${RETVAL}
   fi
@@ -57,7 +57,7 @@ test_mariadb_redis_core_cluster() {
 
 test_postgres_redis_core_cluster() {
   print_test_header postgres_redis_core_cluster
-  docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core-cluster.yml up -d --wait
+  docker compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core-cluster.yml up -d --wait
   RETVAL=$?
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose up FAILED"
@@ -72,9 +72,9 @@ test_postgres_redis_core_cluster() {
   fi
   if [[ ${RETVAL} -gt 0 ]]; then
     echo "ERR docker-compose-test-postgres-redis-core-cluster FAILED"
-    docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core-cluster.yml logs --tail 50 theo1
+    docker compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core-cluster.yml logs --tail 50 theo1
   fi
-  docker-compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core-cluster.yml down --volumes
+  docker compose -p theotests -f docker-compose/docker-compose-test-postgres-redis-core-cluster.yml down --volumes
   if [[ ${RETVAL} -gt 0 ]]; then
     exit ${RETVAL}
   fi
