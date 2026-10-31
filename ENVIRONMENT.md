@@ -14,6 +14,7 @@
 | CLUSTER_MODE                    | boolean |   false |          |          |
 | CORE_TOKEN                      |  string |         |          |          |
 | DATA_PATH                       |  string |         |          |          |
+| DB_ACQUIRE_TIMEOUT              | integer |   10000 |          |          |
 | DB_CLUSTER                      |  string |         |          |          |
 | DB_CONNECTION_LIMIT             |  string |         |          |          |
 | DB_CONN_MAX_RETRY               |  string |         |          |          |

@@ -17,33 +17,25 @@ import { Microservice } from '@fluidware-it/express-microservice';
 import packageJson from '../package.json';
 import { authMiddleware } from './lib/middlewares/AuthMiddleware';
 import { auditMiddleware } from './lib/middlewares/AuditMiddleware';
+import { dbMiddleware } from './lib/middlewares/DbMiddleware';
 import UpdateHelper from './lib/helpers/UpdateHelper';
 import { getAsyncLocalStorage, isMultiInstances } from './lib/utils/instanceUtils';
 import os from 'os';
 import path from 'path';
-import { ADDRESS, ADDRESSES, DEBUG_AUTH, SKIP_UPDATECHECK, TRUST_PROXY, TRUST_PROXY_LIST } from './const';
+import {
+  ADDRESS,
+  ADDRESSES,
+  DB_ACQUIRE_TIMEOUT,
+  DEBUG_AUTH,
+  SKIP_UPDATECHECK,
+  TRUST_PROXY,
+  TRUST_PROXY_LIST
+} from './const';
 import { getLogger } from '@fluidware-it/saddlebag';
-
-const noDbUrls = [{ path: '/authorized_keys', partial: true }, { path: '/' }, { path: '/uptime' }];
 
 let last_check = 0;
 
 const CHECK_INTERVAL = 604800000; // 7days: 7 * 24 * 60 * 60 * 1000;
-
-const doURLneedDb = function (path) {
-  for (let i = 0; i < noDbUrls.length; i++) {
-    if (noDbUrls[i].partial) {
-      if (path.indexOf(noDbUrls[i].path) === 0) {
-        return false;
-      }
-    } else {
-      if (path === noDbUrls[i].path) {
-        return false;
-      }
-    }
-  }
-  return true;
-};
 
 // Keep the bind options of @authkeys/microservice (PORT, ADDRESSES, ADDRESS)
 // and let theo's own authMiddleware handle bearer tokens
@@ -96,36 +88,9 @@ class TheoServer extends Microservice {
     });
     this.express.use(authMiddleware);
     this.express.use(auditMiddleware);
-    this.express.use(async (req, res, next) => {
-      const { path, method } = req;
+    this.express.use((req, res, next) => {
       res.set('Connection', 'close');
       req.dm = this.dm;
-      if (method !== 'HEAD') {
-        const needDb = doURLneedDb(path);
-        if (needDb) {
-          const client = this.dm.getClient(method === 'GET' ? 'ro' : 'rw');
-          try {
-            await client.open();
-          } catch (err) {
-            getLogger().error({ error_message: err.message }, 'Failed to open db');
-            // Ops..
-            res.status(500);
-            res.json({
-              status: 500,
-              reason: 'A problem occurred, please retry'
-            });
-            return;
-          }
-          req.db = client;
-          res.on('close', () => {
-            try {
-              client.close();
-            } catch (e) {
-              getLogger().error({ error_message: e.message }, 'failed to close db');
-            }
-          });
-        }
-      }
       if (!this.skip_updatecheck) {
         res.on('close', () => {
           if (Date.now() - last_check > CHECK_INTERVAL) {
@@ -136,6 +101,7 @@ class TheoServer extends Microservice {
       }
       next();
     });
+    this.express.use(dbMiddleware(DB_ACQUIRE_TIMEOUT));
     this.useOpenapiValidatorMiddleware(
       path.join(__dirname, '..', 'api', 'openapi-spec', 'openapi.yaml'),
       path.join(__dirname, 'controllers'),

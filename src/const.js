@@ -44,6 +44,8 @@ export const DB_SSL_CA = EnvParse.envStringOptional('DB_SSL_CA');
 export const DB_CLUSTER = EnvParse.envStringOptional('DB_CLUSTER');
 export const DB_CONNECTION_LIMIT = EnvParse.envStringOptional('DB_CONNECTION_LIMIT');
 export const DB_QUEUE_LIMIT = EnvParse.envStringOptional('DB_QUEUE_LIMIT');
+// ms a request waits for a db connection from the pool, 0 waits forever
+export const DB_ACQUIRE_TIMEOUT = EnvParse.envInt('DB_ACQUIRE_TIMEOUT', 10000);
 export const DB_NOPOOL = EnvParse.envBool('DB_NOPOOL', false);
 
 // Cache
