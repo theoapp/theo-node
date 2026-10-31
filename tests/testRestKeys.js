@@ -184,9 +184,9 @@ describe('REST Check keys', function () {
     });
   });
 
-  describe('check authorized_keys for user=mil and host=mil', function () {
+  describe('check authorized_keys for user=mil and host=mil with remote IP', function () {
     it('should return 14 rows', async function () {
-      const res = await fetch(base_url + '/authorized_keys/mil/mil', {
+      const res = await fetch(base_url + '/authorized_keys/mil/mil?c=192.168.2.123', {
         method: 'GET',
         headers: {
           Authorization: 'Bearer ' + process.env.CLIENT_TOKENS.split(',')[0]
