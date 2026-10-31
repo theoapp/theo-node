@@ -15,6 +15,25 @@
 
 import BaseClient from '../baseclient';
 
+// node:sqlite refuses to bind undefined and Date: bind them as sqlite3 did (NULL and epoch millis)
+const toParams = params => {
+  if (!params) {
+    return [];
+  }
+  return params.map(p => {
+    if (p === undefined) {
+      return null;
+    }
+    if (p instanceof Date) {
+      return p.getTime();
+    }
+    return p;
+  });
+};
+
+// node:sqlite rows have a null prototype
+const toRow = row => (row ? { ...row } : row);
+
 class SqliteClient extends BaseClient {
   constructor(db) {
     super();
@@ -25,72 +44,35 @@ class SqliteClient extends BaseClient {
     return 'DB sqlite';
   }
 
-  all(sql, params) {
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, params, (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(rows);
-      });
-    });
+  async all(sql, params) {
+    return this.db
+      .prepare(sql)
+      .all(...toParams(params))
+      .map(toRow);
   }
 
-  get(sql, params) {
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, params, (err, row) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(row);
-      });
-    });
+  async get(sql, params) {
+    return toRow(this.db.prepare(sql).get(...toParams(params)));
   }
 
-  run(sql, params) {
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, params, err => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(true);
-      });
-    });
+  async run(sql, params) {
+    this.db.prepare(sql).run(...toParams(params));
+    return true;
   }
 
-  insert(sql, params) {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function (err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(this.lastID);
-      });
-    });
+  async insert(sql, params) {
+    const { lastInsertRowid } = this.db.prepare(sql).run(...toParams(params));
+    return Number(lastInsertRowid);
   }
 
-  update(sql, params) {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function (err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(this.changes);
-      });
-    });
+  async update(sql, params) {
+    const { changes } = this.db.prepare(sql).run(...toParams(params));
+    return Number(changes);
   }
 
-  delete(sql, params) {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function (err) {
-        if (err) {
-          return reject(err);
-        }
-        resolve(this.changes);
-      });
-    });
+  async delete(sql, params) {
+    const { changes } = this.db.prepare(sql).run(...toParams(params));
+    return Number(changes);
   }
 
   open() {

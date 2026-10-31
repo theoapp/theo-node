@@ -23,13 +23,7 @@ import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { md5 } from '../../utils/cryptoUtils';
 import { runV18migration } from '../../../migrations/v18fixInstance';
 import { getLogger } from '@fluidware-it/saddlebag';
-
-let sqlite3;
-try {
-  sqlite3 = require('sqlite3');
-} catch (_e) {
-  // Module not installed
-}
+import { DatabaseSync } from 'node:sqlite';
 
 const IN_MEMORY_DB = ':memory:';
 
@@ -138,26 +132,14 @@ class SqliteManager extends DbManager {
     return 'sqlite';
   }
 
-  openDb(next) {
-    this.db = new sqlite3.Database(this.options.storage, err => {
-      if (err) {
-        return;
-      }
-      this.db.exec('PRAGMA foreign_keys = ON');
-      next && next();
-    });
+  openDb() {
+    this.db = new DatabaseSync(this.options.storage);
+    this.db.exec('PRAGMA foreign_keys = ON');
   }
 
   getClient(_pool = false, next = false) {
-    if (!this.db || this.db.closed) {
-      this.openDb(() => {
-        if (next) {
-          next(new SqliteClient(this.db));
-        }
-      });
-      if (next) {
-        return;
-      }
+    if (!this.db || !this.db.isOpen) {
+      this.openDb();
     }
     if (!next) {
       return new SqliteClient(this.db);
@@ -169,19 +151,11 @@ class SqliteManager extends DbManager {
     this.client = client;
   }
 
-  close() {
-    if (this.db.closed) return;
-    this.db.closed = true;
+  async close() {
+    if (!this.db || !this.db.isOpen) return;
     getLogger().debug('Closing db');
-    return new Promise((resolve, reject) => {
-      this.db.close(err => {
-        if (err) {
-          return reject(err);
-        }
-        getLogger().debug('Closed');
-        resolve();
-      });
-    });
+    this.db.close();
+    getLogger().debug('Closed');
   }
 
   async createVersionTable() {
@@ -338,7 +312,7 @@ class SqliteManager extends DbManager {
     try {
       row = await this.client.get(sqlCheck);
     } catch (e) {
-      if (e.errno === 1) {
+      if (e.errcode === 1) {
         return false;
       }
       throw e;
