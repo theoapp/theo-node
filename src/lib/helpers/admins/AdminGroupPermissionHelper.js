@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +15,17 @@
 
 import GroupManager from '../../managers/GroupManager';
 import PermissionManager from '../../managers/PermissionManager';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export const adminAddGroupPermission = async (db, group_id, user, host, ssh_options, req) => {
   if (!user) {
     const error = new Error('Malformed object, user is required');
-    error.code = 400;
+    error.t_code = 400;
     throw error;
   }
   if (!host) {
     const error = new Error('Malformed object, host is required');
-    error.code = 400;
+    error.t_code = 400;
     throw error;
   }
   const gm = new GroupManager(db);
@@ -37,7 +39,7 @@ export const adminAddGroupPermission = async (db, group_id, user, host, ssh_opti
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   const pm = new PermissionManager(db);
@@ -48,7 +50,7 @@ export const adminAddGroupPermission = async (db, group_id, user, host, ssh_opti
     }
     return { group_id, permission_id };
   } catch (err) {
-    err.t_code = 500;
+    if (!err.t_code) err.t_code = 500;
     throw err;
   }
 };
@@ -65,7 +67,7 @@ export const adminDeleteGroupPermission = async (db, group_id, permission_id, re
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   const pm = new PermissionManager(db);
@@ -105,7 +107,7 @@ export const adminUpdateGroupPermission = async (db, group_id, permission_id, ss
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   const pm = new PermissionManager(db);

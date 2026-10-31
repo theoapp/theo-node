@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +18,7 @@ class KeysImporterManager {
     this.options = options;
   }
 
-  get(username) {
+  get() {
     throw new Error('Not implemented');
   }
 }

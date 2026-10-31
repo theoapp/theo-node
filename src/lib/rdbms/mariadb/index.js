@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,61 +17,103 @@ import DbManager from '../../managers/DbManager';
 import { runV7migrationMariaDb } from '../../../migrations/v7fixGroups';
 import { runV10migrationMariaDb } from '../../../migrations/v10fixGroups';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
-import { common_debug, common_error } from '../../utils/logUtils';
-import ConnectionManager from '@authkeys/mysql-connman';
+import { runV18migration } from '../../../migrations/v18fixInstance';
+import { CLUSTER_MODE } from '../../../const';
+import { getLogger } from '@fluidware-it/saddlebag';
+import mysql from 'mysql2';
+import MariadbClient from './client';
 
 class MariadbManager extends DbManager {
-  dbVersion = 17;
+  dbVersion = 18;
 
-  CREATE_TABLE_AUTH_TOKENS =
-    'create table auth_tokens (token varchar(128) binary PRIMARY KEY, assignee varchar(64) NOT NULL, type varchar(5) NOT NULL, created_at BIGINT UNSIGNED)';
+  CREATE_TABLE_AUTH_TOKENS = `create table auth_tokens (
+    instance varchar(256) NOT NULL,
+    token varchar(128) binary NOT NULL,
+    assignee varchar(64) NOT NULL,
+    type varchar(5) NOT NULL,
+    created_at BIGINT UNSIGNED,
+    primary key (instance, token)
+  )`;
 
-  CREATE_TABLE_ACCOUNTS =
-    'create table accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, email varchar(128) not null, name varchar(128) not null, ' +
-    'active INTEGER not null default 1, expire_at BIGINT UNSIGNED not null default 0, updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (email))';
+  CREATE_TABLE_ACCOUNTS = `create table accounts (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    instance varchar(256) NOT NULL,
+    email varchar(128) not null,
+    name varchar(128) not null,
+    active INTEGER not null default 1,
+    expire_at BIGINT UNSIGNED not null default 0,
+    updated_at BIGINT UNSIGNED,
+    created_at BIGINT UNSIGNED,
+    UNIQUE (instance, email)
+  )`;
 
-  CREATE_TABLE_GROUPS =
-    'create table tgroups (id INTEGER PRIMARY KEY AUTO_INCREMENT, name varchar(128) not null, is_internal tinyint(1) not null default 0, active INTEGER not null default 1, ' +
-    'updated_at BIGINT UNSIGNED, created_at BIGINT UNSIGNED, UNIQUE (name))';
+  CREATE_TABLE_GROUPS = `create table tgroups (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    instance varchar(256) NOT NULL,
+    name varchar(128) not null,
+    is_internal tinyint(1) not null default 0,
+    active INTEGER not null default 1,
+    updated_at BIGINT UNSIGNED,
+    created_at BIGINT UNSIGNED,
+    UNIQUE (instance, name)
+  )`;
 
-  CREATE_TABLE_GROUPS_ACCOUNTS =
-    'create table groups_accounts (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
-    'account_id INTEGER  not null, ' +
-    'group_id INTEGER not null, ' +
-    'updated_at BIGINT UNSIGNED, ' +
-    'created_at BIGINT UNSIGNED, ' +
-    'UNIQUE (account_id, group_id), ' +
-    'CONSTRAINT groups_accounts_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE, ' +
-    'CONSTRAINT groups_accounts_account_id FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
+  CREATE_TABLE_GROUPS_ACCOUNTS = `create table groups_accounts (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    account_id INTEGER not null,
+    group_id INTEGER not null,
+    updated_at BIGINT UNSIGNED,
+    created_at BIGINT UNSIGNED,
+    UNIQUE (account_id, group_id),
+    CONSTRAINT groups_accounts_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE,
+    CONSTRAINT groups_accounts_account_id FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE
+  )`;
 
-  CREATE_TABLE_PUBLIC_KEYS =
-    'create table public_keys (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
-    'account_id INTEGER NOT NULL, ' +
-    'public_key varchar(1024) not null, ' +
-    'public_key_sig varchar(1024), ' +
-    'fingerprint varchar(128), ' +
-    'key_ssh_options TEXT not null, ' +
-    'last_used_at BIGINT UNSIGNED, ' +
-    'created_at BIGINT UNSIGNED, ' +
-    'unique (fingerprint), ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+  CREATE_TABLE_PUBLIC_KEYS = `create table public_keys (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    instance varchar(256) NOT NULL,
+    account_id INTEGER NOT NULL,
+    public_key varchar(1024) not null,
+    public_key_sig varchar(1024),
+    fingerprint varchar(128),
+    key_ssh_options TEXT not null,
+    last_used_at BIGINT UNSIGNED,
+    created_at BIGINT UNSIGNED,
+    unique (instance, fingerprint),
+    FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
+  )`;
 
-  CREATE_TABLE_PERMISSIONS =
-    'create table permissions (id INTEGER PRIMARY KEY AUTO_INCREMENT, ' +
-    'group_id INTEGER, ' +
-    'user varchar(256) binary not null, ' +
-    'host varchar(256) binary not null, ' +
-    'ssh_options TEXT not null, ' +
-    'created_at BIGINT UNSIGNED, ' +
-    'INDEX k_permissions_host_user (host, user),' +
-    'CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE)';
+  CREATE_TABLE_PERMISSIONS = `create table permissions (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    instance varchar(256) NOT NULL,
+    group_id INTEGER,
+    user varchar(256) binary not null,
+    host varchar(256) binary not null,
+    ssh_options TEXT not null,
+    created_at BIGINT UNSIGNED,
+    INDEX k_permissions_instance_host_user (instance, host, user),
+    CONSTRAINT permissions_group_id FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE
+  )`;
 
-  connectionManager;
+  pool;
 
   constructor(settings) {
     super(settings);
     const { config, cluster, noDbPool } = settings;
-    this.connectionManager = new ConnectionManager(config, noDbPool, cluster);
+    this.cluster = !!cluster;
+    this.noDbPool = !!noDbPool;
+    if (cluster) {
+      // A failing node is taken offline and retried after restoreNodeTimeout
+      this.pool = mysql.createPoolCluster({ canRetry: true, restoreNodeTimeout: 5000 });
+      ['rw', 'ro'].forEach(ns => {
+        cluster[ns].forEach((node, i) => {
+          this.pool.add(`${ns}${i}`, { ...config, host: node.host, port: node.port || 3306 });
+        });
+      });
+      this.pool.on('offline', id => getLogger().warn('Db node %s offline', id));
+    } else {
+      this.pool = mysql.createPool(config);
+    }
   }
 
   getEngine() {
@@ -78,7 +121,7 @@ class MariadbManager extends DbManager {
   }
 
   getClient(pool = false) {
-    return this.connectionManager.getClient(pool);
+    return new MariadbClient(this.pool, { cluster: this.cluster, noDbPool: this.noDbPool, poolName: pool });
   }
 
   setClient(client) {
@@ -87,13 +130,13 @@ class MariadbManager extends DbManager {
 
   async getCurrentVersion() {
     const sqlCheck = 'select value from _version';
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       await this.client.run('SET AUTOCOMMIT=0');
       let row;
       try {
         row = await this.client.get(`${sqlCheck} for update`);
         if (row.value === this.dbVersion) {
-          common_debug('Version is equal: %s vs %s, set AUTOCOMMIT=1', row.value, this.dbVersion);
+          getLogger().debug('Version is equal: %s vs %s, set AUTOCOMMIT=1', row.value, this.dbVersion);
           await this.client.run('ROLLBACK');
           await this.client.run('SET AUTOCOMMIT=1');
         }
@@ -103,7 +146,7 @@ class MariadbManager extends DbManager {
         if (e.code === 'ER_NO_SUCH_TABLE') {
           return false;
         }
-        common_error('Ooops: %s', e.message, e.code);
+        getLogger().error({ error_message: e.message, code: e.code }, 'Ooops');
         throw e;
       }
     } else {
@@ -113,7 +156,7 @@ class MariadbManager extends DbManager {
         if (e.code === 'ER_NO_SUCH_TABLE') {
           return false;
         }
-        common_error('Ooops: %s', e.message, e.code);
+        getLogger().error({ error_message: e.message, code: e.code }, 'Ooops');
         throw e;
       }
     }
@@ -130,11 +173,11 @@ class MariadbManager extends DbManager {
     try {
       const sqlInsertVersionZero = 'insert into _version values (-1)';
       await this.client.run(sqlInsertVersionZero);
-      if (process.env.CLUSTER_MODE === '1') {
+      if (CLUSTER_MODE) {
         await this.client.run('select value from _version for update');
       }
     } catch (e) {
-      common_error('Unable to insert -1 version in _version table: [%s] %s', e.code, e.message);
+      getLogger().error('Unable to insert -1 version in _version table: [%s] %s', e.code, e.message);
       throw e;
     }
     return 0;
@@ -142,7 +185,7 @@ class MariadbManager extends DbManager {
 
   async initDb() {
     let dbConn;
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn = this.getClient();
       await dbConn.open();
     } else {
@@ -155,14 +198,14 @@ class MariadbManager extends DbManager {
     await dbConn.run(this.CREATE_TABLE_PERMISSIONS);
     await dbConn.run(this.CREATE_TABLE_GROUPS_ACCOUNTS);
     await this.updateVersion();
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn.close();
     }
   }
 
   async upgradeDb(fromVersion) {
     let dbConn;
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       dbConn = this.getClient();
       await dbConn.open();
     } else {
@@ -191,12 +234,16 @@ class MariadbManager extends DbManager {
     if (fromVersion < 5) {
       try {
         await dbConn.run('alter table groups add updated_at BIGINT UNSIGNED');
-      } catch (err) {}
+      } catch (_err) {
+        //
+      }
     }
     if (fromVersion < 6) {
       try {
         await dbConn.run('alter table public_keys add public_key_sig varchar(1024)');
-      } catch (err) {}
+      } catch (_err) {
+        //
+      }
     }
     if (fromVersion < 7) {
       await runV7migrationMariaDb(dbConn);
@@ -227,8 +274,8 @@ class MariadbManager extends DbManager {
       await dbConn.run('alter table public_keys modify fingerprint varchar(128) not null');
       try {
         await dbConn.run('alter table public_keys add unique(fingerprint)');
-      } catch (e) {
-        common_error(`!!!! ATTENTION !!!
+      } catch (_e) {
+        getLogger().error(`!!!! ATTENTION !!!
 Unable to force uniqueness on fingerprint. This means you have the same public key used multiple time, this could be a problem.
 Pleas fix it and then run this command on your database:
 
@@ -246,7 +293,10 @@ alter table public_keys add unique(fingerprint);
     if (fromVersion < 17) {
       await dbConn.run('alter table public_keys add last_used_at BIGINT UNSIGNED after key_ssh_options');
     }
-    if (process.env.CLUSTER_MODE === '1') {
+    if (fromVersion < 18) {
+      await runV18migration(this);
+    }
+    if (CLUSTER_MODE) {
       dbConn.close();
     }
     await this.updateVersion();
@@ -254,7 +304,7 @@ alter table public_keys add unique(fingerprint);
 
   async updateVersion() {
     const sql = 'update _version set value = ' + this.dbVersion;
-    if (process.env.CLUSTER_MODE === '1') {
+    if (CLUSTER_MODE) {
       await this.client.run(sql);
       await this.client.run('COMMIT');
       return this.client.run('set AUTOCOMMIT=1');
@@ -263,17 +313,16 @@ alter table public_keys add unique(fingerprint);
     }
   }
 
-  async flushDb() {
-    console.log('Flushing db...');
+  async flushDb(client = this.client) {
+    getLogger().info('Flushing db...');
     const tables = 'public_keys, groups_accounts, permissions, tgroups, accounts, auth_tokens, _version'.split(',');
     for (let i = 0; i < tables.length; i++) {
       const sqlDrop = 'drop table ' + tables[i];
       try {
-        await this.client.run(sqlDrop);
-        common_debug('Dropped %s', tables[i]);
+        await client.run(sqlDrop);
+        getLogger().debug('Dropped %s', tables[i]);
       } catch (e) {
-        common_error('Failed to drop %s', tables[i]);
-        console.error(e);
+        getLogger().error(e, 'Failed to drop %s', tables[i]);
         // it doesn't exists
       }
     }
@@ -281,8 +330,9 @@ alter table public_keys add unique(fingerprint);
   }
 
   close() {
-    this.connectionManager.close();
-    return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      this.pool.end(err => (err ? reject(err) : resolve()));
+    });
   }
 }
 

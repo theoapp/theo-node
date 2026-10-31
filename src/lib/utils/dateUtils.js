@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+const invalidDateError = message => {
+  const error = new Error(message);
+  error.t_code = 400;
+  return error;
+};
+
 export const getTimestampFromISO8601 = string => {
   if (!string) {
     return 0;
@@ -22,14 +29,14 @@ export const getTimestampFromISO8601 = string => {
     const d = new Date(string);
     const ts = d.getTime();
     if (isNaN(ts)) {
-      throw new Error('Invalid date string');
+      throw invalidDateError('Invalid date string');
     }
     ret = ts;
   } else if (type === 'object') {
     if (string instanceof Date) {
       ret = string.getTime();
     } else {
-      throw new Error('Invalid object');
+      throw invalidDateError('Invalid object');
     }
   } else {
     ret = string;

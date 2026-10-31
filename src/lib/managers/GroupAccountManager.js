@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +14,8 @@
 // limitations under the License.
 
 import GroupManager from './GroupManager';
+import { getInstance } from '../utils/instanceUtils';
+import AccountManager from './AccountManager';
 
 class GroupAccountManager {
   constructor(db, gm) {
@@ -26,41 +29,50 @@ class GroupAccountManager {
 
   getAll(group_id, limit, offset) {
     let sql =
-      'select ga.id, g.id, g.name, g.active from groups_accounts ga, tgroups g where g.id = ga.group_id and g.id = ? order by name asc';
+      'select ga.id, g.id, g.name, g.active from groups_accounts ga, tgroups g where g.instance = ? and g.id = ga.group_id and g.id = ? order by name asc';
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return this.db.all(sql, [group_id]);
+    return this.db.all(sql, [getInstance(), group_id]);
   }
 
   getAllAccounts(group_id, limit, offset) {
-    let sql =
-      'select a.id, a.name, a.email, a.active, a.expire_at, a.created_at from groups_accounts ga, accounts a where a.id = ga.account_id and ga.group_id = ? order by a.name asc';
+    let sql = `select a.id, a.name, a.email, a.active, a.expire_at, a.created_at
+        from groups_accounts ga, accounts a
+        where a.instance = ? and
+          a.id = ga.account_id and
+          ga.group_id = ?
+          order by a.name asc`;
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return this.db.all(sql, [group_id]);
+    return this.db.all(sql, [getInstance(), group_id]);
   }
 
   getAllByAccount(account_id, limit, offset) {
-    let sql =
-      'select ga.id, g.id, g.name, g.active, g.is_internal, g.created_at from groups_accounts ga, tgroups g where g.id = ga.group_id and ga.account_id = ? order by name asc';
+    let sql = `select ga.id, g.id, g.name, g.active, g.is_internal, g.created_at
+        from groups_accounts ga, tgroups g
+        where g.instance = ? and
+          g.id = ga.group_id and
+          ga.account_id = ?
+          order by name asc`;
     if (limit) {
       sql += ' limit ' + limit;
     }
     if (offset) {
       sql += ' offset ' + offset;
     }
-    return this.db.all(sql, [account_id]);
+    return this.db.all(sql, [getInstance(), account_id]);
   }
 
   async create(group_id, account_id, skip_invalidation = false) {
+    await this.validateGroupAccount(group_id, account_id);
     const sql = 'insert into groups_accounts (group_id, account_id, created_at) values (?, ?, ?) ';
     const lastId = await this.db.insert(sql, [group_id, account_id, new Date().getTime()]);
     if (!skip_invalidation) {
@@ -70,6 +82,7 @@ class GroupAccountManager {
   }
 
   async delete(group_id, account_id, skip_invalidation = false) {
+    await this.validateGroupAccount(group_id, account_id);
     const sql = 'delete from groups_accounts where group_id = ? and account_id = ?';
     const changes = await this.db.delete(sql, [group_id, account_id]);
     if (changes > 0) {
@@ -78,6 +91,19 @@ class GroupAccountManager {
       }
     }
     return changes;
+  }
+
+  async validateGroupAccount(group_id, account_id) {
+    const am = new AccountManager(this.db);
+    const account = await am.get(account_id);
+    if (!account) {
+      throw new Error('Account Not found');
+    }
+    const gm = new GroupManager(this.db);
+    const group = await gm.get(group_id);
+    if (!group) {
+      throw new Error('Group Not found');
+    }
   }
 }
 

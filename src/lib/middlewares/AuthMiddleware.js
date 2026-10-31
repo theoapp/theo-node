@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,9 +15,13 @@
 
 import AppHelper from '../helpers/AppHelper';
 import EventHelper from '../helpers/EventHelper';
+import { getInstance } from '../utils/instanceUtils';
+import { md5 } from '../utils/cryptoUtils';
+import { HTTPError } from '@fluidware-it/express-microservice';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const checkForBearer = function (req, header) {
-  const authorization = req.header('Authorization');
+  const authorization = req.header(header);
   if (authorization) {
     const m = /^[Bb]earer\s+(\S+)$/.exec(authorization);
     if (m === null) {
@@ -57,7 +62,7 @@ export const authMiddleware = (req, res, next) => {
       if (!done) {
         const _sm = AppHelper();
         const _settings = _sm.getSettings();
-        if (_settings.core && token === _settings.core.token) {
+        if (token === _settings.core?.token || md5(token) === _settings.core?.token) {
           req.is_authorized = true;
           req.is_admin = true;
           req.is_core = true;
@@ -67,26 +72,48 @@ export const authMiddleware = (req, res, next) => {
           } else {
             req.auth_token = 'core';
           }
-        } else if (token === _settings.admin.token) {
-          req.is_authorized = true;
-          req.is_admin = true;
-          req.auth_token = 'admin';
-        } else if (_settings.admin.tokens && _settings.admin.tokens[token]) {
-          req.is_authorized = true;
-          req.is_admin = true;
-          req.auth_token = _settings.admin.tokens[token];
         } else {
-          if (_settings.client.tokens) {
-            if (_settings.client.tokens.includes(token)) {
+          const instance = getInstance();
+          const _token = md5(`${instance}:${token}`);
+          /*
+          console.log(JSON.stringify(_settings.instances));
+          console.log(instance);
+          console.log(JSON.stringify(_settings.instances[instance]));
+          console.log(token);
+           */
+          if (_settings.instances?.[instance]?.core === _token) {
+            req.is_authorized = true;
+            req.is_admin = true;
+            req.is_core = true;
+            const onBehalfOfToken = req.header('X-On-Behalf-Of');
+            if (onBehalfOfToken) {
+              req.auth_token = onBehalfOfToken;
+            } else {
+              req.auth_token = 'core';
+            }
+          } else if (_settings.instances?.[instance]?.admin && _settings.instances[instance].admin.tokens?.[_token]) {
+            req.is_authorized = true;
+            req.is_admin = true;
+            req.auth_token = _settings.instances[instance].admin.tokens[_token];
+          } else {
+            if (
+              _settings.instances?.[instance]?.client?.tokens &&
+              _settings.instances[instance].client.tokens.includes(_token)
+            ) {
               req.is_authorized = true;
-              req.auth_token = token;
+              req.auth_token = _token;
             }
           }
         }
         next();
       }
     } catch (e) {
+      getLogger().error(e, 'Failed to check token');
       next();
+    } finally {
+      if (!req.debugAuth) {
+        req.headers.authorization = 'Bearer [***]';
+      }
     }
     return;
   }
@@ -102,6 +129,12 @@ export const requireCoreAuthMiddleware = (req, res, next) => {
   next();
 };
 
+export function checkCoreAuth(req) {
+  if (!req.is_authorized || !req.is_core) {
+    throw new HTTPError('Unauthorized', 401);
+  }
+}
+
 export const requireAdminAuthMiddleware = (req, res, next) => {
   if (!req.is_authorized || !req.is_admin) {
     res.status(401);
@@ -111,6 +144,12 @@ export const requireAdminAuthMiddleware = (req, res, next) => {
   next();
 };
 
+export function checkAdminAuth(req) {
+  if (!req.is_authorized || !req.is_admin) {
+    throw new HTTPError('Unauthorized', 401);
+  }
+}
+
 export const requireAuthMiddleware = (req, res, next) => {
   if (!req.is_authorized) {
     res.status(401);
@@ -119,3 +158,9 @@ export const requireAuthMiddleware = (req, res, next) => {
   }
   next();
 };
+
+export function checkAuth(req) {
+  if (!req.is_authorized) {
+    throw new HTTPError('Unauthorized', 401);
+  }
+}

@@ -1,5 +1,0 @@
-{
-  "extends": "@istanbuljs/nyc-config-babel",
-  "temp-dir": "reports/coverage/.nyc_output",
-  "report-dir": "reports/coverage"
-}

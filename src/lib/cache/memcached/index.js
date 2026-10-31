@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +14,7 @@
 // limitations under the License.
 
 import CachedManager from '../../managers/CacheManager';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const MAX_EXPIRATION = 2592000;
 
@@ -28,8 +30,8 @@ class MemcachedManager extends CachedManager {
     try {
       const Memcached = require('memcached');
       this.memcached = new Memcached(settings.uri, options);
-      console.log('MemcachedManager started');
-    } catch (e) {
+      getLogger().info('MemcachedManager started');
+    } catch (_e) {
       // Module not loaded
     }
   }
@@ -84,7 +86,9 @@ class MemcachedManager extends CachedManager {
   quit() {
     try {
       this.memcached.end();
-    } catch (e) {}
+    } catch (_e) {
+      //
+    }
   }
 }
 

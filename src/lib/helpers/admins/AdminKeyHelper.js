@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +19,7 @@ import AppHelper from '../AppHelper';
 import { getOpenSSHPublicKey, SSHFingerprint } from '../../utils/sshUtils';
 import EventHelper from '../EventHelper';
 import { getKeysImporterModule, getKeysImporterModulesList } from '../../keys_importer/modules';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const adminAddAccountKey = async (km, signRequired, key, account, req) => {
   let _key;
@@ -38,7 +40,7 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
   if (signRequired && !_signature) {
     const err = new Error('Key must be signed');
     err.t_code = 400;
-    console.error('Key must be signed!');
+    getLogger().warn('Key must be signed!');
     throw err;
   }
   try {
@@ -83,6 +85,11 @@ const adminAddAccountKey = async (km, signRequired, key, account, req) => {
 };
 
 export const adminAddAccountKeys = async (db, account_id, keys, req) => {
+  if (!Array.isArray(keys)) {
+    const error = new Error('Malformed object, keys must be an array');
+    error.t_code = 400;
+    throw error;
+  }
   const am = new AccountManager(db);
   let account;
   try {
@@ -139,7 +146,7 @@ export const adminUpdateAccountKey = async function (db, account_id, key_id, ssh
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   if (!ssh_options && ssh_options !== '') {
@@ -194,7 +201,7 @@ export const adminDeleteAccountKey = async (db, account_id, key_id, req) => {
     }
   } catch (err) {
     err.t_code = 404;
-    console.log('Throw 404');
+    getLogger().debug('Throw 404');
     throw err;
   }
   const km = new KeyManager(db, am);

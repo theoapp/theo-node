@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +19,13 @@ import { MAX_ROWS } from '../managers/BaseCacheManager';
 import PermissionManager from '../managers/PermissionManager';
 import KeyManager from '../managers/KeyManager';
 import GroupAccountManager from '../managers/GroupAccountManager';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const getAllGroups = async db => {
   const gm = new GroupManager(db);
   const gam = new GroupAccountManager(db);
   const pm = new PermissionManager(db);
-  const total = await gm.getAllCount('where is_internal = ? ', [0]);
+  const total = await gm.getAllCount('and is_internal = ? ', [0]);
   const items = [];
   while (items.length < total) {
     const itemIds = await gm.getAll(MAX_ROWS, items.length, false, 'id', 'asc');
@@ -50,7 +52,9 @@ const getAllAccounts = async db => {
 };
 
 export const exp = async db => {
+  getLogger().info('Getting groups');
   const groups = await getAllGroups(db);
+  getLogger().info('Getting accounts');
   const accounts = await getAllAccounts(db);
   return {
     accounts,
@@ -71,7 +75,7 @@ export const imp = async (db, dump) => {
           await pm.create(id, permission.user, permission.host, permission.ssh_options);
         }
       } catch (e) {
-        console.error('IMP: Failed to create group %s', group.name, e);
+        getLogger().error(e, 'IMP: Failed to create group %s', group.name);
       }
     }
   }
@@ -88,7 +92,15 @@ export const imp = async (db, dump) => {
           if (!public_key.fingerprint) {
             // TODO get fingerprint!
           }
-          await km.create(id, public_key.public_key, public_key.fingerprint, public_key.public_key_sig);
+          await km.create(
+            id,
+            public_key.public_key,
+            public_key.fingerprint,
+            public_key.public_key_sig,
+            public_key.key_ssh_options,
+            public_key.created_at,
+            public_key.last_used_at
+          );
         }
         const group_id = await gm.create(account.email);
         for (let ii = 0; ii < account.groups.length; ii++) {
@@ -103,7 +115,7 @@ export const imp = async (db, dump) => {
           }
         }
       } catch (e) {
-        console.error('IMP: Failed to create account %s', account.email, e);
+        getLogger().error(e, 'IMP: Failed to create account %s', account.email);
       }
     }
   }

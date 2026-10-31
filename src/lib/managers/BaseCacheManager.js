@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,10 +14,30 @@
 // limitations under the License.
 
 import { loadCacheManager } from '../helpers/CacheHelper';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 let _cm;
 
 export const MAX_ROWS = 100;
+
+export const SORT_VALUES = ['asc', 'desc'];
+
+// order_by and sort come from the query string and are interpolated in sql: accept only known values
+export const buildOrderBy = (order_by, sort, columns, defaultColumn) => {
+  order_by = order_by || defaultColumn;
+  sort = sort || 'asc';
+  if (!columns.includes(order_by)) {
+    const error = new Error('Invalid order_by, valid values are: ' + columns.join(', '));
+    error.t_code = 400;
+    throw error;
+  }
+  if (!SORT_VALUES.includes(sort)) {
+    const error = new Error('Invalid sort, valid values are: ' + SORT_VALUES.join(', '));
+    error.t_code = 400;
+    throw error;
+  }
+  return `order by ${order_by} ${sort}`;
+};
 
 class BaseCacheManager {
   constructor(db) {
@@ -29,7 +50,7 @@ class BaseCacheManager {
     }
     if (_cm !== false) {
       _cm.flush().catch(err => {
-        console.error('Failed to flush cache', err.message);
+        getLogger().error({ error_message: err.message }, 'Failed to flush cache');
       });
     }
   }

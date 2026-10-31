@@ -1,4 +1,5 @@
 // Copyright 2021 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +14,7 @@
 // limitations under the License.
 
 import CachedManager from '../../managers/CacheManager';
+import { getInstance } from '../../utils/instanceUtils';
 
 const cache = {};
 
@@ -23,21 +25,27 @@ class InMemoryCacheManager extends CachedManager {
 
   set(key, value) {
     return new Promise(resolve => {
-      cache[key] = value;
+      const instance = getInstance();
+      if (!cache[instance]) {
+        cache[instance] = {};
+      }
+      cache[instance][key] = value;
       resolve(true);
     });
   }
 
   get(key) {
     return new Promise(resolve => {
-      resolve(cache[key]);
+      const instance = getInstance();
+      resolve(cache[instance]?.[key]);
     });
   }
 
   del(key) {
     return new Promise(resolve => {
-      if (key in cache) {
-        delete cache[key];
+      const instance = getInstance();
+      if (cache[instance]?.[key]) {
+        delete cache[instance][key];
         resolve(true);
       } else {
         resolve(false);
@@ -46,10 +54,9 @@ class InMemoryCacheManager extends CachedManager {
   }
 
   flush() {
-    return new Promise((resolve, reject) => {
-      Object.keys(cache).forEach(k => {
-        delete cache[k];
-      });
+    return new Promise(resolve => {
+      const instance = getInstance();
+      delete cache[instance];
       resolve(true);
     });
   }

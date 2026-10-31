@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
+set -e
+
+echo "### running docker tests"
 ./runTestsDocker.sh
-RETVAL=$?
-if [[ ${RETVAL} -gt 0 ]]; then
-    exit ${RETVAL}
-fi
+echo "### running docker cluster tests"
 ./runTestsCluster.sh skip_build
-RETVAL=$?
-if [[ ${RETVAL} -gt 0 ]]; then
-    exit ${RETVAL}
-fi
+echo "### running docker db upgrade tests"
 ./runTestsUpgrade.sh skip_build
-RETVAL=$?
-exit ${RETVAL}
+echo "### running docker multi-instances tests"
+./runTestsMultiInstances.sh skip_build

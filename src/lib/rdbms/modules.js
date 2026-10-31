@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { common_info } from '../utils/logUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const modules = {};
 
@@ -20,14 +21,20 @@ try {
   const Mariadb = require('./mariadb');
   modules.mariadb = Mariadb.default;
   modules.mysql = Mariadb.default;
-} catch (e) {
-  common_info('mariadb driver not loaded');
+} catch (_e) {
+  getLogger().info('mariadb driver not loaded');
 }
 try {
   const Sqlite = require('./sqlite');
   modules.sqlite = Sqlite.default;
-} catch (e) {
-  common_info('sqlite driver not loaded');
+} catch (_e) {
+  getLogger().info('sqlite driver not loaded');
+}
+try {
+  const Postgres = require('./postgres');
+  modules.postgres = Postgres.default;
+} catch (_e) {
+  getLogger().info('postgres driver not loaded');
 }
 
 export const getRdbmsModule = name => {

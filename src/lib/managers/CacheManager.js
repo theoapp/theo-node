@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,15 +18,15 @@ class CachedManager {
     this.options = options;
   }
 
-  get(key) {
+  get() {
     throw new Error('Not implemented');
   }
 
-  set(key, value) {
+  set() {
     throw new Error('Not implemented');
   }
 
-  del(key) {
+  del() {
     throw new Error('Not implemented');
   }
 

@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +31,17 @@ export const adminCreateAccount = async (db, account, req) => {
     error.t_code = 400;
     throw error;
   }
+  if (typeof account.keys !== 'undefined' && !Array.isArray(account.keys)) {
+    const error = new Error('Malformed object, keys must be an array');
+    error.t_code = 400;
+    throw error;
+  }
   const am = new AccountManager(db);
+  if (await am.checkEmail(account.email)) {
+    const error = new Error('Account already exists');
+    error.t_code = 409;
+    throw error;
+  }
   try {
     const id = await am.create(account);
     EventHelper.emit('theo:change', {
@@ -56,7 +67,9 @@ export const adminCreateAccount = async (db, account, req) => {
 
 export const adminEditAccount = async (db, account_id, active, expire_at, req) => {
   if (typeof active === 'undefined' && typeof expire_at === 'undefined') {
-    return;
+    const error = new Error('Malformed object, one between active and expire_at is required');
+    error.t_code = 400;
+    throw error;
   }
   const am = new AccountManager(db);
   let account;
@@ -158,7 +171,7 @@ export const adminDeleteAccount = async (db, account_id, req) => {
     const gm = new GroupManager(db);
     try {
       await gm.deleteInternal(account_email);
-    } catch (e) {
+    } catch (_e) {
       // I don't care
     }
     EventHelper.emit('theo:change', {

@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,6 +78,11 @@ export const adminGetGroup = async (db, id) => {
 };
 
 export const adminEditGroup = async (db, group_id, active, req) => {
+  if (typeof active === 'undefined') {
+    const error = new Error('Malformed object, active is required');
+    error.t_code = 400;
+    throw error;
+  }
   const gm = new GroupManager(db);
   let group;
   try {
@@ -91,8 +97,9 @@ export const adminEditGroup = async (db, group_id, active, req) => {
       error.t_code = 404;
       throw error;
     }
-    if (!!group.active === active) {
-      return false;
+    if (!!group.active === !!active) {
+      // Nothing to change
+      return true;
     }
     await gm.changeStatus(group_id, active);
     if (req && req.auditHelper) {

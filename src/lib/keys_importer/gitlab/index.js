@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +15,7 @@
 
 import KeysImporterManager from '../../managers/KeysImporterManager';
 import { http_get } from '../../utils/httpUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 class GitlabImporter extends KeysImporterManager {
   async get(username) {
@@ -28,7 +30,7 @@ class GitlabImporter extends KeysImporterManager {
         return [];
       }
     } catch (err) {
-      console.error('Failed to import from gitlab', err);
+      getLogger().error(err, 'Failed to import from gitlab');
     }
   }
 }

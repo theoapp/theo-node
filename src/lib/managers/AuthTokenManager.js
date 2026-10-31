@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,50 +14,66 @@
 // limitations under the License.
 
 import { md5 } from '../utils/cryptoUtils';
+import { getInstance } from '../utils/instanceUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 class AuthTokenManager {
   constructor(db) {
     this.db = db;
   }
 
-  async getAll() {
-    const sql = 'select token, assignee, type from auth_tokens';
-    const tokens = await this.db.all(sql);
-    const agentTokens = [];
-    const adminTokens = {};
+  async getAll(all) {
+    const phs = [];
+    let sql = `select instance, token, assignee, type from auth_tokens`;
+    if (!all) {
+      sql += ' where instance = ?';
+      phs.push(getInstance());
+    }
+    const tokens = await this.db.all(sql, phs);
+    const instances = {};
     tokens.forEach(token => {
+      if (!instances[token.instance]) {
+        instances[token.instance] = {
+          client: {
+            tokens: []
+          },
+          admin: {
+            tokens: {}
+          }
+        };
+      }
       if (token.type === 'agent') {
-        agentTokens.push(token.token);
+        instances[token.instance].client.tokens.push(token.token);
       } else if (token.type === 'admin') {
-        adminTokens[token.token] = token.assignee;
+        instances[token.instance].admin.tokens[token.token] = token.assignee;
+      } else if (token.type === 'core') {
+        instances[token.instance].core = token.token;
       }
     });
-    return {
-      admins: adminTokens,
-      clients: agentTokens
-    };
+    return instances;
   }
 
   create(token, type, assignee = '') {
-    const sql = 'insert into auth_tokens (token, assignee, type, created_at) values (?, ?, ?, ?) ';
-    return this.db.run(sql, [token, assignee, type, new Date().getTime()]);
+    const sql = 'insert into auth_tokens (instance, token, assignee, type, created_at) values (?, ?, ?, ?, ?) ';
+    const instance = getInstance();
+    return this.db.run(sql, [instance, md5(`${instance}:${token}`), assignee, type, new Date().getTime()]);
   }
 
   delete() {
-    const sql = 'delete from auth_tokens';
-    return this.db.delete(sql);
+    const sql = 'delete from auth_tokens where instance = ?';
+    return this.db.delete(sql, [getInstance()]);
   }
 
   static getTokenAssignee(admin, as_admin = false) {
     let token;
     let assignee;
     if (typeof admin === 'string') {
-      console.error('[WARN] tokens.admin as string is deprecated. Please see documentation');
+      getLogger().warn('tokens.admin as string is deprecated. Please see documentation');
       if (as_admin) {
-        console.error('[WARN] We will use "admin" as assignee');
+        getLogger().warn('We will use "admin" as assignee');
         assignee = 'admin';
       } else {
-        console.error('[WARN] We will use md5(tokens.admin) as assignee');
+        getLogger().warn('We will use md5(tokens.admin) as assignee');
         assignee = md5(admin);
       }
       token = admin;

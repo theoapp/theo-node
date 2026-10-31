@@ -15,7 +15,6 @@
 import dotenv from 'dotenv';
 import { describe, it } from 'mocha';
 import assert from 'assert';
-import fetch from 'node-fetch';
 
 import { tokensOne, tokensTwo, tokensThree } from './testCoreTokens';
 

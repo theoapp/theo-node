@@ -1,15 +1,24 @@
 # docker images
-export MARIADB_IMAGE=mariadb:10.5
-export MYSQLSERVER_IMAGE=mysql/mysql-server:8.0
-export REDIS_IMAGE=redis:6.0
+export MARIADB_IMAGE=mariadb:12
+export MYSQLSERVER_IMAGE=mysql:8.4
+export POSTGRES_IMAGE=postgres:16
+export REDIS_IMAGE=redis:8
 export MEMCACHED_IMAGE=memcached:1-alpine
 
-# mariadb/mysql
+# mariadb
+
+export MARIADB_ROOT_PASSWORD=ex4mple
+export MARIADB_DATABASE=theo
+export MARIADB_USER=theouser
+export MARIADB_PASSWORD=theopwd
+
+# mysql
 
 export MYSQL_ROOT_PASSWORD=ex4mple
 export MYSQL_DATABASE=theo
 export MYSQL_USER=theouser
 export MYSQL_PASSWORD=theopwd
+
 
 # tokens
 export CORE_TOKEN=SuperSecretT0ken
@@ -18,3 +27,10 @@ export CLIENT_TOKENS=njknsjd2412fnjkasnj,knkjnknfjfnjenkln
 
 export ADMIN_TOKEN_AUDIT=jjkfsdbb23
 export ADMIN_TOKENS_AUDIT=4getm3N0t:admin1,n0t4ever:admin2,jjkfsdbb23:admin3
+
+
+# Postgres
+
+export POSTGRES_DB=theo
+export POSTGRES_USER=theouser
+export POSTGRES_PASSWORD=theopwd

@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +14,7 @@
 // limitations under the License.
 
 import { adminCreateGroup, adminCreateGroupAccount } from '../lib/helpers/AdminHelper';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 export const runV7migrationMariaDb = async client => {
   const sql = 'select distinct account_id from permissions where group_id is null';
@@ -29,7 +31,7 @@ export const runV7migrationMariaDb = async client => {
   try {
     const dropFKSql = 'alter table permissions DROP FOREIGN KEY permissions_account_id';
     await client.run(dropFKSql);
-  } catch (e) {
+  } catch (_e) {
     const dropFKSql = 'alter table permissions DROP FOREIGN KEY permissions_ibfk_2';
     await client.run(dropFKSql);
   }
@@ -44,11 +46,11 @@ export const runV7migrationSqliteDb = async client => {
     const account_id = accountsToFix[i].account_id;
     const sqlAccount = 'select email from accounts where id = ?';
     const account = await client.get(sqlAccount, [account_id]);
-    console.log('Creating group ', account.email);
+    getLogger().info('Creating group %s', account.email);
     const group_id = await adminCreateGroup(client, { name: account.email }, 'internal_db_upgrade', true);
-    console.log('Associating group %s with account %s', group_id, account_id);
+    getLogger().info('Associating group %s with account %s', group_id, account_id);
     await adminCreateGroupAccount(client, group_id, account_id);
-    console.log('Setting permissions to group %s from account %s', group_id, account_id);
+    getLogger().info('Setting permissions to group %s from account %s', group_id, account_id);
     const updateSql = 'update permissions set group_id = ? where account_id = ? ';
     await client.run(updateSql, [group_id, account_id]);
   }

@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +26,7 @@ class DbManager {
     throw new Error('Not implemented');
   }
 
-  upgradeDb(fromVersion) {
+  upgradeDb() {
     throw new Error('Not implemented');
   }
 
@@ -41,11 +42,11 @@ class DbManager {
     throw new Error('Not implemented');
   }
 
-  getClient(pool = false) {
+  getClient() {
     throw new Error('Not implemented');
   }
 
-  setClient(client) {
+  setClient() {
     throw new Error('Not implemented');
   }
 

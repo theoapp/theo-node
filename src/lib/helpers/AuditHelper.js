@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +15,11 @@
 
 import packageJson from '../../../package';
 import { http_post } from '../utils/httpUtils';
-import { common_error, common_info } from '../utils/logUtils';
+import { getInstance } from '../utils/instanceUtils';
+import { LOG_AUDIT_CONSOLE, LOG_AUDIT_TOKEN, LOG_AUDIT_URL } from '../../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
-const { LOG_AUDIT_CONSOLE, LOG_AUDIT_URL, LOG_AUDIT_TOKEN } = process.env;
-
-const auditEnable = (LOG_AUDIT_CONSOLE && LOG_AUDIT_CONSOLE === 'true') || LOG_AUDIT_URL;
+const auditEnable = LOG_AUDIT_CONSOLE || LOG_AUDIT_URL;
 
 const getHTTPHeaders = function () {
   if (!LOG_AUDIT_URL) return;
@@ -43,9 +44,7 @@ class AuditHelper {
     if (!auditEnable) {
       return;
     }
-    const source_ip = this.req.headers['x-forwarded-for']
-      ? this.req.headers['x-forwarded-for'].split(',')[0].trim()
-      : this.req.connection.remoteAddress;
+    const source_ip = this.req.ip;
     const user_agent = this.req.headers['user-agent'] || 'unknown';
     const { auth_token: author } = this.req;
     const obj = {
@@ -58,16 +57,16 @@ class AuditHelper {
       entity,
       data
     };
-    if (LOG_AUDIT_CONSOLE && LOG_AUDIT_CONSOLE === 'true') {
+    if (LOG_AUDIT_CONSOLE) {
       setImmediate(() => {
-        common_info('[AUDIT]', JSON.stringify(obj));
+        getLogger().info({ audit: obj }, 'AUDIT');
       });
       return;
     }
     if (LOG_AUDIT_URL) {
       setImmediate(() => {
-        http_post(LOG_AUDIT_URL, obj, auditHTTPHeaders).catch(e => {
-          common_error('Unable to send audit log', JSON.stringify(obj), e.message);
+        http_post(LOG_AUDIT_URL, obj, { ...auditHTTPHeaders, 'x-instance-code': getInstance() }).catch(e => {
+          getLogger().error({ audit: obj, error_message: e.message }, 'Unable to send audit log');
         });
       });
     }

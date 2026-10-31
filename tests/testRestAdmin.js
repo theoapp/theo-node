@@ -15,7 +15,6 @@
 import dotenv from 'dotenv';
 import { describe, it, before } from 'mocha';
 import assert from 'assert';
-import fetch from 'node-fetch';
 
 const base_url = process.env.THEO_URL || 'http://localhost:9100';
 dotenv.config();
@@ -202,6 +201,11 @@ describe('REST Test account', function () {
       assert.strictEqual(resAccount.public_keys.length, 1);
       assert.strictEqual(resAccount.public_keys[0].public_key, reqAccount.keys[0]);
       assert.strictEqual(resAccount.permissions.length, 0);
+      // BIGINT columns must be numbers with every db engine
+      assert.strictEqual(typeof resAccount.created_at, 'number');
+      assert.strictEqual(resAccount.expire_at, 0);
+      assert.strictEqual(typeof resAccount.public_keys[0].created_at, 'number');
+      assert.strictEqual(typeof resAccount.groups[0].created_at, 'number');
     });
   });
 
@@ -829,6 +833,167 @@ describe('REST Test group', function () {
       const resAccountWithGroup = await res4.json();
 
       assert.strictEqual(resAccountWithGroup.groups.length, 1);
+    });
+  });
+});
+
+describe('REST Test invalid requests', function () {
+  this.timeout(10000);
+  const email = 'invalid.requests@example.com';
+  const groupName = 'invalid-requests';
+
+  const call = (method, path, body) => {
+    const headers = { Authorization: 'Bearer ' + process.env.ADMIN_TOKEN };
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json; charset=utf-8';
+    }
+    return fetch(base_url + path, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+  };
+
+  before(async function () {
+    const res = await call('POST', '/flushdb');
+    assert.strictEqual(res.status, 204);
+    // I need to wait a bit..
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const res2 = await call('POST', '/accounts', { name: 'invalid', email });
+    assert.strictEqual(res2.status, 200);
+    const res3 = await call('POST', '/groups', { name: groupName });
+    assert.strictEqual(res3.status, 200);
+  });
+
+  describe('create account with keys not an array', function () {
+    it('should return 400 and not create the account', async function () {
+      const res = await call('POST', '/accounts', { name: 'nokeys', email: 'nokeys@example.com', keys: 'ssh-rsa A' });
+      assert.strictEqual(res.status, 400);
+      const res2 = await call('GET', '/accounts/nokeys@example.com');
+      assert.strictEqual(res2.status, 404);
+    });
+  });
+
+  describe('create account with an existing email', function () {
+    it('should return 409', async function () {
+      const res = await call('POST', '/accounts', { name: 'again', email });
+      assert.strictEqual(res.status, 409);
+    });
+  });
+
+  describe('create account with invalid expire_at', function () {
+    it('should return 400', async function () {
+      const res = await call('POST', '/accounts', { name: 'exp', email: 'exp@example.com', expire_at: 'not a date' });
+      assert.strictEqual(res.status, 400);
+    });
+  });
+
+  describe('add keys without keys', function () {
+    it('should return 400', async function () {
+      const res = await call('POST', '/accounts/' + email + '/keys', {});
+      assert.strictEqual(res.status, 400);
+    });
+  });
+
+  describe('add account permission without user or host', function () {
+    it('should return 400 without user', async function () {
+      const res = await call('POST', '/accounts/' + email + '/permissions', { host: 'srv1' });
+      assert.strictEqual(res.status, 400);
+    });
+    it('should return 400 without host', async function () {
+      const res = await call('POST', '/accounts/' + email + '/permissions', { user: 'root' });
+      assert.strictEqual(res.status, 400);
+    });
+  });
+
+  describe('add group permission without user', function () {
+    it('should return 400', async function () {
+      const res = await call('POST', '/groups/' + groupName + '/permissions', { host: 'srv1' });
+      assert.strictEqual(res.status, 400);
+    });
+  });
+
+  describe('edit account', function () {
+    it('should return 400 with an empty payload', async function () {
+      const res = await call('PUT', '/accounts/' + email, {});
+      assert.strictEqual(res.status, 400);
+    });
+    it('should return 400 with an invalid expire_at', async function () {
+      const res = await call('PUT', '/accounts/' + email, { expire_at: 'not a date' });
+      assert.strictEqual(res.status, 400);
+    });
+  });
+
+  describe('edit group', function () {
+    it('should return 400 with an empty payload', async function () {
+      const res = await call('PUT', '/groups/' + groupName, {});
+      assert.strictEqual(res.status, 400);
+    });
+    it('should return 201 when active does not change', async function () {
+      const res = await call('PUT', '/groups/' + groupName, { active: true });
+      assert.strictEqual(res.status, 201);
+    });
+  });
+
+  describe('permissions', function () {
+    it('should return 400 when ssh_options is not an object', async function () {
+      const res = await call('POST', '/accounts/' + email + '/permissions', {
+        user: 'root',
+        host: 'srv1',
+        ssh_options: 'no-pty'
+      });
+      assert.strictEqual(res.status, 400);
+    });
+    it('should return 404 deleting an unknown account permission', async function () {
+      const res = await call('DELETE', '/accounts/' + email + '/permissions/9999');
+      assert.strictEqual(res.status, 404);
+    });
+    it('should return 404 updating an unknown group permission', async function () {
+      const res = await call('PUT', '/groups/' + groupName + '/permissions/9999', { ssh_options: {} });
+      assert.strictEqual(res.status, 404);
+    });
+  });
+
+  describe('import', function () {
+    it('should return 204', async function () {
+      const res = await call('POST', '/impexp', {});
+      assert.strictEqual(res.status, 204);
+    });
+  });
+
+  describe('list with order_by and sort', function () {
+    it('should return 400 for an unknown accounts order_by', async function () {
+      const res = await call('GET', '/accounts?order_by=' + encodeURIComponent('name; drop table accounts'));
+      assert.strictEqual(res.status, 400);
+    });
+    it('should return 400 for an unknown sort', async function () {
+      const res = await call('GET', '/accounts?sort=up');
+      assert.strictEqual(res.status, 400);
+    });
+    it('should sort accounts by email desc', async function () {
+      const res = await call('POST', '/accounts', { name: 'zzz', email: 'aaa@example.com' });
+      assert.strictEqual(res.status, 200);
+      const res2 = await call('GET', '/accounts?order_by=email&sort=desc');
+      assert.strictEqual(res2.status, 200);
+      const { rows, total } = await res2.json();
+      assert.strictEqual(total, 2);
+      assert.deepStrictEqual(
+        rows.map(row => row.email),
+        [email, 'aaa@example.com']
+      );
+    });
+    it('should return 400 for an unknown groups order_by', async function () {
+      const res = await call('GET', '/groups?order_by=email');
+      assert.strictEqual(res.status, 400);
+    });
+    it('should search groups by name without sort', async function () {
+      const res = await call('GET', '/groups?name=invalid');
+      assert.strictEqual(res.status, 200);
+      const { rows } = await res.json();
+      assert.deepStrictEqual(
+        rows.map(row => row.name),
+        [groupName]
+      );
     });
   });
 });

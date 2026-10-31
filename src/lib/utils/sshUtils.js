@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +14,7 @@
 // limitations under the License.
 
 import sshpk from 'sshpk';
-import { common_debug } from './logUtils';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 /**
  * @return {string}
@@ -43,7 +44,7 @@ export const getOpenSSHPublicKey = function (keyPub, signRequired) {
   const key = sshpk.parseKey(keyPub);
   let openssh = key.toString('ssh');
   if (!openssh) {
-    common_debug('Key %s is not a valid OpenSSH Public Key', keyPub);
+    getLogger().debug('Key %s is not a valid OpenSSH Public Key', keyPub);
     return false;
   }
   if (openssh !== keyPub) {

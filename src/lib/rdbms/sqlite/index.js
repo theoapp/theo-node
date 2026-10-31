@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,63 +21,90 @@ import fs from 'fs';
 import { dirname } from 'path';
 import { runV12migration } from '../../../migrations/v12fixFingerprints';
 import { md5 } from '../../utils/cryptoUtils';
+import { runV18migration } from '../../../migrations/v18fixInstance';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 let sqlite3;
 try {
   sqlite3 = require('sqlite3');
-} catch (e) {
+} catch (_e) {
   // Module not installed
 }
 
 const IN_MEMORY_DB = ':memory:';
 
 class SqliteManager extends DbManager {
-  dbVersion = 17;
+  dbVersion = 18;
 
-  CREATE_TABLE_AUTH_TOKENS =
-    'create table auth_tokens (token text PRIMARY KEY, assignee text, type varchar(5), created_at INTEGER)';
+  CREATE_TABLE_AUTH_TOKENS = `create table auth_tokens (
+    instance varchar(256),
+    token text,
+    assignee text,
+    type varchar(5),
+    created_at INTEGER,
+    PRIMARY KEY (instance, token)
+  )`;
 
-  CREATE_TABLE_ACCOUNTS =
-    'create table accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email varchar(128), name varchar(128), ' +
-    'active INTEGER, ' +
-    'expire_at INTEGER, updated_at INTEGER, created_at INTEGER, UNIQUE (email))';
+  CREATE_TABLE_ACCOUNTS = `create table accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance varchar(256),
+    email varchar(128),
+    name varchar(128),
+    active INTEGER,
+    expire_at INTEGER,
+    updated_at INTEGER,
+    created_at INTEGER,
+    UNIQUE (instance, email)
+  )`;
 
-  CREATE_TABLE_GROUPS =
-    'create table tgroups (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(128), active INTEGER, is_internal INTEGER, ' +
-    'updated_at INTEGER, created_at INTEGER, UNIQUE (name))';
+  CREATE_TABLE_GROUPS = `create table tgroups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance varchar(256),
+    name varchar(128),
+    active INTEGER,
+    is_internal INTEGER,
+    updated_at INTEGER,
+    created_at INTEGER,
+    UNIQUE (instance, name)
+  )`;
 
-  CREATE_TABLE_GROUPS_ACCOUNTS =
-    'create table groups_accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-    'account_id INTEGER, ' +
-    'group_id INTEGER, ' +
-    'updated_at INTEGER, ' +
-    'created_at INTEGER, ' +
-    'UNIQUE (account_id, group_id), ' +
-    'FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE, ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE)';
+  CREATE_TABLE_GROUPS_ACCOUNTS = `create table groups_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER,
+    group_id INTEGER,
+    updated_at INTEGER,
+    created_at INTEGER,
+    UNIQUE (account_id, group_id),
+    FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE,
+    FOREIGN KEY(account_id) REFERENCES accounts (id) ON DELETE CASCADE
+  )`;
 
-  CREATE_TABLE_PUBLIC_KEYS =
-    'create table public_keys (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-    'account_id INTEGER, ' +
-    'public_key varchar(1024), ' +
-    'public_key_sig varchar(1024), ' +
-    'fingerprint varchar(1024), ' +
-    'key_ssh_options TEXT, ' +
-    'last_used_at INTEGER, ' +
-    'created_at INTEGER, ' +
-    'UNIQUE (fingerprint), ' +
-    'FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE)';
+  CREATE_TABLE_PUBLIC_KEYS = `create table public_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance varchar(256),
+    account_id INTEGER,
+    public_key varchar(1024),
+    public_key_sig varchar(1024),
+    fingerprint varchar(1024),
+    key_ssh_options TEXT,
+    last_used_at INTEGER,
+    created_at INTEGER,
+    UNIQUE (instance, fingerprint),
+    FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
+  )`;
 
-  CREATE_TABLE_PERMISSIONS =
-    'create table permissions (id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-    'group_id INTEGER, ' +
-    'user varchar(512), ' +
-    'host varchar(512), ' +
-    'ssh_options TEXT, ' +
-    'created_at INTEGER, ' +
-    'FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE)';
+  CREATE_TABLE_PERMISSIONS = `create table permissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance varchar(256),
+    group_id INTEGER,
+    user varchar(512),
+    host varchar(512),
+    ssh_options TEXT,
+    created_at INTEGER,
+    FOREIGN KEY(group_id) REFERENCES tgroups (id) ON DELETE CASCADE
+  )`;
 
-  CREATE_INDEX_PERMISSIONS = 'create index k_permissions_host_user on permissions (host, user)';
+  CREATE_INDEX_PERMISSIONS = 'create index k_permissions_host_user on permissions (instance, host, user)';
 
   constructor(options) {
     super(options);
@@ -96,7 +124,7 @@ class SqliteManager extends DbManager {
             try {
               fs.mkdirSync(parentDir, { recursive: true });
             } catch (err) {
-              console.error('ERROR creating dir structure for Sqlite db file: %s', storage, err.message);
+              getLogger().error(err, 'ERROR creating dir structure for Sqlite db file: %s', storage);
               throw err;
             }
           }
@@ -120,7 +148,7 @@ class SqliteManager extends DbManager {
     });
   }
 
-  getClient(pool = false, next = false) {
+  getClient(_pool = false, next = false) {
     if (!this.db || this.db.closed) {
       this.openDb(() => {
         if (next) {
@@ -144,13 +172,13 @@ class SqliteManager extends DbManager {
   close() {
     if (this.db.closed) return;
     this.db.closed = true;
-    console.log('Closing db');
+    getLogger().debug('Closing db');
     return new Promise((resolve, reject) => {
       this.db.close(err => {
         if (err) {
           return reject(err);
         }
-        console.log('Closed');
+        getLogger().debug('Closed');
         resolve();
       });
     });
@@ -161,14 +189,14 @@ class SqliteManager extends DbManager {
     try {
       await this.client.run(sqlCreateTable);
     } catch (e) {
-      console.error('Unable to create _version table', e.message);
+      getLogger().error({ error_message: e.message }, 'Unable to create _version table');
       throw e;
     }
     try {
       const sqlInsertVersionZero = 'insert into _version values (0)';
       await this.client.run(sqlInsertVersionZero);
     } catch (e) {
-      console.error('Unable to insert 0 version in _version table', e.message);
+      getLogger().error({ error_message: e.message }, 'Unable to insert 0 version in _version table');
       throw e;
     }
     return 0;
@@ -214,12 +242,16 @@ class SqliteManager extends DbManager {
     if (fromVersion < 5) {
       try {
         await this.client.run('alter table groups add updated_at integer');
-      } catch (err) {}
+      } catch (_err) {
+        //
+      }
     }
     if (fromVersion < 6) {
       try {
         await this.client.run('alter table public_keys add public_key_sig varchar(1024)');
-      } catch (err) {}
+      } catch (_err) {
+        //
+      }
     }
     if (fromVersion < 7) {
       await runV7migrationSqliteDb(this.client);
@@ -266,7 +298,7 @@ class SqliteManager extends DbManager {
       try {
         await this.client.run('alter table tgroups add is_internal INTEGER not null default 0');
         await this.client.run("update tgroups set is_internal = 1 where name like '%@%'");
-      } catch (e) {
+      } catch (_e) {
         //
       }
     }
@@ -294,6 +326,9 @@ class SqliteManager extends DbManager {
     if (fromVersion < 17) {
       await this.client.run('alter table public_keys add last_used_at INTEGER');
     }
+    if (fromVersion < 18) {
+      await runV18migration(this);
+    }
     await this.updateVersion();
   }
 
@@ -312,7 +347,7 @@ class SqliteManager extends DbManager {
   }
 
   async flushDb() {
-    console.log('Flushing db...');
+    getLogger().info('Flushing db...');
     /*
     if (this.is_in_memory) {
       await this.close();
@@ -325,9 +360,9 @@ class SqliteManager extends DbManager {
       const sqlDrop = 'drop table ' + tables[i];
       try {
         await this.client.run(sqlDrop);
-        console.log('Dropped ', tables[i]);
+        getLogger().debug('Dropped %s', tables[i]);
       } catch (e) {
-        console.error('Failed to drop %s', tables[i], e);
+        getLogger().error(e, 'Failed to drop %s', tables[i]);
         // it doesn't exists
       }
     }

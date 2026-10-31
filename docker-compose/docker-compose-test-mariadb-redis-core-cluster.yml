@@ -1,15 +1,28 @@
-version: '3.1'
-
+---
 services:
   db:
     image: ${MARIADB_IMAGE}
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    healthcheck:
+      test: healthcheck.sh --connect --innodb_initialized
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+      start_interval: 1s
   cache:
     image: ${REDIS_IMAGE}
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+      start_interval: 1s
   theo1:
     image: theo:test
     container_name: theo1
@@ -17,9 +30,9 @@ services:
       MODE: test
       DB_ENGINE: mariadb
       DB_HOST: db
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MARIADB_USER}
+      DB_PASSWORD: ${MARIADB_PASSWORD}
+      DB_NAME: ${MARIADB_DATABASE}
       CORE_TOKEN: ${CORE_TOKEN}
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379
@@ -27,8 +40,10 @@ services:
       DB_CONN_MAX_RETRY: 30
       SKIP_UPDATECHECK: 1
     depends_on:
-      - cache
-      - db
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
   theo2:
     image: theo:test
     container_name: theo2
@@ -36,9 +51,9 @@ services:
       MODE: test
       DB_ENGINE: mariadb
       DB_HOST: db
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MARIADB_USER}
+      DB_PASSWORD: ${MARIADB_PASSWORD}
+      DB_NAME: ${MARIADB_DATABASE}
       CORE_TOKEN: ${CORE_TOKEN}
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379
@@ -46,8 +61,10 @@ services:
       DB_CONN_MAX_RETRY: 30
       SKIP_UPDATECHECK: 1
     depends_on:
-      - cache
-      - db
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
   theo3:
     image: theo:test
     container_name: theo3
@@ -55,9 +72,9 @@ services:
       MODE: test
       DB_ENGINE: mariadb
       DB_HOST: db
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MARIADB_USER}
+      DB_PASSWORD: ${MARIADB_PASSWORD}
+      DB_NAME: ${MARIADB_DATABASE}
       CORE_TOKEN: ${CORE_TOKEN}
       CACHE_ENABLED: redis
       CACHE_URI: redis://cache:6379
@@ -65,5 +82,7 @@ services:
       DB_CONN_MAX_RETRY: 30
       SKIP_UPDATECHECK: 1
     depends_on:
-      - cache
-      - db
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy

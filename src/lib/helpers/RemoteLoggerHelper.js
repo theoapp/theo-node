@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,9 +15,9 @@
 
 import packageJson from '../../../package';
 import { http_post } from '../utils/httpUtils';
-import { common_error } from '../utils/logUtils';
-
-const { LOG_AUTH_KEYS_URL, LOG_AUTH_KEYS_TOKEN } = process.env;
+import { getInstance } from '../utils/instanceUtils';
+import { LOG_AUTH_KEYS_TOKEN, LOG_AUTH_KEYS_URL } from '../../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 class RemoteLoggerHelper {
   static getHttpHeaders() {
@@ -30,8 +31,11 @@ class RemoteLoggerHelper {
   static log(data) {
     if (!LOG_AUTH_KEYS_URL) return;
     setImmediate(() => {
-      http_post(LOG_AUTH_KEYS_URL, data, this.getHttpHeaders()).catch(e => {
-        common_error('Failed to POST log: %s', e.message, data);
+      http_post(LOG_AUTH_KEYS_URL, data, {
+        ...RemoteLoggerHelper.getHttpHeaders(),
+        'x-instance-code': getInstance()
+      }).catch(e => {
+        getLogger().error({ data, error_message: e.message }, 'Failed to POST log');
       });
     });
   }

@@ -1,12 +1,16 @@
 {
-  "admin": {
-    "token": "TMP_PASSWORD"
-  },
-  "client": {
-    "tokens": [
-      "njknsjd2412fnjkasnj",
-      "knkjnknfjfnjenkln"
-    ]
+  "instances": {
+    "theo": {
+      "admin": {
+        "token": "TMP_PASSWORD"
+      },
+      "client": {
+        "tokens": [
+          "njknsjd2412fnjkasnj",
+          "knkjnknfjfnjenkln"
+        ]
+      }
+    }
   },
   "db": {
     "engine": "sqlite",

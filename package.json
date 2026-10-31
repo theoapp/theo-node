@@ -1,18 +1,21 @@
 {
   "name": "theo",
-  "version": "1.3.0",
+  "version": "2.0.9",
   "description": "Theo is your AuthorizedKeys manager",
-  "main": "index.js",
+  "main": "build/otel.js",
   "repository": "theoapp/theo-node",
+  "type": "commonjs",
   "scripts": {
-    "build": "babel -D src -d build",
-    "build:dev": "babel -D --watch src --out-dir build",
+    "prebuild": "node scripts/version-update.mjs",
+    "build": "babel src -d build",
+    "build:dev": "babel --watch src --out-dir build",
     "clean": "rm -rf build",
-    "coverage": "cross-env NODE_ENV=test nyc mocha tests/testStandAlone*.js",
+    "env2doc": "npm run -s build && env2doc -d -p build > ENVIRONMENT.md",
+    "env2doc:check": "npm run -s build && env2doc -d -p build > .env2doc-check.tmp && diff .env2doc-check.tmp ENVIRONMENT.md",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
-    "start:dev": "nodemon --signal SIGTERM --watch .env --watch src --exec babel-node ./src/index.js",
-    "start": "node ./build/index.js",
+    "start:dev": "nodemon --signal SIGTERM --watch .env --watch src --exec babel-node ./src/otel.js",
+    "start": "node ./build/otel.js",
     "test": "mocha tests/test*.js",
     "test:api": "mocha tests/testRest*",
     "test:api:signed": "mocha tests/testSigned*",
@@ -24,8 +27,9 @@
     "test:standalone": "mocha tests/testStandAlone*.js",
     "test:upgrade:mysql": "mocha tests/testUpgrade_mysql.js",
     "test:upgrade:sqlite": "mocha tests/testUpgrade_sqlite.js",
-    "preversion": "npm run lint",
-    "version": "./scripts/updateVersion.sh"
+    "test:multiinstances": "mocha tests/testMultiInstances.js",
+    "preversion": "npm run -s lint && npm run -s build",
+    "ver": "echo $npm_package_version"
   },
   "nodemonConfig": {
     "delay": 2000
@@ -33,42 +37,46 @@
   "author": "Michele Azzolari <macno@authkeys.io> (macno)",
   "license": "Apache-2.0",
   "dependencies": {
-    "@authkeys/microservice": "^2.4.3",
-    "@authkeys/mysql-connman": "^0.6.0",
-    "dotenv": "^8.2.0",
+    "@fluidware-it/express-microservice": "^0.7.0-rc.0",
+    "@fluidware-it/saddlebag": "^0.3.0",
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/instrumentation-http": "^0.300.0",
+    "@opentelemetry/instrumentation-memcached": "^0.67.0",
+    "@opentelemetry/instrumentation-mysql2": "^0.70.0",
+    "@opentelemetry/instrumentation-pg": "^0.77.0",
+    "@opentelemetry/instrumentation-pino": "^0.70.0",
+    "@opentelemetry/instrumentation-redis": "^0.72.0",
+    "@opentelemetry/instrumentation-undici": "^0.34.0",
+    "@opentelemetry/sdk-node": "^0.300.0",
+    "dotenv": "^16.0.3",
     "memcached": "^2.2.2",
-    "node-fetch": "^2.6.1",
-    "redis": "^3.0.0",
-    "semver": "^7.3.4",
-    "sqlite3": "^5.0.0",
-    "sshpk": "^1.16.1"
+    "mysql2": "^3.24.6",
+    "pg": "^8.8.0",
+    "redis": "^4.5.1",
+    "semver": "^7.5.4",
+    "sqlite3": "^5.1.7",
+    "sshpk": "^1.17.0",
+    "undici": "^8.12.3"
   },
   "devDependencies": {
-    "@babel/cli": "^7.13.0",
-    "@babel/core": "^7.13.8",
-    "@babel/eslint-parser": "^7.13.4",
-    "@babel/node": "^7.13.0",
-    "@babel/plugin-proposal-class-properties": "^7.13.0",
-    "@babel/preset-env": "^7.13.8",
-    "@babel/register": "^7.13.8",
-    "@istanbuljs/nyc-config-babel": "^2.1.1",
-    "babel-plugin-istanbul": "^5.1.4",
-    "cross-env": "^5.2.0",
-    "mocha": "^6.2.3",
+    "@babel/cli": "^8.0.6",
+    "@babel/core": "^8.0.9",
+    "@babel/eslint-parser": "^8.0.7",
+    "@babel/node": "^8.0.6",
+    "@babel/preset-env": "^8.0.7",
+    "@babel/register": "^8.0.6",
+    "@fluidware-it/env2doc": "^0.3.2",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-n": "17.15.1",
+    "eslint-plugin-prettier": "^5.2.1",
+    "mocha": "^11.0.1",
     "mock-http-server": "^1.4.2",
-    "nyc": "^14.1.1",
-    "sinon": "^7.5.0"
-  },
-  "optionalDependencies": {
-    "eslint": "^7.20.0",
-    "eslint-config-prettier": "^8.1.0",
-    "eslint-config-standard": "^16.0.2",
-    "eslint-plugin-prettier": "^3.3.1",
     "nodemon": "^2.0.7",
-    "prettier": "^2.2.1"
+    "prettier": "^3.9.10"
   },
-  "nyc": {
-    "include": "src",
-    "exclude": "test"
+  "engines": {
+    "node": ">=24.22.1",
+    "npm": ">=11.19.1"
   }
 }

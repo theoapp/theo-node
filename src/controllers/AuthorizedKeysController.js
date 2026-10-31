@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { requireAuthMiddleware } from '../lib/middlewares/AuthMiddleware';
-import { getAuthorizedKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysHelper';
+import { checkAuth } from '../lib/middlewares/AuthMiddleware';
+import { sendError } from '../lib/utils/responseUtils';
+import { getAuthorizedKeys as getKeys, getAuthorizedKeysAsJson } from '../lib/helpers/KeysHelper';
 import { dnsReverse } from '../lib/utils/dnsUtils';
 import AppHelper from '../lib/helpers/AppHelper';
 import RemoteLoggerHelper from '../lib/helpers/RemoteLoggerHelper';
-import { common_debug, common_error } from '../lib/utils/logUtils';
 import KeyManager from '../lib/managers/KeyManager';
+import { MODE } from '../const';
+import { getLogger } from '@fluidware-it/saddlebag';
 
 const checkFingerPrint = async function (user, host, fingerprint, keys) {
   for (let i = 0; i < keys.length; i++) {
@@ -33,7 +36,7 @@ const checkFingerPrint = async function (user, host, fingerprint, keys) {
       return keys[i];
     }
   }
-  common_debug('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
+  getLogger().debug('No public key found for %s on %s with %s fingerprint', user, host, fingerprint);
 };
 
 const checkUserHost = async function (dm, accept, user, host, res, fingerprint) {
@@ -52,17 +55,19 @@ const checkUserHost = async function (dm, accept, user, host, res, fingerprint) 
                 return KeyManager.setLastUsed(db, fingerprint);
               })
               .catch(e => {
-                console.error('Failed to update last_used_at', e);
+                getLogger().error(e, 'Failed to update last_used_at');
               })
               .finally(() => {
                 const ret = db.close();
                 if (ret && ret instanceof Promise) {
-                  ret.catch(err => console.error(err));
+                  ret.catch(err => getLogger().error(err, 'Failed to close db'));
                 }
               });
           });
         }
-      } catch (e) {}
+      } catch (_e) {
+        //
+      }
     }
   } else {
     const ah = AppHelper();
@@ -72,60 +77,62 @@ const checkUserHost = async function (dm, accept, user, host, res, fingerprint) 
       err.t_code = 406;
       throw err;
     }
-    const { keys, cache } = await getAuthorizedKeys(dm, user, host);
+    const { keys, cache } = await getKeys(dm, user, host);
     res.header('X-From-Cache', cache);
     res.header('Content-Type', 'text/plain');
     res.send(keys);
   }
 };
 
-export default function handleKeys(express) {
-  const router = express.Router();
+export async function getAuthorizedKeys(req, res) {
+  try {
+    checkAuth(req);
+  } catch (e) {
+    sendError(res, e);
+    return;
+  }
+  const accept = req.header('Accept');
+  const { host, user } = req.params;
+  const { f } = req.query;
+  try {
+    await checkUserHost(req.dm, accept, user, host, res, f);
+  } catch (err) {
+    getLogger().error(err, 'Failed authorized_keys');
+    sendError(res, err);
+  }
+}
 
-  router.get('/:host/:user', requireAuthMiddleware, async (req, res) => {
-    const accept = req.header('Accept');
-    const { host, user } = req.params;
-    const { f } = req.query;
-    try {
-      await checkUserHost(req.dm, accept, user, host, res, f);
-    } catch (err) {
-      if (process.env.MODE === 'test') {
-        common_error('Failed authorized_keys', err.message);
-      }
-      res.status(err.t_code || 500);
-      res.json({ status: err.t_code || 500, reason: err.message });
-      console.error(err);
-    }
-  });
-
-  router.get('/:user', requireAuthMiddleware, async (req, res) => {
-    const accept = req.header('Accept');
-    const { user } = req.params;
-    const { f } = req.query;
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    try {
-      const host = await dnsReverse(ip);
-      if (host && host.length > 0) {
-        try {
-          await checkUserHost(req.dm, accept, user, host[0], res, f);
-        } catch (err) {
-          if (process.env.MODE === 'test') {
-            common_error('Failed authorized_keys', err.message);
-          }
-          res.status(err.t_code || 500);
-          res.json({ status: err.t_code || 500, reason: err.message });
+export async function getAuthorizedKeysByReverseDNS(req, res) {
+  try {
+    checkAuth(req);
+  } catch (e) {
+    sendError(res, e);
+    return;
+  }
+  const accept = req.header('Accept');
+  const { user } = req.params;
+  const { f } = req.query;
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  try {
+    const host = await dnsReverse(ip);
+    if (host && host.length > 0) {
+      try {
+        await checkUserHost(req.dm, accept, user, host[0], res, f);
+      } catch (err) {
+        if (MODE === 'test') {
+          getLogger().error({ error_message: err.message }, 'Failed authorized_keys');
         }
-      } else {
-        res.status(400);
-        res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });
+        sendError(res, err);
       }
-    } catch (err) {
-      if (process.env.MODE === 'test') {
-        common_error('Failed reverse %s', ip, err.message);
-      }
+    } else {
       res.status(400);
       res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });
     }
-  });
-  return router;
+  } catch (err) {
+    if (MODE === 'test') {
+      getLogger().error({ error_message: err.message }, 'Failed reverse %s', ip);
+    }
+    res.status(400);
+    res.json({ status: 400, reason: 'Unable to get hostname for ' + ip });
+  }
 }

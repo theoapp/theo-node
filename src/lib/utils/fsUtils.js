@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +22,7 @@ export const getDirFiles = (dir, onlyDir) => {
     if (!stat.isDirectory()) {
       return false;
     }
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
   let files = fs.readdirSync(dir);

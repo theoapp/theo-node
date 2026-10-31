@@ -1,4 +1,5 @@
 // Copyright 2019 AuthKeys srl
+// Copyright 2023 Fluidware srl
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const setTimeoutPromise = function (timeout) {
-  return new Promise((resolve, reject) => {
-    setTimeout(function () {
-      resolve();
-    }, timeout);
+import { ADDRESS, ADDRESSES, HOSTNAME, PORT } from './const';
+
+// Same bind address resolution as @authkeys/microservice (ADDRESSES, ADDRESS, then HOSTNAME):
+// inside Docker HOSTNAME is set, so the server does not listen on 127.0.0.1
+const host = (ADDRESSES && ADDRESSES.split(',')[0]) || ADDRESS || HOSTNAME || '127.0.0.1';
+
+globalThis
+  .fetch(`http://${host}:${PORT || 9100}/healthz`, { method: 'GET' })
+  .then(res => {
+    if (res.ok) {
+      process.exit(0);
+    }
+    process.exit(1);
+  })
+  .catch(() => {
+    process.exit(1);
   });
-};
