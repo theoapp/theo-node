@@ -1,5 +1,5 @@
-# builder image
-FROM node:24.22.1-alpine3.24 AS builder
+# builder image: the transpiled build is arch independent, so it always runs on the native platform (no emulation)
+FROM --platform=$BUILDPLATFORM node:24.22.1-alpine3.24 AS builder
 
 USER node
 
