@@ -24,7 +24,15 @@ const execute = (method, path, data, headers = {}) => {
   if (dataType !== 'undefined') {
     if (dataType !== 'string') {
       data = JSON.stringify(data);
-      if (!fetchOpts.headers['Content-Type']) {
+      // check if - case-insensitive - Content-Type header is already set, if not set it to application/json
+      let contentTypeSet = false;
+      for (const header in fetchOpts.headers) {
+        if (header.toLowerCase() === 'content-type') {
+          contentTypeSet = true;
+          break;
+        }
+      }
+      if (!contentTypeSet) {
         fetchOpts.headers['Content-Type'] = 'application/json';
       }
     }
