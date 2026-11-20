@@ -21,8 +21,9 @@ import { sendError } from '../lib/utils/responseUtils';
 import DbHelper from '../lib/helpers/DbHelper';
 import { loadCacheManager, notifyReloadTokens } from '../lib/helpers/CacheHelper';
 import { getInstance, isMultiInstances } from '../lib/utils/instanceUtils';
-import { getLogger } from '@fluidware-it/saddlebag';
+import { getAsyncLocalStorageStore, getLogger } from '@fluidware-it/saddlebag';
 import { CLUSTER_MODE, MODE } from '../const';
+import { MicroServiceStoreSymbols } from '@fluidware-it/express-microservice';
 
 const uptime_start = Date.now();
 
@@ -32,6 +33,9 @@ export function getInfo(req, res) {
 }
 
 export function healthCheck(req, res) {
+  // do not log
+  const store = getAsyncLocalStorageStore();
+  store[MicroServiceStoreSymbols.NO_LOG] = true;
   res.set('Content-Type', 'text/plain').send('OK');
 }
 
