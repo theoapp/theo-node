@@ -14,5 +14,26 @@
 // limitations under the License.
 
 import dotenv from 'dotenv';
+import { NAME, VERSION } from './version';
 
-dotenv.config();
+const { error } = dotenv.config({ quiet: true });
+
+// A missing .env is fine: the environment can come from the process. A .env that exists but cannot be read (e.g. a file
+// mounted with a mode the image's unprivileged user has no access to) must not be ignored: theo would start with its
+// defaults, on an empty sqlite db.
+if (error && error.code !== 'ENOENT') {
+  // saddlebag reads its own settings from the environment at import time, so it is only loaded here, on the way out
+  const { getLogger } = require('@fluidware-it/saddlebag');
+  getLogger().fatal(error, 'Unable to load .env file');
+  process.exit(1);
+}
+
+function setEnvIfNotSet(envVar, value) {
+  /* eslint-disable n/no-process-env */
+  if (!process.env[envVar]) {
+    process.env[envVar] = value;
+  }
+  /* eslint-enable n/no-process-env */
+}
+setEnvIfNotSet('npm_package_version', VERSION);
+setEnvIfNotSet('npm_package_name', NAME);

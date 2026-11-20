@@ -7,6 +7,9 @@ It also offers an admin REST API for accounts, keys, groups and permissions. Nod
 ## Layout
 
 - `src/index.js`: entry point. It imports `./appenv` (dotenv) **first**, then `./const`, then everything else.
+- `src/appenv.js`: loads `.env` from the current directory, without overriding the variables already set in the
+  process environment. A missing `.env` is fine, but one that exists and cannot be read stops the startup. It also
+  sets `npm_package_name` / `npm_package_version` when they are missing.
 - `src/const.js`: the **only** place that reads the environment. Every value comes from `EnvParse` (saddlebag) and is read
   once, when the module is imported.
 - `src/theoserver.js`: `TheoServer` extends `Microservice` from `@fluidware-it/express-microservice` (express 5).
