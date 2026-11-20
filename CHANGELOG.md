@@ -2,6 +2,25 @@
 
 ## CHANGELOG
 
+### 3.0.1
+
+* Theo now refuses to start when a `.env` file exists but cannot be read (e.g. a file mounted with a mode that the
+  image's unprivileged user has no access to). Before, the file was skipped silently and theo started with its
+  defaults (sqlite on `./data/theo.db`). A missing `.env` is still fine
+* `npm_package_name` / `npm_package_version` are now set at startup when missing (as it happens when theo is not
+  started through npm), so logs are named after theo instead of `@fluidware-it/saddlebag`
+* Calls to `/healthz` are no longer logged
+* Fix duplicated `Content-Type` header in outgoing HTTP requests when the caller sets it with a different case
+
+### 3.0.0
+
+* Container image now runs as an unprivileged user (`nodeapp`, uid 12345, member of group `nodedevs`, gid 12321)
+  instead of root.  
+NOTE: files and directories mounted into the container must be accessible to that user:
+  * a mounted `.env` (or `SETTINGS_FILE`, `DB_PASSWORD_FILE`, `DB_SSL_CA`) must be readable by uid 12345 or gid 12321.
+    If the `.env` is not loaded, theo falls back to its defaults (sqlite on `./data/theo.db`)
+  * when using sqlite, `DB_STORAGE` must point to a directory writable by uid 12345
+
 ### 0.12.0
 
 * \+ Improved checks for REQUIRE_SIGNED_KEY
